@@ -1,7 +1,8 @@
-<!DOCTYPE html>
-<!-- saved from url=(0123)file:///C:/Users/solrb/Documents/Codex/2026-06-15/create-a-web-based-quote-calculator/outputs/sambodi-quote-calculator.html -->
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sambodi Creations Quote Calculator</title>
   <style>
@@ -32,7 +33,7 @@
         #eef2f6;
     }
 
-    button, input, select { font: inherit; }
+    button, input, select, textarea { font: inherit; }
 
     header {
       position: sticky;
@@ -152,7 +153,8 @@
       font-weight: 800;
     }
 
-    input {
+    input,
+    textarea {
       width: 100%;
       min-width: 0;
       min-height: 42px;
@@ -164,10 +166,19 @@
       outline: none;
     }
 
-    input:focus {
+    textarea {
+      resize: vertical;
+      min-height: 88px;
+      line-height: 1.4;
+    }
+
+    input:focus,
+    textarea:focus {
       border-color: var(--brand);
       box-shadow: 0 0 0 3px rgba(8, 121, 129, .16);
     }
+
+    .span-all { grid-column: 1 / -1; }
 
     .tabs {
       display: flex;
@@ -245,6 +256,26 @@
       overflow: hidden;
     }
 
+    .document-head {
+      display: grid;
+      gap: 6px;
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+    }
+
+    .document-head h2 {
+      margin: 0;
+      font-size: 1.32rem;
+      letter-spacing: 0;
+    }
+
+    .document-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
     .summary-head {
       padding: 17px 18px;
       background: var(--brand-dark);
@@ -281,6 +312,16 @@
       text-align: right;
     }
 
+    .line[data-print-key="notes"] {
+      align-items: start;
+    }
+
+    .line[data-print-key="notes"] strong {
+      max-width: 68%;
+      white-space: pre-wrap;
+      line-height: 1.4;
+    }
+
     .line.total {
       margin-top: 5px;
       padding-top: 14px;
@@ -295,7 +336,21 @@
       font-size: 1.55rem;
     }
 
+    .customer-details {
+      display: grid;
+      gap: 8px;
+      padding: 14px 18px 0;
+    }
+
     .breakdown { padding: 8px 18px 18px; }
+
+    .thanks {
+      padding: 14px 18px 18px;
+      color: var(--ink);
+      font-weight: 900;
+      text-align: center;
+      border-top: 1px solid var(--line);
+    }
 
     .print-options {
       padding: 14px 18px;
@@ -377,25 +432,39 @@
     }
 
     @media print {
-      body { background: #fff; }
-      header { position: static; }
-      main { display: block; padding: 0; }
+      body { background: #fff; color: #111827; }
+      header { display: none; }
+      main { display: block; max-width: none; padding: 0; }
       .workspace, .print-options, .note { display: none; }
-      .summary { position: static; margin-top: 12px; box-shadow: none; }
-      .summary-head { background: #fff; color: var(--ink); border-bottom: 1px solid var(--line); }
+      .summary { position: static; margin: 0; border: 0; border-radius: 0; box-shadow: none; }
+      .document-head { padding: 0 0 18px; border-bottom: 2px solid #111827; }
+      .document-head h2 { font-size: 1.7rem; }
+      .summary-head { background: #fff; color: var(--ink); border-bottom: 1px solid var(--line); padding: 16px 0 12px; }
       .summary-head p { opacity: 1; color: var(--muted); }
+      .customer-details, .totals, .breakdown, .thanks { padding-left: 0; padding-right: 0; }
+      .thanks { margin-top: 22px; }
+      .line.total strong { color: #111827; }
+      body.print-hide-business [data-print-key="business"],
+      body.print-hide-document-title [data-print-key="document-title"],
+      body.print-hide-service [data-print-key="service"],
+      body.print-hide-customer [data-print-key="customer"],
+      body.print-hide-notes [data-print-key="notes"],
+      body.print-hide-quote-number [data-print-key="quote-number"],
+      body.print-hide-due-date [data-print-key="due-date"],
       body.print-hide-direct [data-print-key="direct"],
       body.print-hide-labor [data-print-key="labor"],
       body.print-hide-setup [data-print-key="setup"],
       body.print-hide-profit [data-print-key="profit"],
+      body.print-hide-subtotal [data-print-key="subtotal"],
       body.print-hide-tax [data-print-key="tax"],
+      body.print-hide-total [data-print-key="total"],
       body.print-hide-quantity [data-print-key="quantity"],
       body.print-hide-unit [data-print-key="unit"],
       body.print-hide-breakdown [data-print-key="breakdown"] { display: none; }
     }
   </style>
 </head>
-<body class="print-hide-direct print-hide-labor print-hide-setup print-hide-profit print-hide-breakdown">
+<body>
   <header>
     <div class="topbar">
       <div class="brand">
@@ -419,11 +488,15 @@
         <label>Quote # <input id="quoteNumber" type="text" value="SC-1001"></label>
         <label>Due Date <input id="dueDate" type="date"></label>
         <label>Sales Tax % <input id="taxRate" type="number" min="0" step="0.01" value="0"></label>
+        <label class="span-all">Notes / special items
+          <textarea id="orderNotes" placeholder="Add order notes, special requests, sizing details, install notes, or customer-facing terms."></textarea>
+        </label>
       </div>
 
       <nav class="tabs" aria-label="Product categories">
         <button class="tab active" type="button" data-panel="polos">Embroidered Polos</button>
         <button class="tab" type="button" data-panel="dtf">DTF Transfers</button>
+        <button class="tab" type="button" data-panel="dtfShirts">DTF Printed Shirts</button>
         <button class="tab" type="button" data-panel="banners">Banners</button>
         <button class="tab" type="button" data-panel="engraving">Laser Engraving</button>
         <button class="tab" type="button" data-panel="custom">Custom Job</button>
@@ -467,6 +540,28 @@
           <label>Extra materials / item <input id="dtfMaterials" type="number" min="0" step="0.01" value="0.35"></label>
           <label>Spoilage % <input id="dtfSpoilage" type="number" min="0" step="0.01" value="4"></label>
           <label>Profit margin % <input id="dtfMargin" type="number" min="0" max="95" step="0.01" value="42"></label>
+        </div>
+      </section>
+
+      <section class="panel" id="dtfShirts" data-title="DTF Printed Shirts">
+        <div class="panel-head"><h2>DTF Printed Shirts</h2><p>Prices finished shirts with blanks, DTF print area, multiple print locations, press labor, setup, and margin.</p></div>
+        <div class="grid">
+          <div class="section-title">Quantity and garment</div>
+          <label>Quantity <input id="dtfShirtQty" type="number" min="0" step="1" value="24"></label>
+          <label>Blank shirt cost <input id="dtfShirtBlank" type="number" min="0" step="0.01" value="5.75"></label>
+          <label>Garment markup % <input id="dtfShirtGarmentMarkup" type="number" min="0" step="0.01" value="35"></label>
+          <div class="section-title">Print details</div>
+          <label>Print width in. <input id="dtfShirtWidth" type="number" min="0" step="0.1" value="10"></label>
+          <label>Print height in. <input id="dtfShirtHeight" type="number" min="0" step="0.1" value="10"></label>
+          <label>Print locations <input id="dtfShirtLocations" type="number" min="1" step="1" value="1"></label>
+          <label>Film/ink cost per sq. in. <input id="dtfShirtSqInCost" type="number" min="0" step="0.001" value="0.035"></label>
+          <label>Extra materials / shirt <input id="dtfShirtMaterials" type="number" min="0" step="0.01" value="0.45"></label>
+          <label>Spoilage % <input id="dtfShirtSpoilage" type="number" min="0" step="0.01" value="4"></label>
+          <div class="section-title">Labor and margin</div>
+          <label>Setup fee <input id="dtfShirtSetup" type="number" min="0" step="0.01" value="30"></label>
+          <label>Press seconds / location <input id="dtfShirtPressSeconds" type="number" min="0" step="1" value="45"></label>
+          <label>Labor rate / hr <input id="dtfShirtLaborRate" type="number" min="0" step="0.01" value="30"></label>
+          <label>Profit margin % <input id="dtfShirtMargin" type="number" min="0" max="95" step="0.01" value="42"></label>
         </div>
       </section>
 
@@ -527,37 +622,56 @@
     </section>
 
     <aside class="summary" aria-label="Quote summary">
-      <div class="summary-head">
+      <div class="document-head">
+        <p data-print-key="business">Sambodi Creations</p>
+        <h2 data-print-key="document-title">Customer Quote</h2>
+      </div>
+      <div class="summary-head" data-print-key="service">
         <h2 id="summaryTitle">Embroidered Polos</h2>
-        <p id="summaryMeta">Sample Customer - SC-1001</p>
+      </div>
+      <div class="customer-details">
+        <div class="line" data-print-key="customer"><span>Customer</span><strong id="customerSummary">Sample Customer</strong></div>
+        <div class="line" data-print-key="notes"><span>Notes</span><strong id="notesSummary">-</strong></div>
+        <div class="line" data-print-key="quote-number"><span>Quote #</span><strong id="quoteNumberSummary">SC-1001</strong></div>
+        <div class="line" data-print-key="due-date"><span>Due date</span><strong id="dueDateSummary">-</strong></div>
       </div>
       <div class="totals">
-        <div class="line" data-print-key="direct"><span>Direct costs</span><strong id="directCosts">$723.73</strong></div>
-        <div class="line" data-print-key="labor"><span>Labor</span><strong id="laborCosts">$87.50</strong></div>
-        <div class="line" data-print-key="setup"><span>Setup and fees</span><strong id="setupCosts">$45.00</strong></div>
-        <div class="line" data-print-key="profit"><span>Profit</span><strong id="profitAmount">$570.82</strong></div>
+        <div class="line" data-print-key="direct"><span>Direct costs</span><strong id="directCosts">$0.00</strong></div>
+        <div class="line" data-print-key="labor"><span>Labor</span><strong id="laborCosts">$0.00</strong></div>
+        <div class="line" data-print-key="setup"><span>Setup and fees</span><strong id="setupCosts">$0.00</strong></div>
+        <div class="line" data-print-key="profit"><span>Profit</span><strong id="profitAmount">$0.00</strong></div>
+        <div class="line" data-print-key="subtotal"><span>Subtotal</span><strong id="subtotalAmount">$0.00</strong></div>
         <div class="line" data-print-key="tax"><span>Tax</span><strong id="taxAmount">$0.00</strong></div>
-        <div class="line total"><span>Customer total</span><strong id="customerTotal">$1,427.05</strong></div>
-        <div class="line" data-print-key="quantity"><span>Quantity</span><strong id="quantityAmount">24</strong></div>
-        <div class="line" data-print-key="unit"><span>Estimated unit price</span><strong id="unitPrice">$59.46</strong></div>
+        <div class="line total" data-print-key="total"><span>Customer total</span><strong id="customerTotal">$0.00</strong></div>
+        <div class="line" data-print-key="quantity"><span>Quantity</span><strong id="quantityAmount">0</strong></div>
+        <div class="line" data-print-key="unit"><span>Estimated unit price</span><strong id="unitPrice">$0.00</strong></div>
       </div>
       <div class="breakdown" data-print-key="breakdown">
         <table>
           <thead><tr><th>Line item</th><th>Amount</th></tr></thead>
-          <tbody id="breakdownRows"><tr><td>Blank polos</td><td>$348.00</td></tr><tr><td>Garment markup</td><td>$121.80</td></tr><tr><td>Embroidery stitches</td><td>$216.00</td></tr><tr><td>Thread and backing</td><td>$20.40</td></tr><tr><td>Spoilage reserve</td><td>$17.53</td></tr><tr><td>Production labor</td><td>$87.50</td></tr><tr><td>Digitizing / setup</td><td>$45.00</td></tr><tr><td>Profit</td><td>$570.82</td></tr></tbody>
+          <tbody id="breakdownRows"></tbody>
         </table>
-        <p class="note">Margin is calculated as profit margin on final pre-tax selling price. Adjust default rates to match current shop costs.</p>
       </div>
+      <div class="thanks">Thank you for your business!</div>
       <div class="print-options">
         <h3>Show on printed quote</h3>
         <div class="print-grid">
+          <label class="print-check"><input type="checkbox" data-print-toggle="business" checked> Business name</label>
+          <label class="print-check"><input type="checkbox" data-print-toggle="document-title" checked> Quote title</label>
+          <label class="print-check"><input type="checkbox" data-print-toggle="service" checked> Service type</label>
+          <label class="print-check"><input type="checkbox" data-print-toggle="customer" checked> Customer</label>
+          <label class="print-check"><input type="checkbox" data-print-toggle="notes" checked> Notes</label>
+          <label class="print-check"><input type="checkbox" data-print-toggle="quote-number" checked> Quote number</label>
+          <label class="print-check"><input type="checkbox" data-print-toggle="due-date" checked> Due date</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="direct"> Direct costs</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="labor"> Labor</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="setup"> Setup and fees</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="profit"> Profit</label>
-          <label class="print-check"><input type="checkbox" data-print-toggle="tax" checked=""> Tax</label>
-          <label class="print-check"><input type="checkbox" data-print-toggle="quantity" checked=""> Quantity</label>
-          <label class="print-check"><input type="checkbox" data-print-toggle="unit" checked=""> Unit price</label>
+          <label class="print-check"><input type="checkbox" data-print-toggle="subtotal" checked> Subtotal</label>
+          <label class="print-check"><input type="checkbox" data-print-toggle="tax" checked> Tax</label>
+          <label class="print-check"><input type="checkbox" data-print-toggle="total" checked> Total</label>
+          <label class="print-check"><input type="checkbox" data-print-toggle="quantity" checked> Quantity</label>
+          <label class="print-check"><input type="checkbox" data-print-toggle="unit" checked> Unit price</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="breakdown"> Line-item breakdown</label>
         </div>
       </div>
@@ -570,6 +684,7 @@
     due.setDate(due.getDate() + 14);
     document.getElementById("dueDate").valueAsDate = due;
     const defaults = new Map([...document.querySelectorAll("input[id]")].map((input) => [input.id, input.value]));
+    const textDefaults = new Map([...document.querySelectorAll("textarea[id]")].map((textarea) => [textarea.id, textarea.value]));
     const printDefaults = new Map([...document.querySelectorAll("[data-print-toggle]")].map((input) => [input.dataset.printToggle, input.checked]));
     const state = { activePanel: "polos" };
 
@@ -603,6 +718,7 @@
         setup,
         profit,
         tax,
+        preTax,
         customerTotal,
         unit: quantity > 0 ? customerTotal / quantity : customerTotal,
         lines: [...directLines, ...laborLines, ...setupLines, row("Profit", profit)]
@@ -648,6 +764,26 @@
           row("Artwork / setup", number("dtfSetup"))
         ], percent("dtfMargin"));
       },
+      dtfShirts() {
+        const qty = number("dtfShirtQty");
+        const locations = number("dtfShirtLocations");
+        const transfer = qty * locations * number("dtfShirtWidth") * number("dtfShirtHeight") * number("dtfShirtSqInCost");
+        const garments = qty * number("dtfShirtBlank");
+        const garmentMarkup = garments * percent("dtfShirtGarmentMarkup");
+        const materials = qty * number("dtfShirtMaterials");
+        const spoilage = (transfer + garments + materials) * percent("dtfShirtSpoilage");
+        return summarize(qty, [
+          row("DTF film and ink", transfer),
+          row("Blank shirts", garments),
+          row("Garment markup", garmentMarkup),
+          row("Extra materials", materials),
+          row("Spoilage reserve", spoilage)
+        ], [
+          row("Press labor", (qty * locations * number("dtfShirtPressSeconds") / 3600) * number("dtfShirtLaborRate"))
+        ], [
+          row("Artwork / setup", number("dtfShirtSetup"))
+        ], percent("dtfShirtMargin"));
+      },
       banners() {
         const qty = number("bannerQty");
         const area = qty * number("bannerWidth") * number("bannerHeight");
@@ -692,6 +828,7 @@
         ], percent("customMargin"));
         const rush = base.customerTotal / (1 + percent("taxRate")) * percent("customRush");
         base.profit += rush;
+        base.preTax += rush;
         base.customerTotal += rush + rush * percent("taxRate");
         base.tax += rush * percent("taxRate");
         base.unit = base.customerTotal;
@@ -704,13 +841,21 @@
       const result = calculators[state.activePanel]();
       const panel = document.getElementById(state.activePanel);
       const customer = document.getElementById("customer").value || "Customer";
+      const notes = document.getElementById("orderNotes").value.trim();
       const quoteNumber = document.getElementById("quoteNumber").value || "Quote";
+      const dueDate = document.getElementById("dueDate").value;
+      const formattedDueDate = dueDate ? new Date(`${dueDate}T00:00:00`).toLocaleDateString("en-US") : "-";
       document.getElementById("summaryTitle").textContent = panel.dataset.title;
-      document.getElementById("summaryMeta").textContent = `${customer} - ${quoteNumber}`;
+      document.getElementById("customerSummary").textContent = customer;
+      document.getElementById("notesSummary").textContent = notes || "-";
+      document.querySelector('[data-print-key="notes"]').hidden = !notes;
+      document.getElementById("quoteNumberSummary").textContent = quoteNumber;
+      document.getElementById("dueDateSummary").textContent = formattedDueDate;
       document.getElementById("directCosts").textContent = money.format(result.direct);
       document.getElementById("laborCosts").textContent = money.format(result.labor);
       document.getElementById("setupCosts").textContent = money.format(result.setup);
       document.getElementById("profitAmount").textContent = money.format(result.profit);
+      document.getElementById("subtotalAmount").textContent = money.format(result.preTax);
       document.getElementById("taxAmount").textContent = money.format(result.tax);
       document.getElementById("customerTotal").textContent = money.format(result.customerTotal);
       document.getElementById("quantityAmount").textContent = result.quantity.toLocaleString("en-US");
@@ -736,12 +881,13 @@
       });
     });
 
-    document.querySelectorAll("input").forEach((input) => input.addEventListener("input", render));
+    document.querySelectorAll("input, textarea").forEach((input) => input.addEventListener("input", render));
     document.querySelectorAll("[data-print-toggle]").forEach((toggle) => {
       toggle.addEventListener("change", updatePrintVisibility);
     });
     document.getElementById("resetBtn").addEventListener("click", () => {
       defaults.forEach((value, id) => { document.getElementById(id).value = value; });
+      textDefaults.forEach((value, id) => { document.getElementById(id).value = value; });
       printDefaults.forEach((checked, key) => {
         document.querySelector(`[data-print-toggle="${key}"]`).checked = checked;
       });
@@ -752,6 +898,5 @@
     updatePrintVisibility();
     render();
   </script>
-
-
-</body></html>
+</body>
+</html>
