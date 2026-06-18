@@ -753,8 +753,8 @@
         defaultArt: { x: 50, y: 46, size: 22 },
         colors: ["#ffffff", "#111827", "#e5e7eb", "#dc2626", "#2563eb", "#16a34a", "#facc15", "#ec4899"],
         views: {
-          front: { label: "Front", image: photoAssets.tshirtFront || photoAssets.tshirt || "product-mockup-assets/tshirt-base.png", defaultArt: { x: 50, y: 46, size: 22 } },
-          back: { label: "Back", image: photoAssets.tshirtBack || "product-mockup-assets/tshirt-back-base.png", defaultArt: { x: 50, y: 47, size: 30 } }
+          front: { label: "Front", assetKey: "tshirtFront", legacyAssetKey: "tshirt", file: "tshirt-base.png", defaultArt: { x: 50, y: 46, size: 22 } },
+          back: { label: "Back", assetKey: "tshirtBack", file: "tshirt-back-base.png", defaultArt: { x: 50, y: 47, size: 30 } }
         }
       },
       polo: {
@@ -764,8 +764,8 @@
         defaultArt: { x: 50, y: 51, size: 18 },
         colors: ["#f8fafc", "#111827", "#d1d5db", "#991b1b", "#1d4ed8", "#047857", "#78350f", "#f59e0b"],
         views: {
-          front: { label: "Front", image: photoAssets.poloFront || photoAssets.polo || "product-mockup-assets/polo-base.png", defaultArt: { x: 50, y: 51, size: 18 } },
-          back: { label: "Back", image: photoAssets.poloBack || "product-mockup-assets/polo-back-base.png", defaultArt: { x: 50, y: 48, size: 28 } }
+          front: { label: "Front", assetKey: "poloFront", legacyAssetKey: "polo", file: "polo-base.png", defaultArt: { x: 50, y: 51, size: 18 } },
+          back: { label: "Back", assetKey: "poloBack", file: "polo-back-base.png", defaultArt: { x: 50, y: 48, size: 28 } }
         }
       },
       hat: {
@@ -775,8 +775,8 @@
         defaultArt: { x: 50, y: 42, size: 17 },
         colors: ["#111827", "#ffffff", "#9ca3af", "#b91c1c", "#1d4ed8", "#047857", "#92400e", "#f97316"],
         views: {
-          front: { label: "Front", image: photoAssets.capFront || photoAssets.cap || "product-mockup-assets/cap-base.png", defaultArt: { x: 50, y: 42, size: 17 } },
-          back: { label: "Back", image: photoAssets.capBack || "product-mockup-assets/cap-back-base.png", defaultArt: { x: 50, y: 55, size: 14 } }
+          front: { label: "Front", assetKey: "capFront", legacyAssetKey: "cap", file: "cap-base.png", defaultArt: { x: 50, y: 42, size: 17 } },
+          back: { label: "Back", assetKey: "capBack", file: "cap-back-base.png", defaultArt: { x: 50, y: 55, size: 14 } }
         }
       },
       tumbler: {
@@ -859,7 +859,52 @@
 
     function activeView() {
       const product = activeProduct();
-      return product.views?.[state.view] || { label: "Front", image: product.image, defaultArt: product.defaultArt };
+      return product.views?.[state.view] || { label: "Front", defaultArt: product.defaultArt };
+    }
+
+    function productImageSources(view) {
+      if (!view.file) return [];
+      const embedded = photoAssets[view.assetKey] || photoAssets[view.legacyAssetKey];
+      const localPath = `product-mockup-assets/${view.file}`;
+      const candidates = [
+        localPath,
+        `./${localPath}`,
+        `outputs/${localPath}`,
+        `./outputs/${localPath}`,
+        `../outputs/${localPath}`,
+        embedded
+      ].filter(Boolean);
+      return [...new Set(candidates)];
+    }
+
+    function setProductPhoto(view) {
+      const sources = productImageSources(view);
+      let index = 0;
+      productPhoto.onerror = () => {
+        index += 1;
+        if (index < sources.length) {
+          productPhoto.src = sources[index];
+        } else {
+          status.textContent = "Product mockup image could not be loaded. Check that the product-mockup-assets folder is uploaded with this page.";
+        }
+      };
+      productPhoto.onload = () => {
+        productPhoto.onerror = null;
+      };
+      productPhoto.src = sources[0] || "";
+    }
+
+    async function loadProductImage(view) {
+      const sources = productImageSources(view);
+      let lastError = null;
+      for (const source of sources) {
+        try {
+          return await loadImage(source);
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      throw lastError || new Error("Product image could not be loaded");
     }
 
     function artworkKey(product = state.product, view = state.view) {
@@ -1122,12 +1167,12 @@
     function render() {
       const product = activeProduct();
       const view = activeView();
-      const usesPhoto = Boolean(view.image);
+      const usesPhoto = Boolean(view.file);
       productSvg.innerHTML = usesPhoto ? "" : productSvgMarkup();
       productPhoto.classList.toggle("visible", usesPhoto);
       productTint.classList.toggle("visible", usesPhoto);
       if (usesPhoto) {
-        productPhoto.src = view.image;
+        setProductPhoto(view);
         updatePhotoTint(view, state.color);
       } else {
         productPhoto.removeAttribute("src");
@@ -1148,7 +1193,7 @@
       const context = productTint.getContext("2d");
       context.clearRect(0, 0, productTint.width, productTint.height);
       try {
-        const image = await loadImage(view.image);
+        const image = await loadProductImage(view);
         if (renderId !== tintRenderId || activeView() !== view || state.color !== color) return;
         context.clearRect(0, 0, productTint.width, productTint.height);
         context.drawImage(image, 0, 0, productTint.width, productTint.height);
@@ -1333,8 +1378,8 @@
 
     async function drawProductToCanvas(context) {
       const view = activeView();
-      if (view.image) {
-        const image = await loadImage(view.image);
+      if (view.file) {
+        const image = await loadProductImage(view);
         context.save();
         context.shadowColor = "rgba(23,33,47,0.2)";
         context.shadowBlur = 28;
