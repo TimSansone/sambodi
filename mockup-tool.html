@@ -867,6 +867,8 @@
       const embedded = photoAssets[view.assetKey] || photoAssets[view.legacyAssetKey];
       const localPath = `product-mockup-assets/${view.file}`;
       const candidates = [
+        view.file,
+        `./${view.file}`,
         localPath,
         `./${localPath}`,
         `outputs/${localPath}`,
