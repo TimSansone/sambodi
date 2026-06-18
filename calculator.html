@@ -342,6 +342,7 @@
       padding: 14px 18px 0;
     }
 
+    .order-details,
     .breakdown { padding: 8px 18px 18px; }
 
     .thanks {
@@ -362,6 +363,13 @@
       margin: 0 0 10px;
       font-size: .9rem;
       letter-spacing: 0;
+    }
+
+    .print-preset-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 10px;
     }
 
     .print-grid {
@@ -454,13 +462,13 @@
       body.print-hide-direct [data-print-key="direct"],
       body.print-hide-labor [data-print-key="labor"],
       body.print-hide-setup [data-print-key="setup"],
-      body.print-hide-profit [data-print-key="profit"],
       body.print-hide-subtotal [data-print-key="subtotal"],
       body.print-hide-discount [data-print-key="discount"],
       body.print-hide-tax [data-print-key="tax"],
       body.print-hide-total [data-print-key="total"],
       body.print-hide-quantity [data-print-key="quantity"],
       body.print-hide-unit [data-print-key="unit"],
+      body.print-hide-order-details [data-print-key="order-details"],
       body.print-hide-breakdown [data-print-key="breakdown"] { display: none; }
     }
   </style>
@@ -641,13 +649,18 @@
         <div class="line" data-print-key="direct"><span>Direct costs</span><strong id="directCosts">$0.00</strong></div>
         <div class="line" data-print-key="labor"><span>Labor</span><strong id="laborCosts">$0.00</strong></div>
         <div class="line" data-print-key="setup"><span>Setup and fees</span><strong id="setupCosts">$0.00</strong></div>
-        <div class="line" data-print-key="profit"><span>Profit</span><strong id="profitAmount">$0.00</strong></div>
         <div class="line" data-print-key="subtotal"><span>Subtotal</span><strong id="subtotalAmount">$0.00</strong></div>
         <div class="line" data-print-key="discount"><span>Discount</span><strong id="discountAmount">$0.00</strong></div>
         <div class="line" data-print-key="tax"><span>Tax</span><strong id="taxAmount">$0.00</strong></div>
         <div class="line total" data-print-key="total"><span>Customer total</span><strong id="customerTotal">$0.00</strong></div>
         <div class="line" data-print-key="quantity"><span>Quantity</span><strong id="quantityAmount">0</strong></div>
         <div class="line" data-print-key="unit"><span>Average price / item</span><strong id="unitPrice">$0.00</strong></div>
+      </div>
+      <div class="order-details" data-print-key="order-details">
+        <table>
+          <thead><tr><th>Order detail</th><th>Value</th></tr></thead>
+          <tbody id="orderDetailRows"></tbody>
+        </table>
       </div>
       <div class="breakdown" data-print-key="breakdown">
         <table>
@@ -658,6 +671,11 @@
       <div class="thanks">Thank you for your business!</div>
       <div class="print-options">
         <h3>Show on printed quote</h3>
+        <div class="print-preset-row">
+          <button class="btn primary" id="customerCopyBtn" type="button">Customer Copy</button>
+          <button class="btn" id="selectAllPrintBtn" type="button">Select All</button>
+          <button class="btn" id="deselectAllPrintBtn" type="button">Deselect All</button>
+        </div>
         <div class="print-grid">
           <label class="print-check"><input type="checkbox" data-print-toggle="business" checked> Business name</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="document-title" checked> Quote title</label>
@@ -669,13 +687,13 @@
           <label class="print-check"><input type="checkbox" data-print-toggle="direct"> Direct costs</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="labor"> Labor</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="setup"> Setup and fees</label>
-          <label class="print-check"><input type="checkbox" data-print-toggle="profit"> Profit</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="subtotal" checked> Subtotal</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="discount" checked> Discount</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="tax" checked> Tax</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="total" checked> Total</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="quantity" checked> Quantity</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="unit" checked> Average price / item</label>
+          <label class="print-check"><input type="checkbox" data-print-toggle="order-details" checked> Order details</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="breakdown"> Line-item breakdown</label>
         </div>
       </div>
@@ -699,6 +717,7 @@
 
     function percent(id) { return number(id) / 100; }
     function row(label, amount) { return { label, amount }; }
+    function detail(label, value) { return { label, value }; }
     function total(lines) { return lines.reduce((sum, item) => sum + item.amount, 0); }
     function productionHours(quantity) { return (Math.max(0, quantity) * 2.5) / 60; }
     function setProductionHours(id, hours) {
@@ -745,7 +764,6 @@
           ...directLines,
           ...laborLines,
           ...setupLines,
-          row("Profit", priced.profit),
           row("Discount", -priced.discount)
         ]
       };
@@ -865,11 +883,67 @@
         const rush = base.subtotalBeforeDiscount * percent("customRush");
         const repriced = applyDiscountAndTax(1, base.cost, base.subtotalBeforeDiscount + rush);
         Object.assign(base, repriced);
-        base.lines = base.lines.filter((item) => item.label !== "Profit" && item.label !== "Discount");
-        base.lines.push(row("Rush markup", rush), row("Profit", base.profit), row("Discount", -base.discount));
+        base.lines = base.lines.filter((item) => item.label !== "Discount");
+        base.lines.push(row("Rush markup", rush), row("Discount", -base.discount));
         return base;
       }
     };
+
+    function orderDetails() {
+      const details = {
+        polos: [
+          detail("Quantity ordered", number("poloQty").toLocaleString("en-US")),
+          detail("Blank polo cost", money.format(number("poloBlank"))),
+          detail("Stitches per logo", number("poloStitches").toLocaleString("en-US")),
+          detail("Logo locations", number("poloLocations").toLocaleString("en-US")),
+          detail("Thread / backing per item", money.format(number("poloMaterials"))),
+          detail("Production time", `${number("poloLaborHours").toFixed(2)} hr`)
+        ],
+        dtf: [
+          detail("Quantity ordered", number("dtfQty").toLocaleString("en-US")),
+          detail("Transfer size", `${number("dtfWidth")} in. x ${number("dtfHeight")} in.`),
+          detail("Film/ink cost per sq. in.", money.format(number("dtfSqInCost"))),
+          detail("Blank garment cost", money.format(number("dtfBlank"))),
+          detail("Extra materials / item", money.format(number("dtfMaterials"))),
+          detail("Production time", `${number("dtfLaborHours").toFixed(2)} hr`)
+        ],
+        dtfShirts: [
+          detail("Quantity ordered", number("dtfShirtQty").toLocaleString("en-US")),
+          detail("Blank shirt cost", money.format(number("dtfShirtBlank"))),
+          detail("Print size", `${number("dtfShirtWidth")} in. x ${number("dtfShirtHeight")} in.`),
+          detail("Print locations", number("dtfShirtLocations").toLocaleString("en-US")),
+          detail("Film/ink cost per sq. in.", money.format(number("dtfShirtSqInCost"))),
+          detail("Extra materials / shirt", money.format(number("dtfShirtMaterials"))),
+          detail("Production time", `${number("dtfShirtLaborHours").toFixed(2)} hr`)
+        ],
+        banners: [
+          detail("Quantity ordered", number("bannerQty").toLocaleString("en-US")),
+          detail("Banner size", `${number("bannerWidth")} ft. x ${number("bannerHeight")} ft.`),
+          detail("Material cost / sq. ft.", money.format(number("bannerMaterialRate"))),
+          detail("Print cost / sq. ft.", money.format(number("bannerPrintRate"))),
+          detail("Hem/tape per banner", money.format(number("bannerHem"))),
+          detail("Grommets per banner", number("bannerGrommets").toLocaleString("en-US")),
+          detail("Production time", `${number("bannerLaborHours").toFixed(2)} hr`)
+        ],
+        engraving: [
+          detail("Quantity ordered", number("laserQty").toLocaleString("en-US")),
+          detail("Blank/item cost", money.format(number("laserBlank"))),
+          detail("Engraving minutes / item", `${number("laserMinutes").toFixed(2)} min`),
+          detail("Machine rate / hr", money.format(number("laserMachineRate"))),
+          detail("Masking/finish per item", money.format(number("laserMaterials"))),
+          detail("Production time", `${number("laserLaborHours").toFixed(2)} hr`)
+        ],
+        custom: [
+          detail("Materials", money.format(number("customMaterials"))),
+          detail("Outside services", money.format(number("customOutsource"))),
+          detail("Labor hours", `${number("customLaborHours").toFixed(2)} hr`),
+          detail("Labor rate / hr", money.format(number("customLaborRate"))),
+          detail("Setup / design fee", money.format(number("customSetup"))),
+          detail("Shipping / delivery", money.format(number("customShipping")))
+        ]
+      };
+      return details[state.activePanel] || [];
+    }
 
     function render() {
       const result = calculators[state.activePanel]();
@@ -887,14 +961,16 @@
       document.getElementById("dueDateSummary").textContent = formattedDueDate;
       document.getElementById("directCosts").textContent = money.format(result.direct);
       document.getElementById("laborCosts").textContent = money.format(result.labor);
-      document.getElementById("setupCosts").textContent = money.format(result.setup);
-      document.getElementById("profitAmount").textContent = money.format(result.profit);
+      document.getElementById("setupCosts").textContent = money.format(result.setup + result.profit);
       document.getElementById("subtotalAmount").textContent = money.format(result.subtotalBeforeDiscount);
       document.getElementById("discountAmount").textContent = result.discount > 0 ? `-${money.format(result.discount)}` : money.format(0);
       document.getElementById("taxAmount").textContent = money.format(result.tax);
       document.getElementById("customerTotal").textContent = money.format(result.customerTotal);
       document.getElementById("quantityAmount").textContent = result.quantity.toLocaleString("en-US");
       document.getElementById("unitPrice").textContent = money.format(result.unit);
+      document.getElementById("orderDetailRows").innerHTML = orderDetails()
+        .map((item) => `<tr><td>${item.label}</td><td>${item.value}</td></tr>`)
+        .join("");
       document.getElementById("breakdownRows").innerHTML = result.lines
         .filter((item) => item.amount !== 0)
         .map((item) => `<tr><td>${item.label}</td><td>${money.format(item.amount)}</td></tr>`)
@@ -905,6 +981,41 @@
       document.querySelectorAll("[data-print-toggle]").forEach((toggle) => {
         document.body.classList.toggle(`print-hide-${toggle.dataset.printToggle}`, !toggle.checked);
       });
+    }
+
+    function setPrintToggle(key, checked) {
+      const toggle = document.querySelector(`[data-print-toggle="${key}"]`);
+      if (toggle) toggle.checked = checked;
+    }
+
+    function applyCustomerCopyPreset() {
+      const visible = new Set([
+        "business",
+        "document-title",
+        "service",
+        "customer",
+        "notes",
+        "quote-number",
+        "due-date",
+        "labor",
+        "setup",
+        "discount",
+        "tax",
+        "total",
+        "quantity",
+        "order-details"
+      ]);
+      document.querySelectorAll("[data-print-toggle]").forEach((toggle) => {
+        toggle.checked = visible.has(toggle.dataset.printToggle);
+      });
+      updatePrintVisibility();
+    }
+
+    function setAllPrintOptions(checked) {
+      document.querySelectorAll("[data-print-toggle]").forEach((toggle) => {
+        toggle.checked = checked;
+      });
+      updatePrintVisibility();
     }
 
     document.querySelectorAll("[data-panel]").forEach((button) => {
@@ -920,11 +1031,14 @@
     document.querySelectorAll("[data-print-toggle]").forEach((toggle) => {
       toggle.addEventListener("change", updatePrintVisibility);
     });
+    document.getElementById("customerCopyBtn").addEventListener("click", applyCustomerCopyPreset);
+    document.getElementById("selectAllPrintBtn").addEventListener("click", () => setAllPrintOptions(true));
+    document.getElementById("deselectAllPrintBtn").addEventListener("click", () => setAllPrintOptions(false));
     document.getElementById("resetBtn").addEventListener("click", () => {
       defaults.forEach((value, id) => { document.getElementById(id).value = value; });
       textDefaults.forEach((value, id) => { document.getElementById(id).value = value; });
       printDefaults.forEach((checked, key) => {
-        document.querySelector(`[data-print-toggle="${key}"]`).checked = checked;
+        setPrintToggle(key, checked);
       });
       updatePrintVisibility();
       render();
