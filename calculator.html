@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -456,6 +455,7 @@
       body.print-hide-setup [data-print-key="setup"],
       body.print-hide-profit [data-print-key="profit"],
       body.print-hide-subtotal [data-print-key="subtotal"],
+      body.print-hide-discount [data-print-key="discount"],
       body.print-hide-tax [data-print-key="tax"],
       body.print-hide-total [data-print-key="total"],
       body.print-hide-quantity [data-print-key="quantity"],
@@ -487,6 +487,7 @@
         <label>Customer <input id="customer" type="text" value="Sample Customer"></label>
         <label>Quote # <input id="quoteNumber" type="text" value="SC-1001"></label>
         <label>Due Date <input id="dueDate" type="date"></label>
+        <label>Discount % <input id="discountRate" type="number" min="0" max="100" step="0.01" value="0"></label>
         <label>Sales Tax % <input id="taxRate" type="number" min="0" step="0.01" value="0"></label>
         <label class="span-all">Notes / special items
           <textarea id="orderNotes" placeholder="Add order notes, special requests, sizing details, install notes, or customer-facing terms."></textarea>
@@ -554,12 +555,12 @@
           <label>Print width in. <input id="dtfShirtWidth" type="number" min="0" step="0.1" value="10"></label>
           <label>Print height in. <input id="dtfShirtHeight" type="number" min="0" step="0.1" value="10"></label>
           <label>Print locations <input id="dtfShirtLocations" type="number" min="1" step="1" value="1"></label>
-          <label>Film/ink cost per sq. in. <input id="dtfShirtSqInCost" type="number" min="0" step="0.001" value="0.035"></label>
-          <label>Extra materials / shirt <input id="dtfShirtMaterials" type="number" min="0" step="0.01" value="0.45"></label>
+          <label>Film/ink cost per sq. in. <input id="dtfShirtSqInCost" type="number" min="0" step="0.00001" value="0.00476"></label>
+          <label>Extra materials / shirt <input id="dtfShirtMaterials" type="number" min="0" step="0.00001" value="0.00476"></label>
           <label>Spoilage % <input id="dtfShirtSpoilage" type="number" min="0" step="0.01" value="4"></label>
           <div class="section-title">Labor and margin</div>
           <label>Setup fee <input id="dtfShirtSetup" type="number" min="0" step="0.01" value="30"></label>
-          <label>Press seconds / location <input id="dtfShirtPressSeconds" type="number" min="0" step="1" value="45"></label>
+          <label>Time worked (hours) <input id="dtfShirtLaborHours" type="number" min="0" step="0.1" value="1.5"></label>
           <label>Labor rate / hr <input id="dtfShirtLaborRate" type="number" min="0" step="0.01" value="30"></label>
           <label>Profit margin % <input id="dtfShirtMargin" type="number" min="0" max="95" step="0.01" value="42"></label>
         </div>
@@ -641,6 +642,7 @@
         <div class="line" data-print-key="setup"><span>Setup and fees</span><strong id="setupCosts">$0.00</strong></div>
         <div class="line" data-print-key="profit"><span>Profit</span><strong id="profitAmount">$0.00</strong></div>
         <div class="line" data-print-key="subtotal"><span>Subtotal</span><strong id="subtotalAmount">$0.00</strong></div>
+        <div class="line" data-print-key="discount"><span>Discount</span><strong id="discountAmount">$0.00</strong></div>
         <div class="line" data-print-key="tax"><span>Tax</span><strong id="taxAmount">$0.00</strong></div>
         <div class="line total" data-print-key="total"><span>Customer total</span><strong id="customerTotal">$0.00</strong></div>
         <div class="line" data-print-key="quantity"><span>Quantity</span><strong id="quantityAmount">0</strong></div>
@@ -668,6 +670,7 @@
           <label class="print-check"><input type="checkbox" data-print-toggle="setup"> Setup and fees</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="profit"> Profit</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="subtotal" checked> Subtotal</label>
+          <label class="print-check"><input type="checkbox" data-print-toggle="discount" checked> Discount</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="tax" checked> Tax</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="total" checked> Total</label>
           <label class="print-check"><input type="checkbox" data-print-toggle="quantity" checked> Quantity</label>
@@ -694,7 +697,7 @@
     }
 
     function percent(id) { return number(id) / 100; }
-    function row(label, amount) { return { label, amount: Math.max(0, amount) }; }
+    function row(label, amount) { return { label, amount }; }
     function total(lines) { return lines.reduce((sum, item) => sum + item.amount, 0); }
 
     function priceFromMargin(cost, margin) {
@@ -702,26 +705,43 @@
       return safeMargin >= .95 ? cost : cost / (1 - safeMargin);
     }
 
+    function applyDiscountAndTax(quantity, cost, subtotalBeforeDiscount) {
+      const discount = subtotalBeforeDiscount * Math.min(Math.max(percent("discountRate"), 0), 1);
+      const preTax = Math.max(0, subtotalBeforeDiscount - discount);
+      const profit = preTax - cost;
+      const tax = preTax * percent("taxRate");
+      const customerTotal = preTax + tax;
+      return {
+        discount,
+        profit,
+        tax,
+        preTax,
+        subtotalBeforeDiscount,
+        customerTotal,
+        unit: quantity > 0 ? customerTotal / quantity : customerTotal
+      };
+    }
+
     function summarize(quantity, directLines, laborLines, setupLines, margin) {
       const direct = total(directLines);
       const labor = total(laborLines);
       const setup = total(setupLines);
       const cost = direct + labor + setup;
-      const preTax = priceFromMargin(cost, margin);
-      const profit = preTax - cost;
-      const tax = preTax * percent("taxRate");
-      const customerTotal = preTax + tax;
+      const priced = applyDiscountAndTax(quantity, cost, priceFromMargin(cost, margin));
       return {
         quantity,
         direct,
         labor,
         setup,
-        profit,
-        tax,
-        preTax,
-        customerTotal,
-        unit: quantity > 0 ? customerTotal / quantity : customerTotal,
-        lines: [...directLines, ...laborLines, ...setupLines, row("Profit", profit)]
+        cost,
+        ...priced,
+        lines: [
+          ...directLines,
+          ...laborLines,
+          ...setupLines,
+          row("Profit", priced.profit),
+          row("Discount", -priced.discount)
+        ]
       };
     }
 
@@ -779,7 +799,7 @@
           row("Extra materials", materials),
           row("Spoilage reserve", spoilage)
         ], [
-          row("Press labor", (qty * locations * number("dtfShirtPressSeconds") / 3600) * number("dtfShirtLaborRate"))
+          row("Labor", number("dtfShirtLaborHours") * number("dtfShirtLaborRate"))
         ], [
           row("Artwork / setup", number("dtfShirtSetup"))
         ], percent("dtfShirtMargin"));
@@ -826,13 +846,11 @@
         ], [
           row("Setup / design", number("customSetup"))
         ], percent("customMargin"));
-        const rush = base.customerTotal / (1 + percent("taxRate")) * percent("customRush");
-        base.profit += rush;
-        base.preTax += rush;
-        base.customerTotal += rush + rush * percent("taxRate");
-        base.tax += rush * percent("taxRate");
-        base.unit = base.customerTotal;
-        base.lines.push(row("Rush markup", rush));
+        const rush = base.subtotalBeforeDiscount * percent("customRush");
+        const repriced = applyDiscountAndTax(1, base.cost, base.subtotalBeforeDiscount + rush);
+        Object.assign(base, repriced);
+        base.lines = base.lines.filter((item) => item.label !== "Profit" && item.label !== "Discount");
+        base.lines.push(row("Rush markup", rush), row("Profit", base.profit), row("Discount", -base.discount));
         return base;
       }
     };
@@ -855,13 +873,14 @@
       document.getElementById("laborCosts").textContent = money.format(result.labor);
       document.getElementById("setupCosts").textContent = money.format(result.setup);
       document.getElementById("profitAmount").textContent = money.format(result.profit);
-      document.getElementById("subtotalAmount").textContent = money.format(result.preTax);
+      document.getElementById("subtotalAmount").textContent = money.format(result.subtotalBeforeDiscount);
+      document.getElementById("discountAmount").textContent = result.discount > 0 ? `-${money.format(result.discount)}` : money.format(0);
       document.getElementById("taxAmount").textContent = money.format(result.tax);
       document.getElementById("customerTotal").textContent = money.format(result.customerTotal);
       document.getElementById("quantityAmount").textContent = result.quantity.toLocaleString("en-US");
       document.getElementById("unitPrice").textContent = money.format(result.unit);
       document.getElementById("breakdownRows").innerHTML = result.lines
-        .filter((item) => item.amount > 0)
+        .filter((item) => item.amount !== 0)
         .map((item) => `<tr><td>${item.label}</td><td>${money.format(item.amount)}</td></tr>`)
         .join("");
     }
