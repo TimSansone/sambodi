@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -39,6 +40,7 @@
 
     button,
     input,
+    select,
     textarea {
       font: inherit;
     }
@@ -278,13 +280,13 @@
     .sheet {
       position: relative;
       width: 100%;
-      aspect-ratio: 13 / 19;
+      aspect-ratio: var(--sheet-ratio, 13 / 19);
       overflow: hidden;
       background:
         linear-gradient(rgba(47, 111, 202, 0.08) 1px, transparent 1px),
         linear-gradient(90deg, rgba(47, 111, 202, 0.08) 1px, transparent 1px),
         #ffffff;
-      background-size: calc(100% / 13) calc(100% / 19);
+      background-size: calc(100% / var(--sheet-width, 13)) calc(100% / var(--sheet-height, 19));
       border: 1px solid #aeb9c8;
       border-radius: 4px;
       box-shadow: 0 22px 60px rgba(23, 33, 47, 0.18);
@@ -357,6 +359,7 @@
     }
 
     input,
+    select,
     textarea {
       width: 100%;
       border: 1px solid var(--line);
@@ -368,6 +371,7 @@
     }
 
     input:focus,
+    select:focus,
     textarea:focus {
       border-color: var(--teal);
       box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
@@ -377,6 +381,17 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
+    }
+
+    .size-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      align-items: end;
+    }
+
+    .size-grid .wide {
+      grid-column: 1 / -1;
     }
 
     .tools {
@@ -628,6 +643,7 @@
       }
 
       input,
+      select,
       textarea,
       .btn {
         min-height: 46px;
@@ -682,10 +698,10 @@
     <header>
       <div>
         <h1>Gang Sheet Builder</h1>
-        <p class="subtitle">Upload artwork, arrange it on a 13 inch by 19 inch sheet, then export a print-size PNG.</p>
+        <p class="subtitle">Upload artwork, choose a gang sheet size, arrange designs, then export a print-size PNG.</p>
       </div>
       <div class="sheet-badge">
-        <strong>13 x 19</strong>
+        <strong id="sheetBadge">13 x 19</strong>
         <span>inches at 300 DPI</span>
       </div>
     </header>
@@ -706,7 +722,7 @@
           <ul class="notice">
             <li><span class="mark">1</span><span><strong>Artwork should be at least 300 DPI.</strong> Low quality files may print blurry.</span></li>
             <li><span class="mark">2</span><span><strong>No copyrighted or trademarked artwork.</strong> Upload only designs you own or have permission to use.</span></li>
-            <li><span class="mark">3</span><span><strong>Keep every image inside the sheet.</strong> The builder will not export artwork outside the 13 x 19 area.</span></li>
+            <li><span class="mark">3</span><span><strong>Keep every image inside the sheet.</strong> The builder will not export artwork outside the selected gang sheet area.</span></li>
           </ul>
         </section>
       </aside>
@@ -714,10 +730,11 @@
       <section class="panel canvas-shell">
         <div class="canvas-top">
           <div>
-            <h2>13 x 19 Sheet</h2>
+            <h2 id="sheetTitle">13 x 19 Sheet</h2>
             <div class="stats">
               <span class="stat" id="artCount">0 artwork files</span>
               <span class="stat" id="selectedSize">No selection</span>
+              <span class="stat" id="exportSize">3900 x 5700 px export</span>
             </div>
           </div>
           <button class="btn secondary" id="fitViewBtn" type="button">Center View</button>
@@ -731,6 +748,29 @@
 
       <aside class="stack right-panel">
         <section class="panel pad tools">
+          <h2>Sheet Size</h2>
+          <div class="size-grid">
+            <div class="wide">
+              <label for="sheetPreset">Preset</label>
+              <select id="sheetPreset">
+                <option value="13x19">13 x 19 in</option>
+                <option value="22x24">22 x 24 in</option>
+                <option value="22x36">22 x 36 in</option>
+                <option value="22x48">22 x 48 in</option>
+                <option value="22x60">22 x 60 in</option>
+                <option value="custom">Custom size</option>
+              </select>
+            </div>
+            <div>
+              <label for="sheetWidthInput">Width (in)</label>
+              <input id="sheetWidthInput" type="number" min="1" max="60" step="0.1" value="13">
+            </div>
+            <div>
+              <label for="sheetHeightInput">Height (in)</label>
+              <input id="sheetHeightInput" type="number" min="1" max="120" step="0.1" value="19">
+            </div>
+          </div>
+
           <h2>Selected Artwork</h2>
           <div class="field-grid">
             <div>
@@ -783,20 +823,31 @@
   </div>
 
   <script>
-    const sheetWidth = 13;
-    const sheetHeight = 19;
     const exportDpi = 300;
-    const exportWidth = sheetWidth * exportDpi;
-    const exportHeight = sheetHeight * exportDpi;
+    const presets = {
+      "13x19": { width: 13, height: 19 },
+      "22x24": { width: 22, height: 24 },
+      "22x36": { width: 22, height: 36 },
+      "22x48": { width: 22, height: 48 },
+      "22x60": { width: 22, height: 60 }
+    };
 
     const state = {
       items: [],
       selectedId: null,
       nextId: 1,
+      sheetWidth: 13,
+      sheetHeight: 19,
       downloaded: false
     };
 
     const sheet = document.getElementById("sheet");
+    const sheetBadge = document.getElementById("sheetBadge");
+    const sheetTitle = document.getElementById("sheetTitle");
+    const sheetPreset = document.getElementById("sheetPreset");
+    const sheetWidthInput = document.getElementById("sheetWidthInput");
+    const sheetHeightInput = document.getElementById("sheetHeightInput");
+    const exportSize = document.getElementById("exportSize");
     const emptySheet = document.getElementById("emptySheet");
     const fileInput = document.getElementById("fileInput");
     const uploadBox = document.getElementById("uploadBox");
@@ -824,25 +875,25 @@
     }
 
     function inchesToPercentX(value) {
-      return (value / sheetWidth) * 100;
+      return (value / state.sheetWidth) * 100;
     }
 
     function inchesToPercentY(value) {
-      return (value / sheetHeight) * 100;
+      return (value / state.sheetHeight) * 100;
     }
 
     function clientToInches(event) {
       const rect = sheet.getBoundingClientRect();
-      const x = ((event.clientX - rect.left) / rect.width) * sheetWidth;
-      const y = ((event.clientY - rect.top) / rect.height) * sheetHeight;
+      const x = ((event.clientX - rect.left) / rect.width) * state.sheetWidth;
+      const y = ((event.clientY - rect.top) / rect.height) * state.sheetHeight;
       return { x, y };
     }
 
     function clampItem(item) {
-      item.w = Math.min(Math.max(item.w, 0.2), sheetWidth);
-      item.h = Math.min(Math.max(item.h, 0.2), sheetHeight);
-      item.x = Math.min(Math.max(item.x, 0), sheetWidth - item.w);
-      item.y = Math.min(Math.max(item.y, 0), sheetHeight - item.h);
+      item.w = Math.min(Math.max(item.w, 0.2), state.sheetWidth);
+      item.h = Math.min(Math.max(item.h, 0.2), state.sheetHeight);
+      item.x = Math.min(Math.max(item.x, 0), state.sheetWidth - item.w);
+      item.y = Math.min(Math.max(item.y, 0), state.sheetHeight - item.h);
     }
 
     function escapeHtml(value) {
@@ -852,6 +903,42 @@
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+    }
+
+    function formatInches(value) {
+      return Number(value).toFixed(1).replace(/\.0$/, "");
+    }
+
+    function sheetLabel() {
+      return `${formatInches(state.sheetWidth)} x ${formatInches(state.sheetHeight)}`;
+    }
+
+    function formatSizeForFile() {
+      return `${formatInches(state.sheetWidth)}x${formatInches(state.sheetHeight)}`.replaceAll(".", "p");
+    }
+
+    function renderSheetSize() {
+      const label = sheetLabel();
+      sheetBadge.textContent = label;
+      sheetTitle.textContent = `${label} Sheet`;
+      exportSize.textContent = `${Math.round(state.sheetWidth * exportDpi)} x ${Math.round(state.sheetHeight * exportDpi)} px export`;
+      sheet.style.setProperty("--sheet-ratio", `${state.sheetWidth} / ${state.sheetHeight}`);
+      sheet.style.setProperty("--sheet-width", state.sheetWidth);
+      sheet.style.setProperty("--sheet-height", state.sheetHeight);
+      widthInput.max = state.sheetWidth;
+      heightInput.max = state.sheetHeight;
+      sheetWidthInput.value = formatInches(state.sheetWidth);
+      sheetHeightInput.value = formatInches(state.sheetHeight);
+    }
+
+    function applySheetSize(width, height, preset = "custom") {
+      state.sheetWidth = Math.min(Math.max(Number(width) || 13, 1), 60);
+      state.sheetHeight = Math.min(Math.max(Number(height) || 19, 1), 120);
+      sheetPreset.value = preset;
+      state.items.forEach(clampItem);
+      state.downloaded = false;
+      status.textContent = `Sheet size changed to ${sheetLabel()} inches.`;
+      render();
     }
 
     function addImage(file) {
@@ -864,7 +951,7 @@
           const naturalH = image.naturalHeight || exportDpi;
           const rawW = naturalW / exportDpi;
           const rawH = naturalH / exportDpi;
-          const scale = Math.min(1, sheetWidth / rawW, sheetHeight / rawH);
+          const scale = Math.min(1, state.sheetWidth / rawW, state.sheetHeight / rawH);
           const w = Math.max(0.5, rawW * scale);
           const h = Math.max(0.5, rawH * scale);
           const item = {
@@ -873,9 +960,10 @@
             src: reader.result,
             naturalW,
             naturalH,
+            aspectRatio: naturalW / naturalH,
             rotation: 0,
-            x: Math.max(0, (sheetWidth - w) / 2),
-            y: Math.max(0, (sheetHeight - h) / 2),
+            x: Math.max(0, (state.sheetWidth - w) / 2),
+            y: Math.max(0, (state.sheetHeight - h) / 2),
             w,
             h
           };
@@ -978,6 +1066,7 @@
     }
 
     function render() {
+      renderSheetSize();
       renderSheet();
       renderList();
       renderControls();
@@ -1002,12 +1091,12 @@
             const ratio = startItem.w / startItem.h;
             item.w = startItem.w + dx;
             item.h = item.w / ratio;
-            if (item.y + item.h > sheetHeight) {
-              item.h = sheetHeight - item.y;
+            if (item.y + item.h > state.sheetHeight) {
+              item.h = state.sheetHeight - item.y;
               item.w = item.h * ratio;
             }
-            if (item.x + item.w > sheetWidth) {
-              item.w = sheetWidth - item.x;
+            if (item.x + item.w > state.sheetWidth) {
+              item.w = state.sheetWidth - item.x;
               item.h = item.w / ratio;
             }
           } else {
@@ -1035,8 +1124,19 @@
     function resizeSelected() {
       const item = selectedItem();
       if (!item) return;
-      item.w = Number(widthInput.value) || item.w;
-      item.h = Number(heightInput.value) || item.h;
+      const ratio = effectiveAspectRatio(item);
+      const nextW = Number(widthInput.value) || item.w;
+      const nextH = Number(heightInput.value) || item.h;
+      if (document.activeElement === widthInput) {
+        item.w = nextW;
+        item.h = nextW / ratio;
+      } else if (document.activeElement === heightInput) {
+        item.h = nextH;
+        item.w = nextH * ratio;
+      } else {
+        item.w = nextW;
+        item.h = nextW / ratio;
+      }
       clampItem(item);
       state.downloaded = false;
       status.textContent = `${item.name} resized.`;
@@ -1082,8 +1182,8 @@
     function centerSelected() {
       const item = selectedItem();
       if (!item) return;
-      item.x = (sheetWidth - item.w) / 2;
-      item.y = (sheetHeight - item.h) / 2;
+      item.x = (state.sheetWidth - item.w) / 2;
+      item.y = (state.sheetHeight - item.h) / 2;
       state.downloaded = false;
       status.textContent = "Artwork centered.";
       render();
@@ -1102,32 +1202,51 @@
     async function exportPng() {
       if (exportBtn.disabled) return;
       const canvas = document.createElement("canvas");
-      canvas.width = exportWidth;
-      canvas.height = exportHeight;
+      canvas.width = Math.round(state.sheetWidth * exportDpi);
+      canvas.height = Math.round(state.sheetHeight * exportDpi);
       const context = canvas.getContext("2d");
       context.fillStyle = "#ffffff";
       context.fillRect(0, 0, canvas.width, canvas.height);
 
       for (const item of state.items) {
         const image = await loadImage(item.src);
-        const x = Math.round(item.x * exportDpi);
-        const y = Math.round(item.y * exportDpi);
-        const w = Math.round(item.w * exportDpi);
-        const h = Math.round(item.h * exportDpi);
-        context.save();
-        context.translate(x + w / 2, y + h / 2);
-        context.rotate(((item.rotation || 0) * Math.PI) / 180);
-        context.drawImage(image, -w / 2, -h / 2, w, h);
-        context.restore();
+        drawArtworkForExport(context, image, item);
       }
 
       const link = document.createElement("a");
-      link.download = `sambodi-gang-sheet-13x19-${Date.now()}.png`;
+      link.download = `sambodi-gang-sheet-${formatSizeForFile()}-${Date.now()}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
       state.downloaded = true;
       status.textContent = "PNG downloaded. Use the email button and attach the downloaded file.";
       renderControls();
+    }
+
+    function drawArtworkForExport(context, image, item) {
+      const x = item.x * exportDpi;
+      const y = item.y * exportDpi;
+      const w = item.w * exportDpi;
+      const h = item.h * exportDpi;
+      const rotation = ((item.rotation || 0) % 360 + 360) % 360;
+      const turned = rotation % 180 === 90;
+      const frameW = turned ? h : w;
+      const frameH = turned ? w : h;
+      const imageRatio = image.naturalWidth / image.naturalHeight;
+      const frameRatio = frameW / frameH;
+      let drawW = frameW;
+      let drawH = frameH;
+
+      if (imageRatio > frameRatio) {
+        drawH = drawW / imageRatio;
+      } else {
+        drawW = drawH * imageRatio;
+      }
+
+      context.save();
+      context.translate(x + w / 2, y + h / 2);
+      context.rotate((rotation * Math.PI) / 180);
+      context.drawImage(image, -drawW / 2, -drawH / 2, drawW, drawH);
+      context.restore();
     }
 
     function loadImage(src) {
@@ -1139,12 +1258,17 @@
       });
     }
 
+    function effectiveAspectRatio(item) {
+      const ratio = item.aspectRatio || item.w / item.h || 1;
+      return Math.abs(item.rotation || 0) % 180 === 90 ? 1 / ratio : ratio;
+    }
+
     function openEmail() {
       const subject = encodeURIComponent("Gang Sheet Submission");
       const body = encodeURIComponent([
         "Hello Sambodi Creations,",
         "",
-        "I built a 13 x 19 gang sheet and downloaded the PNG from the builder.",
+        `I built a ${sheetLabel()} gang sheet and downloaded the PNG from the builder.`,
         "I will attach the PNG file to this email before sending.",
         "",
         "I confirm the artwork is at least 300 DPI quality to the best of my knowledge.",
@@ -1157,6 +1281,24 @@
 
     chooseFilesBtn.addEventListener("click", () => fileInput.click());
     fileInput.addEventListener("change", () => addFiles(fileInput.files));
+
+    sheetPreset.addEventListener("change", () => {
+      if (sheetPreset.value === "custom") {
+        applySheetSize(sheetWidthInput.value, sheetHeightInput.value, "custom");
+        return;
+      }
+
+      const preset = presets[sheetPreset.value];
+      applySheetSize(preset.width, preset.height, sheetPreset.value);
+    });
+
+    sheetWidthInput.addEventListener("change", () => {
+      applySheetSize(sheetWidthInput.value, sheetHeightInput.value, "custom");
+    });
+
+    sheetHeightInput.addEventListener("change", () => {
+      applySheetSize(sheetWidthInput.value, sheetHeightInput.value, "custom");
+    });
 
     uploadBox.addEventListener("dragover", (event) => {
       event.preventDefault();
