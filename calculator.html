@@ -519,7 +519,7 @@
           <label>Thread / backing per item <input id="poloMaterials" type="number" min="0" step="0.01" value="0.85"></label>
           <label>Spoilage % <input id="poloSpoilage" type="number" min="0" step="0.01" value="3"></label>
           <div class="section-title">Labor and margin</div>
-          <label>Labor hours <input id="poloLaborHours" type="number" min="0" step="0.1" value="2.5"></label>
+          <label>Production time (auto hours) <input id="poloLaborHours" type="number" min="0" step="0.01" value="1.00" readonly></label>
           <label>Labor rate / hr <input id="poloLaborRate" type="number" min="0" step="0.01" value="35"></label>
           <label>Profit margin % <input id="poloMargin" type="number" min="0" max="95" step="0.01" value="40"></label>
         </div>
@@ -537,7 +537,7 @@
           <label>Garment markup % <input id="dtfGarmentMarkup" type="number" min="0" step="0.01" value="30"></label>
           <div class="section-title">Production</div>
           <label>Setup fee <input id="dtfSetup" type="number" min="0" step="0.01" value="25"></label>
-          <label>Time worked (hours) <input id="dtfLaborHours" type="number" min="0" step="0.1" value="1"></label>
+          <label>Production time (auto hours) <input id="dtfLaborHours" type="number" min="0" step="0.01" value="2.08" readonly></label>
           <label>Labor rate / hr <input id="dtfLaborRate" type="number" min="0" step="0.01" value="30"></label>
           <label>Extra materials / item <input id="dtfMaterials" type="number" min="0" step="0.01" value="0.35"></label>
           <label>Spoilage % <input id="dtfSpoilage" type="number" min="0" step="0.01" value="4"></label>
@@ -561,7 +561,7 @@
           <label>Spoilage % <input id="dtfShirtSpoilage" type="number" min="0" step="0.01" value="4"></label>
           <div class="section-title">Labor and margin</div>
           <label>Setup fee <input id="dtfShirtSetup" type="number" min="0" step="0.01" value="30"></label>
-          <label>Time worked (hours) <input id="dtfShirtLaborHours" type="number" min="0" step="0.1" value="1.5"></label>
+          <label>Production time (auto hours) <input id="dtfShirtLaborHours" type="number" min="0" step="0.01" value="1.00" readonly></label>
           <label>Labor rate / hr <input id="dtfShirtLaborRate" type="number" min="0" step="0.01" value="30"></label>
           <label>Profit margin % <input id="dtfShirtMargin" type="number" min="0" max="95" step="0.01" value="42"></label>
         </div>
@@ -581,7 +581,7 @@
           <label>Grommets per banner <input id="bannerGrommets" type="number" min="0" step="1" value="6"></label>
           <label>Grommet cost each <input id="bannerGrommetCost" type="number" min="0" step="0.01" value="0.35"></label>
           <label>Design/setup fee <input id="bannerSetup" type="number" min="0" step="0.01" value="40"></label>
-          <label>Labor hours <input id="bannerLaborHours" type="number" min="0" step="0.1" value="1.4"></label>
+          <label>Production time (auto hours) <input id="bannerLaborHours" type="number" min="0" step="0.01" value="0.08" readonly></label>
           <label>Labor rate / hr <input id="bannerLaborRate" type="number" min="0" step="0.01" value="32"></label>
           <label>Profit margin % <input id="bannerMargin" type="number" min="0" max="95" step="0.01" value="38"></label>
         </div>
@@ -599,7 +599,7 @@
           <label>Setup fee <input id="laserSetup" type="number" min="0" step="0.01" value="30"></label>
           <div class="section-title">Materials and labor</div>
           <label>Masking/finish per item <input id="laserMaterials" type="number" min="0" step="0.01" value="0.60"></label>
-          <label>Labor hours <input id="laserLaborHours" type="number" min="0" step="0.1" value="1.2"></label>
+          <label>Production time (auto hours) <input id="laserLaborHours" type="number" min="0" step="0.01" value="0.50" readonly></label>
           <label>Labor rate / hr <input id="laserLaborRate" type="number" min="0" step="0.01" value="35"></label>
           <label>Spoilage % <input id="laserSpoilage" type="number" min="0" step="0.01" value="3"></label>
           <label>Profit margin % <input id="laserMargin" type="number" min="0" max="95" step="0.01" value="45"></label>
@@ -700,6 +700,11 @@
     function percent(id) { return number(id) / 100; }
     function row(label, amount) { return { label, amount }; }
     function total(lines) { return lines.reduce((sum, item) => sum + item.amount, 0); }
+    function productionHours(quantity) { return (Math.max(0, quantity) * 2.5) / 60; }
+    function setProductionHours(id, hours) {
+      const input = document.getElementById(id);
+      if (input) input.value = hours.toFixed(2);
+    }
 
     function priceFromMargin(cost, margin) {
       const safeMargin = Math.min(Math.max(margin, 0), .95);
@@ -749,6 +754,8 @@
     const calculators = {
       polos() {
         const qty = number("poloQty");
+        const laborHours = productionHours(qty);
+        setProductionHours("poloLaborHours", laborHours);
         const garments = qty * number("poloBlank");
         const garmentMarkup = garments * percent("poloGarmentMarkup");
         const stitches = qty * number("poloLocations") * (number("poloStitches") / 1000) * number("poloStitchRate");
@@ -761,13 +768,15 @@
           row("Thread and backing", materials),
           row("Spoilage reserve", spoilage)
         ], [
-          row("Production labor", number("poloLaborHours") * number("poloLaborRate"))
+          row("Production labor (2.5 min/item)", laborHours * number("poloLaborRate"))
         ], [
           row("Digitizing / setup", number("poloSetup"))
         ], percent("poloMargin"));
       },
       dtf() {
         const qty = number("dtfQty");
+        const laborHours = productionHours(qty);
+        setProductionHours("dtfLaborHours", laborHours);
         const transfer = qty * number("dtfWidth") * number("dtfHeight") * number("dtfSqInCost");
         const garments = qty * number("dtfBlank");
         const garmentMarkup = garments * percent("dtfGarmentMarkup");
@@ -780,13 +789,15 @@
           row("Extra materials", materials),
           row("Spoilage reserve", spoilage)
         ], [
-          row("Labor", number("dtfLaborHours") * number("dtfLaborRate"))
+          row("Production labor (2.5 min/item)", laborHours * number("dtfLaborRate"))
         ], [
           row("Artwork / setup", number("dtfSetup"))
         ], percent("dtfMargin"));
       },
       dtfShirts() {
         const qty = number("dtfShirtQty");
+        const laborHours = productionHours(qty);
+        setProductionHours("dtfShirtLaborHours", laborHours);
         const locations = number("dtfShirtLocations");
         const transfer = qty * locations * number("dtfShirtWidth") * number("dtfShirtHeight") * number("dtfShirtSqInCost");
         const garments = qty * number("dtfShirtBlank");
@@ -800,13 +811,15 @@
           row("Extra materials", materials),
           row("Spoilage reserve", spoilage)
         ], [
-          row("Labor", number("dtfShirtLaborHours") * number("dtfShirtLaborRate"))
+          row("Production labor (2.5 min/item)", laborHours * number("dtfShirtLaborRate"))
         ], [
           row("Artwork / setup", number("dtfShirtSetup"))
         ], percent("dtfShirtMargin"));
       },
       banners() {
         const qty = number("bannerQty");
+        const laborHours = productionHours(qty);
+        setProductionHours("bannerLaborHours", laborHours);
         const area = qty * number("bannerWidth") * number("bannerHeight");
         return summarize(qty, [
           row("Banner vinyl", area * number("bannerMaterialRate")),
@@ -814,13 +827,15 @@
           row("Hem / tape", qty * number("bannerHem")),
           row("Grommets", qty * number("bannerGrommets") * number("bannerGrommetCost"))
         ], [
-          row("Finishing labor", number("bannerLaborHours") * number("bannerLaborRate"))
+          row("Production labor (2.5 min/item)", laborHours * number("bannerLaborRate"))
         ], [
           row("Design / setup", number("bannerSetup"))
         ], percent("bannerMargin"));
       },
       engraving() {
         const qty = number("laserQty");
+        const laborHours = productionHours(qty);
+        setProductionHours("laserLaborHours", laborHours);
         const blanks = qty * number("laserBlank");
         const machine = (qty * number("laserMinutes") / 60) * number("laserMachineRate");
         const materials = qty * number("laserMaterials");
@@ -832,7 +847,7 @@
           row("Masking / finish", materials),
           row("Spoilage reserve", spoilage)
         ], [
-          row("Handling labor", number("laserLaborHours") * number("laserLaborRate"))
+          row("Production labor (2.5 min/item)", laborHours * number("laserLaborRate"))
         ], [
           row("Artwork / setup", number("laserSetup"))
         ], percent("laserMargin"));
