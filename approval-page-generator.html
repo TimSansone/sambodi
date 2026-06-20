@@ -1,10 +1,9 @@
-
 <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Artwork Approval Portal</title>
+  <title>Approval Page Generator</title>
   <style>
     :root {
       color-scheme: light;
@@ -18,7 +17,6 @@
       --blue: #2f6fca;
       --amber: #d9951f;
       --red: #b91c1c;
-      --green: #047857;
       --shadow: 0 18px 48px rgba(23, 33, 47, .13);
       font-family: Arial, Helvetica, sans-serif;
     }
@@ -30,15 +28,14 @@
       min-height: 100vh;
       background:
         linear-gradient(135deg, rgba(15, 118, 110, .12), transparent 34%),
-        linear-gradient(45deg, rgba(47, 111, 202, .12), transparent 30%),
+        linear-gradient(45deg, rgba(217, 149, 31, .13), transparent 30%),
         #eef3f7;
       color: var(--ink);
     }
 
     button,
     input,
-    textarea,
-    select { font: inherit; }
+    textarea { font: inherit; }
 
     button { touch-action: manipulation; }
 
@@ -58,7 +55,7 @@
 
     h1 {
       margin: 0;
-      font-size: clamp(2.2rem, 4vw, 4.5rem);
+      font-size: clamp(2.1rem, 4vw, 4.4rem);
       line-height: .98;
       letter-spacing: 0;
     }
@@ -69,7 +66,7 @@
       line-height: 1.45;
     }
 
-    .status-card {
+    .badge {
       min-width: 230px;
       padding: 14px 16px;
       border: 1px solid var(--line);
@@ -79,13 +76,13 @@
       text-align: center;
     }
 
-    .status-card strong {
+    .badge strong {
       display: block;
-      font-size: 1.45rem;
+      font-size: 1.55rem;
       line-height: 1.05;
     }
 
-    .status-card span {
+    .badge span {
       color: var(--muted);
       font-size: .78rem;
       font-weight: 900;
@@ -95,7 +92,7 @@
 
     main {
       display: grid;
-      grid-template-columns: minmax(300px, 430px) minmax(0, 1fr) minmax(300px, 390px);
+      grid-template-columns: minmax(320px, 460px) minmax(0, 1fr) minmax(300px, 390px);
       gap: 18px;
       align-items: start;
     }
@@ -130,8 +127,7 @@
     }
 
     input,
-    textarea,
-    select {
+    textarea {
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -142,14 +138,13 @@
     }
 
     textarea {
-      min-height: 92px;
+      min-height: 90px;
       resize: vertical;
       line-height: 1.45;
     }
 
     input:focus,
-    textarea:focus,
-    select:focus {
+    textarea:focus {
       border-color: var(--teal);
       box-shadow: 0 0 0 3px rgba(15, 118, 110, .16);
     }
@@ -161,6 +156,25 @@
     }
 
     .span-all { grid-column: 1 / -1; }
+
+    .upload-box {
+      display: grid;
+      gap: 10px;
+      place-items: center;
+      min-height: 150px;
+      padding: 18px;
+      border: 2px dashed #b8c6d7;
+      border-radius: 8px;
+      background: #f8fbfd;
+      text-align: center;
+    }
+
+    .upload-box input { display: none; }
+
+    .upload-box span {
+      color: var(--muted);
+      line-height: 1.4;
+    }
 
     .btn {
       min-height: 44px;
@@ -192,28 +206,9 @@
     .btn.danger { background: var(--red); }
     .btn.danger:hover { background: #991b1b; }
 
-    .upload-box {
-      display: grid;
-      gap: 10px;
-      place-items: center;
-      min-height: 150px;
-      padding: 18px;
-      border: 2px dashed #b8c6d7;
-      border-radius: 8px;
-      background: #f8fbfd;
-      text-align: center;
-    }
+    .preview-panel { padding: 16px; }
 
-    .upload-box input { display: none; }
-
-    .upload-box span {
-      color: var(--muted);
-      line-height: 1.4;
-    }
-
-    .proof-panel { padding: 16px; }
-
-    .proof-top {
+    .preview-top {
       display: flex;
       justify-content: space-between;
       gap: 12px;
@@ -221,7 +216,7 @@
       margin-bottom: 12px;
     }
 
-    .proof-stage {
+    .proof-preview {
       min-height: 560px;
       display: grid;
       place-items: center;
@@ -238,97 +233,73 @@
       overflow: hidden;
     }
 
-    .proof-stage img {
+    .proof-preview img {
       display: none;
       max-width: 100%;
       max-height: 560px;
       object-fit: contain;
     }
 
-    .proof-stage.has-proof img { display: block; }
+    .proof-preview.has-proof img { display: block; }
 
-    .empty-proof {
-      width: min(420px, 90%);
+    .empty-preview {
+      width: min(440px, 90%);
       padding: 22px;
       text-align: center;
       color: var(--muted);
       line-height: 1.45;
     }
 
-    .proof-stage.has-proof .empty-proof { display: none; }
+    .proof-preview.has-proof .empty-preview { display: none; }
 
-    .approval-options {
+    .client-preview {
       display: grid;
       gap: 10px;
-    }
-
-    .choice {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 10px;
-      align-items: start;
+      margin-top: 12px;
       padding: 12px;
       border: 1px solid var(--line);
       border-radius: 8px;
       background: #fbfcfe;
-      cursor: pointer;
     }
 
-    .choice input {
-      width: auto;
-      margin-top: 2px;
+    .client-preview-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line);
     }
 
-    .choice strong { display: block; }
+    .client-preview-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
 
-    .choice span {
-      display: block;
-      margin-top: 3px;
+    .client-preview-row span {
       color: var(--muted);
-      font-size: .88rem;
-      line-height: 1.35;
+      font-weight: 800;
     }
 
-    .choice.approved { border-color: rgba(4, 120, 87, .35); }
-    .choice.revision { border-color: rgba(217, 149, 31, .42); }
+    .client-preview-row strong {
+      text-align: right;
+      overflow-wrap: anywhere;
+    }
+
+    .link-box {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .link-box input {
+      font-size: .9rem;
+      background: #fff;
+    }
 
     .action-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-    }
-
-    .summary-list {
-      display: grid;
-      gap: 8px;
-    }
-
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 9px 0;
-      border-bottom: 1px solid var(--line);
-    }
-
-    .summary-row span {
-      color: var(--muted);
-      font-weight: 800;
-    }
-
-    .summary-row strong {
-      text-align: right;
-      overflow-wrap: anywhere;
-    }
-
-    .notice {
-      padding: 11px 12px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #f8fbfd;
-      color: var(--muted);
-      line-height: 1.4;
-      font-size: .92rem;
     }
 
     .status {
@@ -341,9 +312,19 @@
       line-height: 1.4;
     }
 
+    .notice {
+      padding: 11px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fbfd;
+      color: var(--muted);
+      line-height: 1.4;
+      font-size: .92rem;
+    }
+
     @media (max-width: 1160px) {
       main {
-        grid-template-columns: minmax(300px, 430px) minmax(0, 1fr);
+        grid-template-columns: minmax(320px, 460px) minmax(0, 1fr);
       }
 
       .right-panel { grid-column: 1 / -1; }
@@ -355,67 +336,36 @@
         grid-template-columns: 1fr;
       }
 
-      .proof-panel {
+      .preview-panel {
         order: -1;
         padding: 10px;
       }
 
-      .proof-stage {
+      .proof-preview {
         min-height: 380px;
       }
 
-      .proof-stage img {
+      .proof-preview img {
         max-height: 380px;
-      }
-
-      .status-card {
-        min-width: 0;
       }
     }
 
     @media (max-width: 560px) {
-      body {
-        background:
-          linear-gradient(180deg, rgba(15, 118, 110, .14), transparent 240px),
-          #f2f6fa;
-      }
-
       .app { padding: 10px; }
-
       h1 { font-size: 2rem; }
-
       .grid,
       .action-grid {
         grid-template-columns: 1fr;
       }
-
-      .proof-top {
+      .preview-top {
         display: grid;
       }
-
       input,
       textarea,
-      select,
       .btn {
         min-height: 46px;
         font-size: 16px;
       }
-    }
-
-    @media print {
-      body { background: #fff; color: #111827; }
-      header,
-      .left-panel,
-      .right-panel .tools,
-      .status { display: none; }
-      .app { width: 100%; padding: 0; }
-      main { display: block; }
-      .panel { box-shadow: none; border: 0; }
-      .proof-panel { padding: 0; }
-      .proof-top { border-bottom: 2px solid #111827; padding-bottom: 12px; }
-      .proof-stage { min-height: auto; border: 1px solid #d1d5db; background: #fff; page-break-inside: avoid; }
-      .proof-stage img { max-height: 650px; }
-      .right-panel { margin-top: 18px; }
     }
   </style>
 </head>
@@ -423,39 +373,51 @@
   <div class="app">
     <header>
       <div>
-        <h1>Artwork Approval Portal</h1>
-        <p class="subtitle">Create a proof record, collect approval or revision notes, and print or save the customer response.</p>
+        <h1>Approval Page Generator</h1>
+        <p class="subtitle">Upload a proof and create a client-ready approval HTML file with the proof already embedded.</p>
       </div>
-      <div class="status-card">
-        <strong id="approvalBadge">Draft</strong>
-        <span>Approval status</span>
+      <div class="badge">
+        <strong id="readyBadge">Not Ready</strong>
+        <span>Client page status</span>
       </div>
     </header>
 
     <main>
-      <aside class="stack left-panel">
+      <aside class="stack">
         <section class="panel pad">
-          <h2>Customer and Job</h2>
+          <h2>Client Page Details</h2>
           <div class="grid">
             <div>
-              <label for="customerName">Customer</label>
-              <input id="customerName" type="text" placeholder="Customer name">
+              <label for="businessName">Business name</label>
+              <input id="businessName" type="text" value="Sambodi Creations">
             </div>
             <div>
-              <label for="jobName">Job name</label>
-              <input id="jobName" type="text" placeholder="Order or project name">
+              <label for="businessEmail">Approval email</label>
+              <input id="businessEmail" type="email" value="info@sambodicreations.com" readonly>
+            </div>
+            <div>
+              <label for="customerName">Customer</label>
+              <input id="customerName" type="text" placeholder="Customer or company">
             </div>
             <div>
               <label for="proofNumber">Proof #</label>
               <input id="proofNumber" type="text" value="PROOF-1001">
             </div>
             <div>
-              <label for="proofDate">Date</label>
+              <label for="jobName">Job / order</label>
+              <input id="jobName" type="text" placeholder="Project name">
+            </div>
+            <div>
+              <label for="proofDate">Proof date</label>
               <input id="proofDate" type="date">
             </div>
             <div class="span-all">
               <label for="productDetails">Product details</label>
-              <textarea id="productDetails" placeholder="Example: black Gildan shirts, left chest logo, full back print, 24 pieces"></textarea>
+              <textarea id="productDetails" placeholder="Example: 24 black shirts, left chest logo, full back print"></textarea>
+            </div>
+            <div class="span-all">
+              <label for="message">Client message</label>
+              <textarea id="message">Please review the proof carefully. If everything looks correct, choose Approved for Production. If changes are needed, choose Request Changes and list the changes in the comments box.</textarea>
             </div>
           </div>
         </section>
@@ -463,146 +425,259 @@
         <section class="panel pad">
           <h2>Upload Proof</h2>
           <label class="upload-box">
-            <input id="proofInput" type="file" accept="image/png,image/jpeg,image/webp,application/pdf">
-            <button class="btn" id="chooseProofBtn" type="button">Choose Proof</button>
-            <span>Upload a PNG, JPG, WebP, or PDF proof. Image files preview directly in the portal.</span>
+            <input id="proofInput" type="file" accept="image/png,image/jpeg,image/webp">
+            <button class="btn" id="chooseProofBtn" type="button">Choose Proof Image</button>
+            <span>Use PNG, JPG, or WebP. The image will be embedded directly inside the generated client approval page.</span>
           </label>
         </section>
       </aside>
 
-      <section class="panel proof-panel">
-        <div class="proof-top">
+      <section class="panel preview-panel">
+        <div class="preview-top">
           <div>
-            <h2 id="proofTitle">Artwork Proof</h2>
+            <h2 id="previewTitle">Client Proof Preview</h2>
             <div class="notice" id="fileStatus">No proof uploaded yet.</div>
           </div>
-          <button class="btn secondary" id="printBtn" type="button">Print Approval</button>
+          <button class="btn secondary" id="previewClientBtn" type="button" disabled>Preview Client Page</button>
         </div>
-        <div class="proof-stage" id="proofStage">
-          <img id="proofImage" alt="Artwork proof preview">
-          <div class="empty-proof">Upload a proof image to preview the artwork here. PDF files can still be attached to the approval record, but they will not preview inside this single-file tool.</div>
+        <div class="proof-preview" id="proofPreview">
+          <img id="proofImage" alt="Uploaded proof preview">
+          <div class="empty-preview">Upload a proof image to preview it here. The downloaded client page will include the image, so the client will not need to upload anything.</div>
+        </div>
+        <div class="client-preview">
+          <div class="client-preview-row"><span>Customer</span><strong id="summaryCustomer">-</strong></div>
+          <div class="client-preview-row"><span>Job</span><strong id="summaryJob">-</strong></div>
+          <div class="client-preview-row"><span>Proof #</span><strong id="summaryProof">PROOF-1001</strong></div>
+          <div class="client-preview-row"><span>Email to</span><strong id="summaryEmail">info@sambodicreations.com</strong></div>
         </div>
       </section>
 
       <aside class="stack right-panel">
         <section class="panel pad">
-          <h2>Customer Response</h2>
-          <div class="approval-options">
-            <label class="choice approved">
-              <input type="radio" name="approvalStatus" value="Approved">
-              <span><strong>Approved</strong><span>Artwork is approved for production as shown.</span></span>
-            </label>
-            <label class="choice revision">
-              <input type="radio" name="approvalStatus" value="Needs Revision">
-              <span><strong>Needs Revision</strong><span>Customer requests changes before production.</span></span>
-            </label>
+          <h2>Generate Client File</h2>
+          <div class="notice">
+            Download the client-ready HTML file, upload that file to your GitHub artwork approval folder, then send the published GitHub Pages link to the client.
           </div>
-          <label for="customerNotes">Customer notes</label>
-          <textarea id="customerNotes" placeholder="Revision notes, approval comments, spelling confirmations, color notes, sizing concerns..."></textarea>
-          <div class="grid">
-            <div>
-              <label for="approvedBy">Approved by</label>
-              <input id="approvedBy" type="text" placeholder="Customer name">
-            </div>
-            <div>
-              <label for="signatureDate">Response date</label>
-              <input id="signatureDate" type="date">
-            </div>
-          </div>
-        </section>
-
-        <section class="panel pad tools">
-          <h2>Approval Record</h2>
-          <div class="summary-list">
-            <div class="summary-row"><span>Customer</span><strong id="summaryCustomer">-</strong></div>
-            <div class="summary-row"><span>Job</span><strong id="summaryJob">-</strong></div>
-            <div class="summary-row"><span>Proof</span><strong id="summaryProof">PROOF-1001</strong></div>
-            <div class="summary-row"><span>Status</span><strong id="summaryStatus">Draft</strong></div>
-            <div class="summary-row"><span>Proof file</span><strong id="summaryFile">-</strong></div>
+          <div class="link-box">
+            <label for="clientApprovalLink">Client approval link</label>
+            <input id="clientApprovalLink" type="text" readonly>
+            <button class="btn secondary" id="copyClientLinkBtn" type="button">Copy Client Link</button>
           </div>
           <div class="action-grid">
-            <button class="btn secondary" id="downloadRecordBtn" type="button">Download Record</button>
-            <button class="btn warning" id="copySummaryBtn" type="button">Copy Summary</button>
+            <button class="btn" id="downloadClientBtn" type="button" disabled>Download Client Page</button>
           </div>
           <button class="btn danger" id="clearBtn" type="button">Clear Form</button>
-          <div class="status" id="status">Fill out the proof details and upload artwork.</div>
+          <div class="status" id="status">Enter the proof details and upload an image.</div>
         </section>
       </aside>
     </main>
   </div>
 
   <script>
+    const APPROVAL_EMAIL = "info@sambodicreations.com";
+    const CLIENT_APPROVAL_BASE_URL = "https://timsansone.github.io/sambodi/approval%20forms/";
     const today = new Date();
     document.getElementById("proofDate").valueAsDate = today;
-    document.getElementById("signatureDate").valueAsDate = today;
+    document.getElementById("businessEmail").value = APPROVAL_EMAIL;
 
     const state = {
       proofFileName: "",
-      proofFileType: "",
       proofImageSrc: ""
     };
 
-    const proofInput = document.getElementById("proofInput");
-    const chooseProofBtn = document.getElementById("chooseProofBtn");
-    const proofStage = document.getElementById("proofStage");
-    const proofImage = document.getElementById("proofImage");
-    const fileStatus = document.getElementById("fileStatus");
-    const approvalBadge = document.getElementById("approvalBadge");
-    const status = document.getElementById("status");
-
     const fields = [
+      "businessName",
+      "businessEmail",
       "customerName",
-      "jobName",
       "proofNumber",
+      "jobName",
       "proofDate",
       "productDetails",
-      "customerNotes",
-      "approvedBy",
-      "signatureDate"
+      "message"
     ];
+
+    const proofInput = document.getElementById("proofInput");
+    const chooseProofBtn = document.getElementById("chooseProofBtn");
+    const proofPreview = document.getElementById("proofPreview");
+    const proofImage = document.getElementById("proofImage");
+    const fileStatus = document.getElementById("fileStatus");
+    const status = document.getElementById("status");
+    const readyBadge = document.getElementById("readyBadge");
+    const downloadClientBtn = document.getElementById("downloadClientBtn");
+    const copyClientLinkBtn = document.getElementById("copyClientLinkBtn");
+    const clientApprovalLink = document.getElementById("clientApprovalLink");
+    const previewClientBtn = document.getElementById("previewClientBtn");
 
     function value(id) {
       return document.getElementById(id).value.trim();
     }
 
-    function selectedApprovalStatus() {
-      return document.querySelector('input[name="approvalStatus"]:checked')?.value || "Draft";
+    function displayDate(rawDate) {
+      return rawDate ? new Date(`${rawDate}T00:00:00`).toLocaleDateString("en-US") : "-";
+    }
+
+    function escapeHtml(text) {
+      return String(text || "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#039;"
+      }[char]));
+    }
+
+    function jsString(text) {
+      return JSON.stringify(String(text || ""));
+    }
+
+    function slug(text) {
+      return (text || "client-artwork-approval")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "") || "client-artwork-approval";
+    }
+
+    function slugPart(text) {
+      return String(text || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "");
+    }
+
+    function clientFileName() {
+      const parts = [
+        value("customerName"),
+        value("jobName"),
+        value("proofNumber")
+      ].map(slugPart).filter(Boolean);
+      return `${parts.join("-") || "client-artwork-approval"}-approval.html`;
+    }
+
+    function clientApprovalUrl() {
+      return `${CLIENT_APPROVAL_BASE_URL}${encodeURIComponent(clientFileName())}`;
+    }
+
+    function isReady() {
+      return Boolean(state.proofImageSrc && value("proofNumber"));
     }
 
     function updateSummary() {
-      const approval = selectedApprovalStatus();
-      const customer = value("customerName") || "-";
-      const job = value("jobName") || "-";
-      const proof = value("proofNumber") || "-";
-      document.getElementById("summaryCustomer").textContent = customer;
-      document.getElementById("summaryJob").textContent = job;
-      document.getElementById("summaryProof").textContent = proof;
-      document.getElementById("summaryStatus").textContent = approval;
-      document.getElementById("summaryFile").textContent = state.proofFileName || "-";
-      document.getElementById("proofTitle").textContent = job === "-" ? "Artwork Proof" : job;
-      approvalBadge.textContent = approval;
-      approvalBadge.style.color = approval === "Approved" ? "var(--green)" : approval === "Needs Revision" ? "var(--amber)" : "var(--ink)";
+      document.getElementById("previewTitle").textContent = value("jobName") || "Client Proof Preview";
+      document.getElementById("summaryCustomer").textContent = value("customerName") || "-";
+      document.getElementById("summaryJob").textContent = value("jobName") || "-";
+      document.getElementById("summaryProof").textContent = value("proofNumber") || "-";
+      document.getElementById("summaryEmail").textContent = APPROVAL_EMAIL;
+      clientApprovalLink.value = clientApprovalUrl();
+      const ready = isReady();
+      readyBadge.textContent = ready ? "Ready" : "Not Ready";
+      readyBadge.style.color = ready ? "var(--teal)" : "var(--ink)";
+      downloadClientBtn.disabled = !ready;
+      previewClientBtn.disabled = !ready;
     }
 
-    function approvalRecordText() {
-      return [
-        "Artwork Approval Record",
-        "=======================",
-        `Customer: ${value("customerName") || "-"}`,
-        `Job name: ${value("jobName") || "-"}`,
-        `Proof #: ${value("proofNumber") || "-"}`,
-        `Proof date: ${value("proofDate") || "-"}`,
-        `Product details: ${value("productDetails") || "-"}`,
-        `Proof file: ${state.proofFileName || "-"}`,
-        "",
-        `Status: ${selectedApprovalStatus()}`,
-        `Approved by: ${value("approvedBy") || "-"}`,
-        `Response date: ${value("signatureDate") || "-"}`,
-        `Customer notes: ${value("customerNotes") || "-"}`,
-        "",
-        "Approval terms:",
-        "Customer is responsible for reviewing spelling, colors, placement, sizing, and artwork details before production."
-      ].join("\n");
+    function generatedClientHtml() {
+      const businessName = escapeHtml(value("businessName") || "Sambodi Creations");
+      const businessEmail = APPROVAL_EMAIL;
+      const customerName = escapeHtml(value("customerName"));
+      const proofNumber = escapeHtml(value("proofNumber"));
+      const jobName = escapeHtml(value("jobName") || "Artwork Proof");
+      const proofDate = escapeHtml(displayDate(value("proofDate")));
+      const productDetails = escapeHtml(value("productDetails"));
+      const message = escapeHtml(value("message"));
+      const proofImageSrc = state.proofImageSrc;
+      const emailLiteral = jsString(businessEmail);
+      const proofLiteral = jsString(value("proofNumber"));
+      const jobLiteral = jsString(value("jobName"));
+
+      return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${jobName} Approval</title>
+  <style>
+    :root{color-scheme:light;--ink:#17212f;--muted:#647084;--line:#d9e2ee;--panel:#fff;--soft:#f4f8fb;--teal:#0f766e;--blue:#2f6fca;--amber:#d9951f;--shadow:0 18px 48px rgba(23,33,47,.13);font-family:Arial,Helvetica,sans-serif}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:linear-gradient(135deg,rgba(15,118,110,.12),transparent 34%),linear-gradient(45deg,rgba(47,111,202,.11),transparent 30%),#eef3f7;color:var(--ink)}button,input,textarea{font:inherit}.page{width:min(1240px,100%);margin:0 auto;padding:clamp(12px,3vw,24px)}header{display:grid;grid-template-columns:minmax(260px,1fr) auto;gap:18px;align-items:end;margin-bottom:18px}h1{margin:0;font-size:clamp(2rem,4vw,4.2rem);line-height:.98;letter-spacing:0}.subtitle{margin:8px 0 0;color:var(--muted);line-height:1.45}.brand{min-width:230px;padding:14px 16px;border:1px solid var(--line);border-radius:8px;background:var(--panel);box-shadow:var(--shadow);text-align:center}.brand strong{display:block;font-size:1.35rem}.brand span{color:var(--muted);font-size:.78rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase}main{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(320px,.75fr);gap:18px;align-items:start}.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow)}.pad{padding:16px}h2{margin:0 0 12px;font-size:1.18rem}.proof-head{display:flex;justify-content:space-between;gap:12px;align-items:start;padding:16px;border-bottom:1px solid var(--line)}.meta{display:flex;flex-wrap:wrap;gap:8px;color:var(--muted);font-size:.9rem;font-weight:800}.pill{padding:7px 9px;border:1px solid var(--line);border-radius:999px;background:#fbfcfe}.proof-stage{min-height:610px;display:grid;place-items:center;background:#fbfdff;overflow:hidden}.proof-stage img{display:block;max-width:100%;max-height:610px;object-fit:contain}.details{display:grid;gap:8px;padding:14px 16px;border-top:1px solid var(--line)}.detail{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}.detail:last-child{border-bottom:0}.detail span{color:var(--muted);font-weight:800}.detail strong{text-align:right;overflow-wrap:anywhere}label{display:block;margin-bottom:7px;color:var(--muted);font-size:.78rem;font-weight:900;letter-spacing:.07em;text-transform:uppercase}input,textarea{width:100%;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);padding:10px 11px;outline:none}textarea{min-height:104px;resize:vertical;line-height:1.45}.choices{display:grid;gap:10px}.choice{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;padding:12px;border:1px solid var(--line);border-radius:8px;background:#fbfcfe;cursor:pointer}.choice input{width:auto;margin-top:2px}.choice strong{display:block}.choice span span{display:block;margin-top:3px;color:var(--muted);font-size:.88rem;line-height:1.35}.approved{border-color:rgba(4,120,87,.35)}.revision{border-color:rgba(217,149,31,.42)}.terms{padding:12px;border:1px solid var(--line);border-radius:8px;background:var(--soft);color:var(--muted);line-height:1.42;font-size:.92rem}.btn{min-height:44px;border:0;border-radius:8px;padding:10px 13px;cursor:pointer;color:#fff;background:var(--teal);font-weight:900}.btn.secondary{background:var(--blue)}.btn.warning{background:var(--amber);color:#241800}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.status{min-height:42px;padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:#f8fbfd;color:var(--muted);line-height:1.4}.response{display:grid;gap:14px}@media(max-width:920px){header,main{grid-template-columns:1fr}.brand{min-width:0}.proof-stage{min-height:420px}.proof-stage img{max-height:420px}}@media(max-width:560px){.page{padding:10px}h1{font-size:2rem}.proof-head,.actions{display:grid;grid-template-columns:1fr}input,textarea,.btn{min-height:46px;font-size:16px}}@media print{body{background:#fff;color:#111827}.page{width:100%;padding:0}header{border-bottom:2px solid #111827;padding-bottom:14px}main{display:block}.panel{box-shadow:none;border:0}.actions,.status{display:none}.proof-stage{min-height:auto;border:1px solid #d1d5db;background:#fff;page-break-inside:avoid}.proof-stage img{max-height:620px}.response{margin-top:18px}}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div>
+        <h1>Artwork Approval</h1>
+        <p class="subtitle">${message}</p>
+      </div>
+      <div class="brand"><strong>${businessName}</strong><span>Proof approval</span></div>
+    </header>
+    <main>
+      <section class="panel">
+        <div class="proof-head">
+          <div>
+            <h2>${jobName}</h2>
+            <div class="meta">
+              <span class="pill">Customer: ${customerName || "-"}</span>
+              <span class="pill">Proof #: ${proofNumber || "-"}</span>
+              <span class="pill">Date: ${proofDate}</span>
+            </div>
+          </div>
+          <button class="btn secondary" id="printBtn" type="button">Print Copy</button>
+        </div>
+        <div class="proof-stage"><img src="${proofImageSrc}" alt="Artwork proof"></div>
+        <div class="details">
+          <div class="detail"><span>Product details</span><strong>${productDetails || "-"}</strong></div>
+        </div>
+      </section>
+      <aside class="panel pad response">
+        <h2>Approval Response</h2>
+        <div class="choices">
+          <label class="choice approved"><input type="radio" name="approvalStatus" value="Approved"><span><strong>Approved for Production</strong><span>I approve this artwork as shown.</span></span></label>
+          <label class="choice revision"><input type="radio" name="approvalStatus" value="Needs Revision"><span><strong>Request Changes</strong><span>I need changes before production begins.</span></span></label>
+        </div>
+        <div><label for="notes">Comments or requested changes</label><textarea id="notes" placeholder="List any requested changes or approval comments."></textarea></div>
+        <div><label for="signature">Typed signature</label><input id="signature" type="text" placeholder="Type your name"></div>
+        <div class="terms">By approving, you confirm that spelling, artwork, color expectations, placement, and sizing have been reviewed. Production may begin after approval.</div>
+        <div class="actions">
+          <button class="btn" id="emailBtn" type="button">Email Response</button>
+          <button class="btn warning" id="downloadBtn" type="button">Download Copy</button>
+        </div>
+        <div class="status" id="status">Choose approved or request changes, then email your response.</div>
+      </aside>
+    </main>
+  </div>
+  <script>
+    const businessEmail=${emailLiteral};
+    const proofNumber=${proofLiteral};
+    const jobName=${jobLiteral};
+    const generatedDate=${jsString(displayDate(value("proofDate")))};
+    function selectedStatus(){return document.querySelector('input[name="approvalStatus"]:checked')?.value||""}
+    function responseText(){return ["Artwork Approval Response","=========================", "Customer: ${customerName || "-"}", "Job / order: "+(jobName||"-"), "Proof #: "+(proofNumber||"-"), "Date: "+generatedDate, "", "Response: "+(selectedStatus()||"-"), "Typed signature: "+(document.getElementById("signature").value.trim()||"-"), "", "Comments / requested changes:", document.getElementById("notes").value.trim()||"-", "", "Approval statement:", "By approving, the customer confirms that spelling, artwork, color expectations, placement, and sizing have been reviewed."].join("\\n")}
+    document.getElementById("emailBtn").addEventListener("click",()=>{const status=document.getElementById("status");if(!selectedStatus()){status.textContent="Please choose Approved for Production or Request Changes before emailing.";return}const subject=encodeURIComponent("Artwork Approval Response - "+(proofNumber||jobName||"Proof"));const body=encodeURIComponent(responseText());window.location.href="mailto:"+businessEmail+"?subject="+subject+"&body="+body;status.textContent="Your email app should open with the approval response filled in."});
+    document.getElementById("downloadBtn").addEventListener("click",()=>{const blob=new Blob([responseText()],{type:"text/plain"});const url=URL.createObjectURL(blob);const link=document.createElement("a");link.href=url;link.download=((proofNumber||"artwork-approval").replace(/[^a-z0-9-]+/gi,"-").replace(/^-|-$/g,"")||"artwork-approval")+"-response.txt";document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);document.getElementById("status").textContent="Approval response downloaded."});
+    document.getElementById("printBtn").addEventListener("click",()=>window.print());
+  <\/script>
+</body>
+</html>`;
+    }
+
+    function downloadClientPage() {
+      const html = generatedClientHtml();
+      const blob = new Blob([html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = clientFileName();
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      status.textContent = "Client page downloaded. Upload this HTML file to your GitHub artwork approval folder, then send the published link to the client.";
+    }
+
+    function previewClientPage() {
+      const blob = new Blob([generatedClientHtml()], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
     }
 
     chooseProofBtn.addEventListener("click", () => proofInput.click());
@@ -611,76 +686,53 @@
       const file = proofInput.files?.[0];
       if (!file) return;
       state.proofFileName = file.name;
-      state.proofFileType = file.type;
-      if (file.type.startsWith("image/")) {
-        const reader = new FileReader();
-        reader.onload = () => {
-          state.proofImageSrc = reader.result;
-          proofImage.src = state.proofImageSrc;
-          proofStage.classList.add("has-proof");
-          fileStatus.textContent = `${file.name} uploaded.`;
-          status.textContent = "Proof image loaded.";
-          updateSummary();
-        };
-        reader.readAsDataURL(file);
-      } else {
-        state.proofImageSrc = "";
-        proofImage.removeAttribute("src");
-        proofStage.classList.remove("has-proof");
-        fileStatus.textContent = `${file.name} attached. PDF preview is not available in this single-file tool.`;
-        status.textContent = "Proof file attached.";
+      const reader = new FileReader();
+      reader.onload = () => {
+        state.proofImageSrc = reader.result;
+        proofImage.src = state.proofImageSrc;
+        proofPreview.classList.add("has-proof");
+        fileStatus.textContent = `${file.name} uploaded and ready to embed.`;
+        status.textContent = "Proof image loaded. You can now generate the client page.";
         updateSummary();
-      }
+      };
+      reader.readAsDataURL(file);
     });
 
-    document.querySelectorAll("input, textarea").forEach((input) => {
-      input.addEventListener("input", updateSummary);
-      input.addEventListener("change", updateSummary);
+    fields.forEach((id) => {
+      document.getElementById(id).addEventListener("input", updateSummary);
+      document.getElementById(id).addEventListener("change", updateSummary);
     });
 
-    document.getElementById("printBtn").addEventListener("click", () => window.print());
+    downloadClientBtn.addEventListener("click", downloadClientPage);
 
-    document.getElementById("downloadRecordBtn").addEventListener("click", () => {
-      const blob = new Blob([approvalRecordText()], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      const proof = (value("proofNumber") || "proof").replace(/[^a-z0-9-]+/gi, "-").replace(/^-|-$/g, "");
-      link.href = url;
-      link.download = `${proof}-approval-record.txt`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      status.textContent = "Approval record downloaded.";
-    });
-
-    document.getElementById("copySummaryBtn").addEventListener("click", async () => {
+    copyClientLinkBtn.addEventListener("click", async () => {
+      clientApprovalLink.select();
+      clientApprovalLink.setSelectionRange(0, clientApprovalLink.value.length);
       try {
-        await navigator.clipboard.writeText(approvalRecordText());
-        status.textContent = "Approval summary copied.";
+        await navigator.clipboard.writeText(clientApprovalLink.value);
+        status.textContent = "Client approval link copied. Remember to upload the downloaded HTML file to GitHub before sending the link.";
       } catch {
-        status.textContent = "Copy was blocked by the browser. Use Download Record instead.";
+        status.textContent = "Copy was blocked by the browser. Select the link field and copy it manually.";
       }
     });
+
+    previewClientBtn.addEventListener("click", previewClientPage);
 
     document.getElementById("clearBtn").addEventListener("click", () => {
       fields.forEach((id) => {
-        const element = document.getElementById(id);
-        if (element.type === "date") {
-          element.valueAsDate = today;
-        } else if (id === "proofNumber") {
-          element.value = "PROOF-1001";
-        } else {
-          element.value = "";
-        }
+        const input = document.getElementById(id);
+        if (id === "businessName") input.value = "Sambodi Creations";
+        else if (id === "businessEmail") input.value = APPROVAL_EMAIL;
+        else if (id === "proofNumber") input.value = "PROOF-1001";
+        else if (id === "proofDate") input.valueAsDate = today;
+        else if (id === "message") input.value = "Please review the proof carefully. If everything looks correct, choose Approved for Production. If changes are needed, choose Request Changes and list the changes in the comments box.";
+        else input.value = "";
       });
-      document.querySelectorAll('input[name="approvalStatus"]').forEach((input) => { input.checked = false; });
       proofInput.value = "";
       state.proofFileName = "";
-      state.proofFileType = "";
       state.proofImageSrc = "";
       proofImage.removeAttribute("src");
-      proofStage.classList.remove("has-proof");
+      proofPreview.classList.remove("has-proof");
       fileStatus.textContent = "No proof uploaded yet.";
       status.textContent = "Form cleared.";
       updateSummary();
