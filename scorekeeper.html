@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -390,6 +389,36 @@
       overflow-wrap: anywhere;
     }
 
+    .score-stepper {
+      display: grid;
+      grid-template-columns: 44px minmax(82px, 1fr) 44px;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .score-stepper input {
+      text-align: center;
+      font-weight: 900;
+    }
+
+    .score-step-btn {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 1.25rem;
+      font-weight: 900;
+      line-height: 1;
+      touch-action: manipulation;
+    }
+
+    .score-step-btn:hover {
+      border-color: var(--teal);
+      color: var(--teal);
+    }
+
     .dot {
       width: 10px;
       height: 10px;
@@ -614,7 +643,7 @@
       }
 
       .score-input {
-        grid-template-columns: minmax(0, 1fr) minmax(92px, 34%);
+        grid-template-columns: minmax(0, 1fr) minmax(156px, 44%);
         align-items: center;
         padding: 12px;
         background: white;
@@ -629,6 +658,10 @@
         text-align: right;
         font-size: 1.1rem;
         font-weight: 900;
+      }
+
+      .score-stepper input {
+        text-align: center;
       }
 
       .round-actions {
@@ -706,8 +739,8 @@
         grid-template-columns: 1fr;
       }
 
-      .score-input input {
-        text-align: left;
+      .score-stepper {
+        grid-template-columns: 48px minmax(0, 1fr) 48px;
       }
     }
   </style>
@@ -1096,12 +1129,26 @@
         wrap.style.setProperty("--player-color", player.color);
         wrap.innerHTML = `
           <label><span class="dot"></span>${escapeHtml(player.name)}</label>
-          <input type="number" inputmode="decimal" step="1" placeholder="+/- 0" value="${state.currentScores[player.id] ?? ""}">
+          <div class="score-stepper">
+            <button class="score-step-btn" type="button" data-step="-1" aria-label="Subtract one point from ${escapeHtml(player.name)}">-</button>
+            <input type="number" inputmode="decimal" step="1" placeholder="+/- 0" value="${state.currentScores[player.id] ?? ""}">
+            <button class="score-step-btn" type="button" data-step="1" aria-label="Add one point to ${escapeHtml(player.name)}">+</button>
+          </div>
         `;
         const input = wrap.querySelector("input");
+        const stepButtons = wrap.querySelectorAll(".score-step-btn");
         input.addEventListener("input", () => {
           state.currentScores[player.id] = input.value;
           save();
+        });
+        stepButtons.forEach((button) => {
+          button.addEventListener("click", () => {
+            const current = input.value === "" ? 0 : Number(input.value);
+            const next = (Number.isFinite(current) ? current : 0) + Number(button.dataset.step);
+            input.value = next;
+            state.currentScores[player.id] = String(next);
+            save();
+          });
         });
         scoreInputs.appendChild(wrap);
       });
