@@ -118,7 +118,6 @@
 
     main {
       display: grid;
-      grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
       gap: 18px;
       align-items: start;
     }
@@ -136,6 +135,7 @@
 
     .sidebar {
       display: grid;
+      grid-template-columns: minmax(300px, 1fr) minmax(300px, 1fr);
       gap: 14px;
     }
 
@@ -470,6 +470,10 @@
         grid-template-columns: 1fr;
       }
 
+      .sidebar {
+        grid-template-columns: 1fr;
+      }
+
       header {
         align-items: start;
       }
@@ -722,41 +726,6 @@
     </header>
 
     <main>
-      <aside class="sidebar">
-        <section class="panel pad">
-          <div class="section-title">
-            <h2>Players</h2>
-          </div>
-          <div class="add-player">
-            <input id="newPlayerName" type="text" placeholder="Add player name" maxlength="30">
-            <button class="btn" id="addPlayerBtn" type="button">Add Player</button>
-          </div>
-          <div class="players" id="playersList" aria-live="polite"></div>
-        </section>
-
-        <section class="panel pad settings">
-          <div>
-            <h2>Scoring Mode</h2>
-          </div>
-          <div class="mode-grid">
-            <label class="mode">
-              <input type="radio" name="scoreMode" value="high" checked>
-              <span>High Wins</span>
-            </label>
-            <label class="mode">
-              <input type="radio" name="scoreMode" value="low">
-              <span>Low Wins</span>
-            </label>
-          </div>
-          <div class="tools">
-            <button class="btn secondary" id="undoRoundBtn" type="button" disabled>Undo Round</button>
-            <button class="btn secondary" id="exportBtn" type="button" disabled>Export CSV</button>
-            <button class="btn warning" id="zeroBtn" type="button">Fill Zeros</button>
-            <button class="btn danger" id="resetBtn" type="button">Reset Game</button>
-          </div>
-        </section>
-      </aside>
-
       <div class="workspace">
         <section class="panel pad">
           <div class="section-title">
@@ -791,6 +760,41 @@
           <div class="history-wrap" id="historyWrap"></div>
         </section>
       </div>
+
+      <aside class="sidebar">
+        <section class="panel pad">
+          <div class="section-title">
+            <h2>Players</h2>
+          </div>
+          <div class="add-player">
+            <input id="newPlayerName" type="text" placeholder="Add player name" maxlength="30">
+            <button class="btn" id="addPlayerBtn" type="button">Add Player</button>
+          </div>
+          <div class="players" id="playersList" aria-live="polite"></div>
+        </section>
+
+        <section class="panel pad settings">
+          <div>
+            <h2>Scoring Mode</h2>
+          </div>
+          <div class="mode-grid">
+            <label class="mode">
+              <input type="radio" name="scoreMode" value="high" checked>
+              <span>High Wins</span>
+            </label>
+            <label class="mode">
+              <input type="radio" name="scoreMode" value="low">
+              <span>Low Wins</span>
+            </label>
+          </div>
+          <div class="tools">
+            <button class="btn secondary" id="undoRoundBtn" type="button" disabled>Undo Round</button>
+            <button class="btn secondary" id="exportBtn" type="button" disabled>Export CSV</button>
+            <button class="btn warning" id="zeroBtn" type="button">Fill Zeros</button>
+            <button class="btn danger" id="resetBtn" type="button">Reset Game</button>
+          </div>
+        </section>
+      </aside>
     </main>
   </div>
 
@@ -1092,7 +1096,7 @@
         wrap.style.setProperty("--player-color", player.color);
         wrap.innerHTML = `
           <label><span class="dot"></span>${escapeHtml(player.name)}</label>
-          <input type="number" inputmode="numeric" step="1" placeholder="0" value="${state.currentScores[player.id] ?? ""}">
+          <input type="number" inputmode="decimal" step="1" placeholder="+/- 0" value="${state.currentScores[player.id] ?? ""}">
         `;
         const input = wrap.querySelector("input");
         input.addEventListener("input", () => {
