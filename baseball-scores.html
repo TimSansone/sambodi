@@ -545,6 +545,25 @@
       letter-spacing: 0.05em;
     }
 
+    .note-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .note-item {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      line-height: 1.38;
+    }
+
+    .note-item strong {
+      display: block;
+      margin-bottom: 3px;
+      color: var(--ink);
+    }
+
     .empty,
     .message {
       padding: 18px;
@@ -816,6 +835,26 @@
       scheduledGames.textContent = counts.scheduled;
     }
 
+    function scoreboardTeamNote(game, side) {
+      if (gameState(game) === "scheduled") return `Probable starter: ${pitcherName(game, side)}`;
+      return `Record: ${recordText(game, side)}`;
+    }
+
+    function scoreboardGameNotes(game) {
+      const notes = [];
+      if (gameState(game) === "final") {
+        notes.push(`W: ${decisionName(game, null, "winner")}`);
+        notes.push(`L: ${decisionName(game, null, "loser")}`);
+        notes.push(`S: ${savePitcherName(game, null)}`);
+      } else if (gameState(game) === "live") {
+        notes.push("Pitching decisions: pending");
+        notes.push(hitsErrorsText(game, null));
+      }
+      if (game.description) notes.push(game.description);
+      if (game.status?.reason) notes.push(game.status.reason);
+      return notes;
+    }
+
     function renderGames() {
       const games = visibleGames();
       if (games.length === 0) {
@@ -837,17 +876,18 @@
             </div>
             <div class="team-row">
               <img class="logo" src="${teamLogo(away.id)}" alt="">
-              <div class="team-name"><strong>${escapeHtml(away.name)}</strong><span>Probable starter: ${escapeHtml(pitcherName(game, "away"))}</span></div>
+              <div class="team-name"><strong>${escapeHtml(away.name)}</strong><span>${escapeHtml(scoreboardTeamNote(game, "away"))}</span></div>
               <div class="score">${scoreFor(game, "away")}</div>
             </div>
             <div class="team-row">
               <img class="logo" src="${teamLogo(home.id)}" alt="">
-              <div class="team-name"><strong>${escapeHtml(home.name)}</strong><span>Probable starter: ${escapeHtml(pitcherName(game, "home"))}</span></div>
+              <div class="team-name"><strong>${escapeHtml(home.name)}</strong><span>${escapeHtml(scoreboardTeamNote(game, "home"))}</span></div>
               <div class="score">${scoreFor(game, "home")}</div>
             </div>
             <div class="game-info">
               <div><strong>Venue:</strong> ${escapeHtml(venue)}</div>
               <div><strong>Game status:</strong> ${escapeHtml(game.status?.detailedState || "-")}</div>
+              ${scoreboardGameNotes(game).map((note) => `<div>${escapeHtml(note)}</div>`).join("")}
             </div>
           </button>
         `;
@@ -1029,6 +1069,46 @@
       `;
     }
 
+    function durationText(feed) {
+      const minutes = feed?.gameData?.gameInfo?.gameDurationMinutes;
+      if (!minutes || !Number.isFinite(Number(minutes))) return "Duration unavailable";
+      const hours = Math.floor(Number(minutes) / 60);
+      const remaining = Number(minutes) % 60;
+      return hours > 0 ? `${hours} hr ${remaining} min` : `${remaining} min`;
+    }
+
+    function officialScorerText(feed) {
+      return feed?.gameData?.officialScorer?.fullName || feed?.gameData?.officialScorer || "Official scorer unavailable";
+    }
+
+    function feedNotes(feed) {
+      const info = feed?.liveData?.boxscore?.info || [];
+      return info
+        .map((item) => ({
+          label: item.label || item.title || "Note",
+          value: item.value || item.note || ""
+        }))
+        .filter((item) => item.value);
+    }
+
+    function finalNotesMarkup(feed) {
+      const notes = feedNotes(feed);
+      if (!notes.length) return "";
+      return `
+        <div class="detail-section">
+          <h2>Additional Notes</h2>
+          <div class="note-list">
+            ${notes.map((item) => `
+              <div class="note-item">
+                <strong>${escapeHtml(item.label)}</strong>
+                ${escapeHtml(item.value)}
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }
+
     function oddsMarkup(game, feed) {
       if (gameState(game) !== "live") return "";
       const away = game.teams.away.team;
@@ -1066,12 +1146,18 @@
     function finalInfoMarkup(game, feed) {
       if (gameState(game) !== "final") return "";
       return `
-        <div class="mini-grid">
-          <div class="mini"><span>Winning Pitcher</span><strong>${escapeHtml(decisionName(game, feed, "winner"))}</strong></div>
-          <div class="mini"><span>Losing Pitcher</span><strong>${escapeHtml(decisionName(game, feed, "loser"))}</strong></div>
-          <div class="mini"><span>Save</span><strong>${escapeHtml(savePitcherName(game, feed))}</strong></div>
-          <div class="mini"><span>Hits / Errors</span><strong>${escapeHtml(hitsErrorsText(game, feed))}</strong></div>
+        <div class="detail-section">
+          <h2>Final Game Summary</h2>
+          <div class="mini-grid">
+            <div class="mini"><span>Winning Pitcher</span><strong>${escapeHtml(decisionName(game, feed, "winner"))}</strong></div>
+            <div class="mini"><span>Losing Pitcher</span><strong>${escapeHtml(decisionName(game, feed, "loser"))}</strong></div>
+            <div class="mini"><span>Save</span><strong>${escapeHtml(savePitcherName(game, feed))}</strong></div>
+            <div class="mini"><span>Hits / Errors</span><strong>${escapeHtml(hitsErrorsText(game, feed))}</strong></div>
+            <div class="mini"><span>Duration</span><strong>${escapeHtml(durationText(feed))}</strong></div>
+            <div class="mini"><span>Official Scorer</span><strong>${escapeHtml(officialScorerText(feed))}</strong></div>
+          </div>
         </div>
+        ${finalNotesMarkup(feed)}
       `;
     }
 
