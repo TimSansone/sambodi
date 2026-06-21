@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -207,6 +206,7 @@
     }
 
     .game-card {
+      position: relative;
       display: grid;
       gap: 12px;
       border: 1px solid var(--line);
@@ -216,6 +216,31 @@
       cursor: pointer;
       text-align: left;
       box-shadow: 0 10px 24px rgba(23, 32, 51, 0.08);
+    }
+
+    .game-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 5px;
+      border-radius: 8px 0 0 8px;
+      background: var(--blue);
+    }
+
+    .game-card.live::before {
+      background: var(--red);
+    }
+
+    .game-card.final {
+      background: #f1f3f5;
+    }
+
+    .game-card.final::before {
+      background: #9aa4b2;
+    }
+
+    .game-card.scheduled::before {
+      background: var(--gold);
     }
 
     .game-card:hover,
@@ -680,10 +705,13 @@
 
       .games-grid {
         grid-template-columns: 1fr;
+        gap: 8px;
       }
 
       .game-card {
-        padding: 11px;
+        gap: 7px;
+        padding: 8px 9px 8px 12px;
+        box-shadow: 0 6px 14px rgba(23, 32, 51, 0.08);
       }
 
       input,
@@ -694,16 +722,70 @@
       }
 
       .team-row {
-        grid-template-columns: 38px minmax(0, 1fr) auto;
+        grid-template-columns: 28px minmax(0, 1fr) auto;
+        gap: 7px;
       }
 
       .logo {
-        width: 38px;
-        height: 38px;
+        width: 28px;
+        height: 28px;
+      }
+
+      .badge {
+        min-height: 23px;
+        padding: 3px 7px;
+        font-size: 0.68rem;
+      }
+
+      .game-top {
+        gap: 6px;
+      }
+
+      .team-name strong {
+        font-size: 0.9rem;
+      }
+
+      .team-name span {
+        font-size: 0.74rem;
+        line-height: 1.2;
       }
 
       .score {
-        font-size: 1.7rem;
+        min-width: 30px;
+        font-size: 1.35rem;
+      }
+
+      .game-info {
+        gap: 3px;
+        padding-top: 6px;
+        font-size: 0.76rem;
+        line-height: 1.22;
+      }
+
+      .situation {
+        gap: 5px;
+        padding: 7px;
+      }
+
+      .situation-top {
+        gap: 7px;
+      }
+
+      .situation-lines {
+        gap: 2px;
+        font-size: 0.76rem;
+        line-height: 1.2;
+      }
+
+      .mini-diamond {
+        grid-template-columns: repeat(3, 10px);
+        grid-template-rows: repeat(3, 10px);
+        padding: 3px;
+      }
+
+      .mini-base {
+        width: 10px;
+        height: 10px;
       }
 
       .matchup {
@@ -866,9 +948,14 @@
 
     function visibleGames() {
       const filter = teamFilter.value;
-      if (!filter) return state.games;
-      return state.games.filter((game) => {
+      const games = filter ? state.games.filter((game) => {
         return String(game.teams.away.team.id) === filter || String(game.teams.home.team.id) === filter;
+      }) : [...state.games];
+      const order = { live: 0, scheduled: 1, final: 2 };
+      return games.sort((a, b) => {
+        const stateDiff = order[gameState(a)] - order[gameState(b)];
+        if (stateDiff) return stateDiff;
+        return new Date(a.gameDate) - new Date(b.gameDate);
       });
     }
 
@@ -910,13 +997,21 @@
         notes.push(`W: ${decisionName(game, null, "winner")}`);
         notes.push(`L: ${decisionName(game, null, "loser")}`);
         notes.push(`S: ${savePitcherName(game, null)}`);
-      } else if (gameState(game) === "live") {
-        notes.push("Pitching decisions: pending");
-        notes.push(hitsErrorsText(game, null));
       }
       if (game.description) notes.push(game.description);
       if (game.status?.reason) notes.push(game.status.reason);
       return notes;
+    }
+
+    function scoreboardInfoMarkup(game, venue) {
+      if (gameState(game) === "live") return "";
+      return `
+        <div class="game-info">
+          <div><strong>Venue:</strong> ${escapeHtml(venue)}</div>
+          <div><strong>Game status:</strong> ${escapeHtml(game.status?.detailedState || "-")}</div>
+          ${scoreboardGameNotes(game).map((note) => `<div>${escapeHtml(note)}</div>`).join("")}
+        </div>
+      `;
     }
 
     function feedForGame(game) {
@@ -966,7 +1061,7 @@
         const venue = game.venue?.name || "Venue TBD";
         const active = game.gamePk === state.selectedGamePk ? " active" : "";
         return `
-          <button class="game-card${active}" type="button" data-game-pk="${game.gamePk}">
+          <button class="game-card ${stateName}${active}" type="button" data-game-pk="${game.gamePk}">
             <div class="game-top">
               <span class="badge ${stateName}">${stateName === "live" ? "Live" : stateName === "final" ? "Final" : "Scheduled"}</span>
               <span class="badge">${escapeHtml(statusLabel(game))}</span>
@@ -981,11 +1076,7 @@
               <div class="team-name"><strong>${escapeHtml(home.name)}</strong><span>${escapeHtml(scoreboardTeamNote(game, "home"))}</span></div>
               <div class="score">${scoreFor(game, "home")}</div>
             </div>
-            <div class="game-info">
-              <div><strong>Venue:</strong> ${escapeHtml(venue)}</div>
-              <div><strong>Game status:</strong> ${escapeHtml(game.status?.detailedState || "-")}</div>
-              ${scoreboardGameNotes(game).map((note) => `<div>${escapeHtml(note)}</div>`).join("")}
-            </div>
+            ${scoreboardInfoMarkup(game, venue)}
             ${scoreboardSituationMarkup(game)}
           </button>
         `;
@@ -1289,12 +1380,11 @@
       const due = dueUp(feed);
       return `
         <div class="mini-grid">
-          <div class="mini"><span>Pitching Now</span><strong>${escapeHtml(currentPitcher(feed))}</strong></div>
-          <div class="mini"><span>Batting Now</span><strong>${escapeHtml(currentBatter(feed))}</strong></div>
+          <div class="mini"><span>Pitching Now</span><strong>${escapeHtml(currentPitcherLine(feed))}</strong></div>
+          <div class="mini"><span>Batting Now</span><strong>${escapeHtml(currentBatterLine(feed))}</strong></div>
           <div class="mini"><span>Due Up</span><strong>${escapeHtml(due.length ? due.join(" / ") : "Unavailable")}</strong></div>
           <div class="mini"><span>Hits / Errors</span><strong>${escapeHtml(hitsErrorsText(game, feed))}</strong></div>
         </div>
-        ${oddsMarkup(game, feed)}
       `;
     }
 
@@ -1377,10 +1467,6 @@
         ${liveInfoMarkup(game, feed)}
         ${finalInfoMarkup(game, feed)}
         <div class="detail-section">
-          <h2>Game Notes</h2>
-          ${gameNotesMarkup(game, feed)}
-        </div>
-        <div class="detail-section">
           <h2>Scoring Plays</h2>
           <div class="plays">
             ${scoring.length ? scoring.map((play) => `
@@ -1401,6 +1487,11 @@
               </div>
             `).join("") : '<div class="empty">Play-by-play will appear here once the game feed is available.</div>'}
           </div>
+        </div>
+        ${oddsMarkup(game, feed)}
+        <div class="detail-section">
+          <h2>Game Notes</h2>
+          ${gameNotesMarkup(game, feed)}
         </div>
       `;
     }
