@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -838,12 +837,12 @@
             </div>
             <div class="team-row">
               <img class="logo" src="${teamLogo(away.id)}" alt="">
-              <div class="team-name"><strong>${escapeHtml(away.name)}</strong><span>Pitcher: ${escapeHtml(pitcherName(game, "away"))}</span></div>
+              <div class="team-name"><strong>${escapeHtml(away.name)}</strong><span>Probable starter: ${escapeHtml(pitcherName(game, "away"))}</span></div>
               <div class="score">${scoreFor(game, "away")}</div>
             </div>
             <div class="team-row">
               <img class="logo" src="${teamLogo(home.id)}" alt="">
-              <div class="team-name"><strong>${escapeHtml(home.name)}</strong><span>Pitcher: ${escapeHtml(pitcherName(game, "home"))}</span></div>
+              <div class="team-name"><strong>${escapeHtml(home.name)}</strong><span>Probable starter: ${escapeHtml(pitcherName(game, "home"))}</span></div>
               <div class="score">${scoreFor(game, "home")}</div>
             </div>
             <div class="game-info">
@@ -1076,6 +1075,19 @@
       `;
     }
 
+    function probableStartersMarkup(game) {
+      if (gameState(game) !== "scheduled") return "";
+      return `
+        <div class="detail-section">
+          <h2>Probable Starters</h2>
+          <div class="mini-grid">
+            <div class="mini"><span>${escapeHtml(game.teams.away.team.name)}</span><strong>${escapeHtml(pitcherName(game, "away"))}</strong></div>
+            <div class="mini"><span>${escapeHtml(game.teams.home.team.name)}</span><strong>${escapeHtml(pitcherName(game, "home"))}</strong></div>
+          </div>
+        </div>
+      `;
+    }
+
     function renderDetail() {
       const game = state.games.find((item) => item.gamePk === state.selectedGamePk);
       if (!game) {
@@ -1108,6 +1120,7 @@
           <h2>Box Score</h2>
           ${boxScoreMarkup(game, feed)}
         </div>
+        ${probableStartersMarkup(game)}
         <div class="mini-grid">
           <div class="mini"><span>Status</span><strong>${escapeHtml(statusLabel(game))}</strong></div>
           <div class="mini"><span>Count</span><strong>${escapeHtml(countText(feed))}</strong></div>
