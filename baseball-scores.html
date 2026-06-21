@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -309,6 +310,68 @@
 
     .game-info strong {
       color: var(--ink);
+    }
+
+    .situation {
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f8fbff;
+    }
+
+    .situation-top {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+    }
+
+    .situation-lines {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .situation-lines div {
+      overflow-wrap: anywhere;
+    }
+
+    .mini-diamond {
+      display: grid;
+      grid-template-columns: repeat(3, 12px);
+      grid-template-rows: repeat(3, 12px);
+      gap: 2px;
+      padding: 5px;
+    }
+
+    .mini-base {
+      width: 12px;
+      height: 12px;
+      border: 2px solid #c7d2df;
+      background: #ffffff;
+      transform: rotate(45deg);
+    }
+
+    .mini-base.on {
+      border-color: var(--gold);
+      background: var(--gold);
+    }
+
+    .mini-base.second {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .mini-base.third {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .mini-base.first {
+      grid-column: 3;
+      grid-row: 2;
     }
 
     .detail {
@@ -722,6 +785,7 @@
       selectedGamePk: null,
       selectedFeed: null,
       selectedWinProbability: null,
+      liveFeeds: {},
       lastLoadedDate: "",
       refreshTimer: null
     };
@@ -855,6 +919,39 @@
       return notes;
     }
 
+    function feedForGame(game) {
+      return state.liveFeeds[String(game.gamePk)] || (state.selectedGamePk === game.gamePk ? state.selectedFeed : null);
+    }
+
+    function miniDiamondMarkup(feed) {
+      return `
+        <div class="mini-diamond" aria-label="Base runners">
+          <span class="mini-base second ${baseIsOn(feed, "second") ? "on" : ""}"></span>
+          <span class="mini-base third ${baseIsOn(feed, "third") ? "on" : ""}"></span>
+          <span class="mini-base first ${baseIsOn(feed, "first") ? "on" : ""}"></span>
+        </div>
+      `;
+    }
+
+    function scoreboardSituationMarkup(game) {
+      if (gameState(game) !== "live") return "";
+      const feed = feedForGame(game);
+      const pitcher = currentPitcherLine(feed);
+      const batter = currentBatterLine(feed);
+      return `
+        <div class="situation">
+          <div class="situation-top">
+            ${miniDiamondMarkup(feed)}
+            <div class="situation-lines">
+              <div><strong>Count:</strong> ${escapeHtml(countText(feed))}</div>
+              <div><strong>Pitching:</strong> ${escapeHtml(pitcher)}</div>
+              <div><strong>Batting:</strong> ${escapeHtml(batter)}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
     function renderGames() {
       const games = visibleGames();
       if (games.length === 0) {
@@ -889,6 +986,7 @@
               <div><strong>Game status:</strong> ${escapeHtml(game.status?.detailedState || "-")}</div>
               ${scoreboardGameNotes(game).map((note) => `<div>${escapeHtml(note)}</div>`).join("")}
             </div>
+            ${scoreboardSituationMarkup(game)}
           </button>
         `;
       }).join("");
@@ -929,12 +1027,69 @@
       return person?.fullName || person?.name || "Unavailable";
     }
 
+    function personId(person) {
+      return person?.id || person?.person?.id || null;
+    }
+
+    function playerBoxScore(feed, person) {
+      const id = personId(person);
+      if (!id) return null;
+      const playerKey = `ID${id}`;
+      const awayPlayer = feed?.liveData?.boxscore?.teams?.away?.players?.[playerKey];
+      const homePlayer = feed?.liveData?.boxscore?.teams?.home?.players?.[playerKey];
+      return awayPlayer || homePlayer || null;
+    }
+
+    function currentMatchup(feed) {
+      return feed?.liveData?.plays?.currentPlay?.matchup || {};
+    }
+
     function currentBatter(feed) {
       return personName(feed?.liveData?.plays?.currentPlay?.matchup?.batter);
     }
 
     function currentPitcher(feed) {
       return personName(feed?.liveData?.plays?.currentPlay?.matchup?.pitcher);
+    }
+
+    function currentPitcherLine(feed) {
+      const pitcher = currentMatchup(feed).pitcher;
+      const box = playerBoxScore(feed, pitcher);
+      const pitching = box?.stats?.pitching || {};
+      const pitches = pitching.numberOfPitches ?? pitching.pitchesThrown ?? pitching.pitchCount;
+      const strikes = pitching.strikes;
+      const balls = pitching.balls;
+      const name = personName(pitcher);
+      if (pitches === undefined && strikes === undefined && balls === undefined) return name;
+      return `${name} - ${pitches ?? "-"} pitches (${strikes ?? "-"} strikes / ${balls ?? "-"} balls)`;
+    }
+
+    function batterResultSummary(batting) {
+      const parts = [];
+      const doubles = Number(batting.doubles || 0);
+      const triples = Number(batting.triples || 0);
+      const homers = Number(batting.homeRuns || batting.homeruns || 0);
+      const walks = Number(batting.baseOnBalls || batting.walks || 0);
+      const singles = Math.max(0, Number(batting.hits || 0) - doubles - triples - homers);
+      if (singles) parts.push(`${singles} single${singles === 1 ? "" : "s"}`);
+      if (doubles) parts.push(`${doubles} dbl${doubles === 1 ? "" : "s"}`);
+      if (triples) parts.push(`${triples} triple${triples === 1 ? "" : "s"}`);
+      if (homers) parts.push(`${homers} HR`);
+      if (walks) parts.push(`${walks} BB`);
+      return parts.length ? parts.join(", ") : "no hits/walks";
+    }
+
+    function currentBatterLine(feed) {
+      const batter = currentMatchup(feed).batter;
+      const box = playerBoxScore(feed, batter);
+      const batting = box?.stats?.batting || {};
+      const season = box?.seasonStats?.batting || {};
+      const atBats = batting.atBats ?? 0;
+      const hits = batting.hits ?? 0;
+      const avg = season.avg || batting.avg || "AVG unavailable";
+      const name = personName(batter);
+      if (!box) return name;
+      return `${name} - ${hits} for ${atBats}, ${batterResultSummary(batting)}, season AVG ${avg}`;
     }
 
     function dueUp(feed) {
@@ -1256,6 +1411,18 @@
       return response.json();
     }
 
+    async function loadLiveFeedsForScoreboard() {
+      const liveGames = state.games.filter((game) => gameState(game) === "live");
+      state.liveFeeds = {};
+      if (!liveGames.length) return;
+      const results = await Promise.allSettled(liveGames.map((game) => fetchJson(`${LIVE_BASE}/${game.gamePk}/feed/live`)));
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          state.liveFeeds[String(liveGames[index].gamePk)] = result.value;
+        }
+      });
+    }
+
     async function selectGame(gamePk) {
       state.selectedGamePk = gamePk;
       state.selectedFeed = null;
@@ -1269,6 +1436,7 @@
         ]);
         state.selectedFeed = feedResult.status === "fulfilled" ? feedResult.value : null;
         state.selectedWinProbability = probabilityResult.status === "fulfilled" ? probabilityResult.value : null;
+        if (state.selectedFeed) state.liveFeeds[String(gamePk)] = state.selectedFeed;
       } catch {
         state.selectedFeed = null;
         state.selectedWinProbability = null;
@@ -1286,6 +1454,7 @@
         const url = `${API_BASE}/schedule?sportId=1&date=${date}&hydrate=team,linescore,probablePitcher,venue,decisions`;
         const data = await fetchJson(url);
         state.games = (data.dates || []).flatMap((day) => day.games || []);
+        await loadLiveFeedsForScoreboard();
         const selectedStillExists = state.games.some((game) => game.gamePk === state.selectedGamePk);
         if (!selectedStillExists) {
           const firstLive = state.games.find((game) => gameState(game) === "live");
