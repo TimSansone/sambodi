@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -368,6 +369,16 @@
         display: block;
         color: var(--muted);
         font-size:.84rem
+    }
+
+    .scorers {
+        display: block;
+        margin-top: 3px;
+        color: var(--green);
+        font-size: .78rem;
+        font-weight: 800;
+        line-height: 1.25;
+        overflow-wrap:anywhere
     }
 
     .score {
@@ -882,6 +893,7 @@
     </div>
     <script>
     const ESPN_SCOREBOARD = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
+    const ESPN_STANDINGS = 'https://site.web.api.espn.com/apis/v2/sports/soccer/fifa.world/standings';
     const OPEN_WC_GAMES = 'https://worldcup26.ir/get/games';
     const OPEN_WC_GROUPS = 'https://worldcup26.ir/get/groups';
     const WC_START = '2026-06-11',
@@ -1014,6 +1026,7 @@
     const state = {
         matches: [],
         allStageMatches: [],
+        liveStandings: null,
         selectedId: null,
         teamFilter: '',
         stageFilter: '',
@@ -1099,13 +1112,12 @@
         const status = e.status || {};
         const type = status.type || {};
         const stateName = type.state === 'in' ? 'live' : (type.completed ? 'final' : 'upcoming');
-        const notes = e.notes?.[0]?.headline||e.season?.slug||e.group?.name || e.name || '';
         return {
             id: e.id,
             name: e.name,
             shortName: e.shortName,
             date: e.date,
-            stage: notes,
+            stage: stageFromEvent(e, comp),
             venue: comp.venue?.fullName||comp.venue?.name || 'Venue TBD',
             statusDetail: type.detail || type.shortDetail || type.description || '',
             status: stateName,
@@ -1139,6 +1151,68 @@
     }
     function scoreKey(m) {
         return `${scoreNum(m.away.score)}-${scoreNum(m.home.score)}`
+    }
+    function displayScore(v) {
+        return v === 0 || v === '0' ? '0' : v || '-'
+    }
+    function groupNameFromText(text) {
+        const match = String(text || '').match(/Group\s+([A-L])/i);
+        return match ? `Group ${match[1].toUpperCase()}` : ''
+    }
+    function stageFromEvent(e, comp) {
+        return groupNameFromText(comp?.altGameNote) || groupNameFromText(e?.group?.name) || groupNameFromText(e?.notes?.[0]?.headline) || e?.notes?.[0]?.headline || e?.group?.name || e?.season?.slug || e?.name || ''
+    }
+    function normalizedTeamKey(t) {
+        const abbr = canonicalAbbr(String(t?.abbr || '').trim().toUpperCase());
+        const name = String(t?.name || t?.short || '').trim().toUpperCase().replace(/[^A-Z0-9]+/g, '');
+        return abbr || name
+    }
+    function hasRealTeam(t) {
+        const key = normalizedTeamKey(t);
+        return key && key !== 'TBD' && !key.includes('TBD')
+    }
+    function canonicalMatchKey(m) {
+        if (!m?.date || !hasRealTeam(m.away) || !hasRealTeam(m.home))
+            return '';
+        const kickoff = new Date(m.date);
+        if (Number.isNaN(kickoff.getTime()))
+            return '';
+        const teams = [normalizedTeamKey(m.away), normalizedTeamKey(m.home)].sort().join('-');
+        return `${kickoff.toISOString().slice(0, 10)}|${teams}`
+    }
+    function mergeMatchData(old, m) {
+        return {
+            ...old,
+            ...m,
+            away: {
+                ...old.away,
+                ...m.away
+            },
+            home: {
+                ...old.home,
+                ...m.home
+            },
+            stage: m.stage || old.stage,
+            venue: m.venue || old.venue,
+            details: m.details?.length ? m.details : old.details,
+            broadcasts: m.broadcasts?.length ? m.broadcasts : old.broadcasts
+        }
+    }
+    function uniqueMatches(matches) {
+        const list = [];
+        matches.forEach(m => {
+            const id = String(m.id || '');
+            const canonical = canonicalMatchKey(m);
+            const existingIndex = list.findIndex(old => String(old.id || '') === id || (canonical && canonicalMatchKey(old) === canonical));
+            if (existingIndex === -1)
+                list.push(m);
+            else
+                list[existingIndex] = mergeMatchData(list[existingIndex], m)
+        });
+        return list
+    }
+    function matchStorageKey(m) {
+        return canonicalMatchKey(m) || String(m.id || `${m.away?.abbr || ''}-${m.home?.abbr || ''}-${m.date || ''}`)
     }
     function matchStatusLabel(m) {
         if (m.status === 'live')
@@ -1242,7 +1316,51 @@
     }
     function teamRow(t, m) {
         const record = t.record ? `Record: ${t.record}` : (m.status === 'upcoming' ? 'Ready for kickoff' : '');
-        return `<div class="team-row"><img class="flag" src="${flag(t.abbr)}" alt=""><div class="team-name"><strong>${esc(t.name)}</strong><span>${esc(record)}</span></div><div class="score">${esc(t.score || '-')}</div></div>`
+        const scorers = scorerSummary(m, t);
+        return `<div class="team-row"><img class="flag" src="${flag(t.abbr)}" alt=""><div class="team-name"><strong>${esc(t.name)}</strong><span>${esc(record)}</span>${scorers ? `<span class="scorers">${esc(scorers)}</span>` : ''}</div><div class="score">${esc(displayScore(t.score))}</div></div>`
+    }
+    function eventTypeText(e) {
+        return e.type?.text || e.type?.description || e.type || e.event_type || e.kind || ''
+    }
+    function isGoalEvent(e) {
+        return e.scoringPlay || /goal/i.test(eventTypeText(e)) || e.ownGoal
+    }
+    function eventMinute(e) {
+        return e.clock?.displayValue || e.displayTime || e.minute && `${e.minute}'` || ''
+    }
+    function eventPlayer(e) {
+        const athlete = e.athletesInvolved?.[0] || e.athlete || e.player || e.scorer;
+        return athlete?.displayName || athlete?.shortName || athlete?.fullName || athlete?.name || e.player_name || e.scorer_name || e.text || 'Goal'
+    }
+    function eventEventText(e) {
+        if (isGoalEvent(e)) {
+            const suffix = e.ownGoal ? ' own goal' : e.penaltyKick ? ' penalty goal' : ' goal';
+            return `${eventPlayer(e)}${suffix}`
+        }
+        return eventTypeText(e) || e.text || 'Event update'
+    }
+    function sameTeamId(a, b) {
+        return a != null && b != null && String(a) === String(b)
+    }
+    function eventTeamMatches(e, t) {
+        const team = e.team || e.teamInfo || {};
+        const eventAbbr = canonicalAbbr(team.abbreviation || team.abbr || e.team_abbr || e.team_code || '');
+        if (sameTeamId(team.id || e.team_id, t.id))
+            return true;
+        if (eventAbbr && eventAbbr === canonicalAbbr(t.abbr))
+            return true;
+        const eventName = String(team.displayName || team.name || e.team_name || '').toLowerCase();
+        return eventName && eventName === String(t.name || '').toLowerCase()
+    }
+    function scorerSummary(m, t) {
+        const goals = (m.details || []).filter(e => isGoalEvent(e) && eventTeamMatches(e, t));
+        if (!goals.length)
+            return '';
+        return goals.map(e => {
+            const minute = eventMinute(e);
+            const suffix = e.ownGoal ? ' OG' : e.penaltyKick ? ' pen' : '';
+            return `${eventPlayer(e)}${minute ? ` ${minute}` : ''}${suffix}`
+        }).join(', ')
     }
     function halfScore(m) {
         const ht=m.details?.find(d => /Half Time|HT|halftime/i.test(d.type?.text||d.type?.description || ''));
@@ -1293,7 +1411,7 @@
         state.selectedId = m.id;
         els.detailMessage.style.display = 'none';
         const events = (m.details || []).slice().reverse().slice(0, 10);
-        els.detail.innerHTML = `<div class="matchup"><div class="match-team"><img class="flag" src="${flag(m.away.abbr)}" alt=""><strong>${esc(m.away.name)}</strong><span>${esc(m.away.record || '')}</span></div><div class="match-score">${esc(m.away.score || '-')} - ${esc(m.home.score || '-')}</div><div class="match-team"><img class="flag" src="${flag(m.home.abbr)}" alt=""><strong>${esc(m.home.name)}</strong><span>${esc(m.home.record || '')}</span></div></div><div class="mini-grid"><div class="mini"><span>Status</span><strong>${esc(matchStatusLabel(m))}</strong></div><div class="mini"><span>Kickoff</span><strong>${esc(fmtDateTime(m.date))}</strong></div><div class="mini"><span>Venue</span><strong>${esc(m.venue)}</strong></div><div class="mini"><span>Stage</span><strong>${esc(m.stage || 'World Cup')}</strong></div><div class="mini"><span>Favorite shortcut</span><strong>Press F on a card to favorite its home team</strong></div><div class="mini"><span>TV / Stream</span><strong>${esc((m.broadcasts || []).map(b => b.names?.join(', ') || b.name).filter(Boolean).join(' / ') || 'Broadcast info unavailable')}</strong></div></div><div style="margin-top:14px"><h2>Match Events</h2><div class="events">${events.length ? events.map(e => `<div class="event"><span>${esc(e.clock?.displayValue || e.displayTime || 'Match event')}</span>${esc(e.type?.text||e.type?.description || e.text || 'Event update')}</div>`).join('') : '<div class="empty">Match events will appear when the feed provides them.</div>'}</div></div>`
+        els.detail.innerHTML = `<div class="matchup"><div class="match-team"><img class="flag" src="${flag(m.away.abbr)}" alt=""><strong>${esc(m.away.name)}</strong><span>${esc(m.away.record || '')}</span></div><div class="match-score">${esc(displayScore(m.away.score))} - ${esc(displayScore(m.home.score))}</div><div class="match-team"><img class="flag" src="${flag(m.home.abbr)}" alt=""><strong>${esc(m.home.name)}</strong><span>${esc(m.home.record || '')}</span></div></div><div class="mini-grid"><div class="mini"><span>Status</span><strong>${esc(matchStatusLabel(m))}</strong></div><div class="mini"><span>Kickoff</span><strong>${esc(fmtDateTime(m.date))}</strong></div><div class="mini"><span>Venue</span><strong>${esc(m.venue)}</strong></div><div class="mini"><span>Stage</span><strong>${esc(m.stage || 'World Cup')}</strong></div><div class="mini"><span>Favorite shortcut</span><strong>Press F on a card to favorite its home team</strong></div><div class="mini"><span>TV / Stream</span><strong>${esc((m.broadcasts || []).map(b => b.names?.join(', ') || b.name).filter(Boolean).join(' / ') || 'Broadcast info unavailable')}</strong></div></div><div style="margin-top:14px"><h2>Match Events</h2><div class="events">${events.length ? events.map(e => `<div class="event"><span>${esc(eventMinute(e) || 'Match event')}</span>${esc(eventEventText(e))}</div>`).join('') : '<div class="empty">Match events will appear when the feed provides them.</div>'}</div></div>`
     }
     function canonicalAbbr(abbr) {
         return ({
@@ -1364,8 +1482,43 @@
         });
         return groups
     }
+    function statValue(entry, names) {
+        const stats = entry.stats || [];
+        const stat = stats.find(s => names.includes(s.name) || names.includes(s.abbreviation));
+        const value = Number(stat?.value ?? stat?.displayValue);
+        return Number.isFinite(value) ? value : 0
+    }
+    function normalizeStandings(data) {
+        const groups = {};
+        (data.children || []).forEach(child => {
+            const key = (groupNameFromText(child.name) || child.name || '').replace(/^Group\s+/i, '');
+            if (!key)
+                return;
+            groups[key] = {};
+            (child.standings?.entries || []).forEach(entry => {
+                const team = entry.team || {};
+                const abbr = canonicalAbbr(team.abbreviation || team.shortDisplayName || team.name || '');
+                if (!abbr)
+                    return;
+                groups[key][abbr] = {
+                    team: {
+                        abbr,
+                        name: team.displayName || team.name || abbr
+                    },
+                    p: statValue(entry, ['gamesPlayed', 'GP']),
+                    w: statValue(entry, ['wins', 'W']),
+                    d: statValue(entry, ['ties', 'D']),
+                    l: statValue(entry, ['losses', 'L']),
+                    gf: statValue(entry, ['pointsFor', 'F']),
+                    ga: statValue(entry, ['pointsAgainst', 'A']),
+                    pts: statValue(entry, ['points', 'P'])
+                }
+            })
+        });
+        return Object.keys(groups).length ? groups : null
+    }
     function renderStandings() {
-        const groups = standingsFrom(state.allStageMatches.length ? state.allStageMatches : state.matches);
+        const groups = state.liveStandings || standingsFrom(state.allStageMatches.length ? state.allStageMatches : state.matches);
         const keys = Object.keys(GROUPS);
         els.standingsPanel.innerHTML = keys.map(g => {
             const rows = Object.values(groups[g] || {}).sort((a, b) => (b.pts - a.pts) || ((b.gf - b.ga) - (a.gf - a.ga)) || (b.gf - a.gf) || a.team.name.localeCompare(b.team.name));
@@ -1450,31 +1603,12 @@
         const data = await fetchJson(`${ESPN_SCOREBOARD}?dates=${apiDateParam(WC_START)}-${apiDateParam(WC_END)}&limit=300`);
         return (data.events || []).map(normalizeEvent)
     }
+    async function fetchEspnStandings() {
+        const data = await fetchJson(ESPN_STANDINGS);
+        return normalizeStandings(data)
+    }
     function mergeMatches(primary, overlay) {
-        const map = new Map(primary.map(m => [String(m.id), m]));
-        overlay.forEach(m => {
-            const old = map.get(String(m.id));
-            if (!old)
-                map.set(String(m.id), m);
-            else
-                map.set(String(m.id), {
-                    ...old,
-                    ...m,
-                    away: {
-                        ...old.away,
-                        ...m.away
-                    },
-                    home: {
-                        ...old.home,
-                        ...m.home
-                    },
-                    stage: m.stage || old.stage,
-                    venue: m.venue || old.venue,
-                    details: m.details?.length ? m.details : old.details,
-                    broadcasts: m.broadcasts?.length ? m.broadcasts : old.broadcasts
-                })
-        });
-        return [...map.values()]
+        return uniqueMatches([...(primary || []), ...(overlay || [])])
     }
     async function loadDay() {
         const date = els.date.value || todayIso();
@@ -1512,7 +1646,7 @@
                     matches = base.length ? base : builtInForDate(date);
                 }
             }
-            state.matches = matches.sort((a, b) => new Date(a.date) - new Date(b.date));
+            state.matches = uniqueMatches(matches).sort((a, b) => new Date(a.date) - new Date(b.date));
             checkScoreAlerts();
             if (!state.selectedId || !state.matches.some(m => m.id === state.selectedId))
                 state.selectedId = state.matches.find(m => m.status === 'live')?.id||state.matches[0]?.id || null;
@@ -1527,8 +1661,14 @@
     async function loadStageRange() {
         try {
             if ((els.sourceMode?.value || state.sourceMode) === 'static') {
+                state.liveStandings = null;
                 state.allStageMatches = BUILT_IN_MATCHES;
             } else {
+                try {
+                    state.liveStandings = await fetchEspnStandings()
+                } catch (e) {
+                    state.liveStandings = null
+                }
                 let open = [];
                 try {
                     open = await fetchOpenMatches()
@@ -1537,11 +1677,12 @@
                 try {
                     espn = await fetchEspnRange()
                 } catch (e) {}
-                state.allStageMatches = mergeMatches(open.length ? open : BUILT_IN_MATCHES, espn);
+                state.allStageMatches = uniqueMatches(mergeMatches(open.length ? open : BUILT_IN_MATCHES, espn));
             }
             renderStandings();
             updateTeamCombo();
         } catch (e) {
+            state.liveStandings = null;
             state.allStageMatches = BUILT_IN_MATCHES;
             renderStandings();
             updateTeamCombo();
@@ -1550,7 +1691,7 @@
 
     function checkScoreAlerts() {
         state.matches.forEach(m => {
-            const key = m.id,
+            const key = matchStorageKey(m),
                 score = scoreKey(m),
                 old = state.lastScores[key];
             if (old && old !== score && !state.alerted[key] && m.status === 'live') {
@@ -1563,7 +1704,7 @@
     }
     function showAlert(text) {
         const el = document.createElement('div');
-        el.textContent = '⚽ Score update: ' + text;
+        el.textContent = 'Score update: ' + text;
         el.style.cssText = 'position:fixed;right:16px;bottom:16px;z-index:100;background:#13294b;color:#fff;padding:12px 14px;border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.25);font-weight:900';
         document.body.appendChild(el);
         setTimeout(() => el.remove(), 6000)
