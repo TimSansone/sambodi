@@ -1,0 +1,1681 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Baseball Scorekeeping Trainer</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18202d;
+      --muted: #657185;
+      --line: #d9e2ee;
+      --panel: #ffffff;
+      --soft: #f4f8fb;
+      --grass: #16704f;
+      --grass-dark: #105a40;
+      --clay: #c96b34;
+      --blue: #2f6fca;
+      --gold: #d79a27;
+      --red: #c8463d;
+      --shadow: 0 18px 46px rgba(24, 32, 45, 0.12);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background:
+        linear-gradient(135deg, rgba(22, 112, 79, 0.14), transparent 34%),
+        linear-gradient(45deg, rgba(201, 107, 52, 0.14), transparent 30%),
+        #edf3f7;
+      color: var(--ink);
+    }
+
+    button, input, select, textarea { font: inherit; }
+    button { touch-action: manipulation; }
+
+    .app {
+      width: min(1600px, 100%);
+      margin: 0 auto;
+      padding: clamp(12px, 3vw, 24px);
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 18px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 4.4rem);
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      max-width: 780px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .header-tools {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      min-width: min(420px, 100%);
+    }
+
+    .btn {
+      min-height: 42px;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 13px;
+      cursor: pointer;
+      color: #ffffff;
+      background: var(--grass);
+      font-weight: 900;
+    }
+
+    .btn:hover { background: var(--grass-dark); }
+    .btn.secondary { background: var(--blue); }
+    .btn.warning { background: var(--gold); color: #241800; }
+    .btn.danger { background: var(--red); }
+    .btn.light { background: #ffffff; color: var(--ink); border: 1px solid var(--line); }
+
+    input, select, textarea {
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      color: var(--ink);
+      padding: 10px 11px;
+      outline: none;
+    }
+
+    textarea {
+      min-height: 78px;
+      resize: vertical;
+      line-height: 1.42;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--grass);
+      box-shadow: 0 0 0 3px rgba(22, 112, 79, 0.15);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .panel.pad { padding: 16px; }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(320px, 430px) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.18rem;
+      line-height: 1.2;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .lineup {
+      display: grid;
+      gap: 8px;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .segmented .btn.active {
+      background: var(--clay);
+      color: #ffffff;
+    }
+
+    .lineup-tools {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: end;
+      margin: 12px 0;
+    }
+
+    .player-row {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr) 72px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .order {
+      display: grid;
+      place-items: center;
+      min-height: 36px;
+      border-radius: 8px;
+      background: var(--soft);
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .game-strip {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .stat {
+      min-height: 78px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .stat strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+
+    .bases {
+      display: grid;
+      grid-template-columns: repeat(3, 22px);
+      grid-template-rows: repeat(3, 22px);
+      gap: 4px;
+      justify-content: center;
+      margin-top: 9px;
+    }
+
+    .base {
+      width: 22px;
+      height: 22px;
+      border: 2px solid #bdc9d8;
+      background: #ffffff;
+      transform: rotate(45deg);
+    }
+
+    .base.on {
+      border-color: var(--gold);
+      background: var(--gold);
+    }
+
+    .base.second { grid-column: 2; grid-row: 1; }
+    .base.third { grid-column: 1; grid-row: 2; }
+    .base.first { grid-column: 3; grid-row: 2; }
+
+    .play-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .play-grid .wide {
+      grid-column: 1 / -1;
+    }
+
+    .grid .wide {
+      grid-column: 1 / -1;
+    }
+
+    .runner-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .pitch-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .check {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 7px;
+      align-items: center;
+      min-height: 42px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      color: var(--ink);
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .check input {
+      width: auto;
+      min-height: 0;
+    }
+
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .status {
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      border: 1px solid #b8dcd2;
+      border-radius: 8px;
+      background: #eef9f5;
+      color: #0d5d45;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .lesson {
+      display: grid;
+      gap: 9px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .lesson strong { color: var(--ink); }
+
+    .scorebook-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    table.scorebook {
+      width: 100%;
+      min-width: 980px;
+      border-collapse: collapse;
+    }
+
+    .scorebook th,
+    .scorebook td {
+      border-bottom: 1px solid var(--line);
+      border-right: 1px solid var(--line);
+      vertical-align: top;
+      text-align: left;
+    }
+
+    .scorebook th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      padding: 9px;
+      color: var(--muted);
+      background: #f7f9fc;
+      font-size: 0.76rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .scorebook th:first-child,
+    .scorebook td:first-child {
+      position: sticky;
+      left: 0;
+      z-index: 3;
+      min-width: 170px;
+      background: #ffffff;
+      box-shadow: 1px 0 0 var(--line);
+    }
+
+    .scorebook th:first-child {
+      background: #f7f9fc;
+      z-index: 4;
+    }
+
+    .player-cell {
+      padding: 9px;
+    }
+
+    .player-cell strong {
+      display: block;
+      overflow-wrap: anywhere;
+    }
+
+    .player-cell span {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .atbat {
+      width: 108px;
+      height: 104px;
+      padding: 5px;
+      background: #ffffff;
+    }
+
+    .atbat.active {
+      background: #fff8e8;
+      box-shadow: inset 0 0 0 2px var(--gold);
+    }
+
+    .mark {
+      position: relative;
+      display: grid;
+      grid-template-rows: 1fr auto;
+      gap: 3px;
+      min-height: 100%;
+      color: var(--ink);
+      font-size: 0.86rem;
+      line-height: 1.12;
+    }
+
+    .score-diamond {
+      position: relative;
+      min-height: 64px;
+    }
+
+    .diamond-svg {
+      width: 64px;
+      height: 64px;
+      display: block;
+      margin: 0 auto;
+    }
+
+    .diamond-path {
+      fill: #ffffff;
+      stroke: #9ca9ba;
+      stroke-width: 2;
+    }
+
+    .base-path {
+      stroke: var(--grass);
+      stroke-width: 4;
+      stroke-linecap: round;
+      fill: none;
+      opacity: 0.85;
+    }
+
+    .hit-line {
+      position: absolute;
+      left: 50%;
+      top: 48px;
+      width: 42px;
+      height: 2px;
+      background: var(--clay);
+      transform-origin: left center;
+      opacity: 0.9;
+    }
+
+    .hit-line.none { display: none; }
+    .hit-line.left { transform: rotate(-132deg); }
+    .hit-line.left-center { transform: rotate(-112deg); }
+    .hit-line.center { transform: rotate(-90deg); }
+    .hit-line.right-center { transform: rotate(-68deg); }
+    .hit-line.right { transform: rotate(-48deg); }
+    .hit-line.infield-left { width: 24px; transform: rotate(-146deg); }
+    .hit-line.infield-middle { width: 22px; transform: rotate(-90deg); }
+    .hit-line.infield-right { width: 24px; transform: rotate(-35deg); }
+
+    .mark-code {
+      position: absolute;
+      inset: 23px 0 auto;
+      text-align: center;
+      font-size: 1.05rem;
+      font-weight: 900;
+    }
+
+    .mark-detail {
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    .mark-details {
+      display: grid;
+      gap: 2px;
+      min-height: 28px;
+    }
+
+    .run-dot {
+      position: absolute;
+      right: 4px;
+      top: 4px;
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--grass);
+    }
+
+    .log {
+      display: grid;
+      gap: 8px;
+      max-height: 360px;
+      overflow: auto;
+    }
+
+    .log-entry {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      line-height: 1.38;
+    }
+
+    .log-entry strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .log-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .log-actions .btn {
+      min-height: 34px;
+      padding: 7px 10px;
+      font-size: 0.86rem;
+    }
+
+    .edit-panel {
+      display: none;
+      gap: 10px;
+      margin-top: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+    }
+
+    .edit-panel.open {
+      display: grid;
+    }
+
+    .mini-table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .mini-table {
+      width: 100%;
+      min-width: 520px;
+      border-collapse: collapse;
+    }
+
+    .mini-table th,
+    .mini-table td {
+      padding: 9px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+    }
+
+    .mini-table th {
+      color: var(--muted);
+      background: #f7f9fc;
+      font-size: 0.76rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .empty {
+      padding: 16px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    @media (max-width: 1120px) {
+      header,
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .header-tools {
+        min-width: 0;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .app { padding: 10px; }
+      header { gap: 12px; margin-bottom: 14px; }
+      h1 { font-size: 2.15rem; }
+      .subtitle { font-size: 0.94rem; }
+      .panel.pad { padding: 12px; }
+      .header-tools,
+      .grid,
+      .play-grid,
+      .runner-grid,
+      .pitch-grid,
+      .game-strip,
+      .action-row {
+        grid-template-columns: 1fr;
+      }
+
+      input, select, textarea, .btn {
+        min-height: 48px;
+        font-size: 16px;
+      }
+
+      .player-row {
+        grid-template-columns: 34px minmax(0, 1fr);
+      }
+
+      .player-row select {
+        grid-column: 2;
+      }
+
+      .scorebook th:first-child,
+      .scorebook td:first-child {
+        min-width: 138px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>Baseball Scorekeeping Trainer</h1>
+        <p class="subtitle">Learn the scoring language, enter each play, and let the app update a digital scorebook, inning state, runners, and score.</p>
+      </div>
+      <div class="header-tools">
+        <button class="btn secondary" id="showAwayBookBtn" type="button">Visitor Book</button>
+        <button class="btn secondary" id="showHomeBookBtn" type="button">Home Book</button>
+        <button class="btn secondary" id="saveBtn" type="button">Save Game</button>
+        <button class="btn light" id="loadBtn" type="button">Load Saved</button>
+        <button class="btn warning" id="exportBtn" type="button">Export File</button>
+        <button class="btn light" id="printBtn" type="button">Print</button>
+      </div>
+    </header>
+
+    <main>
+      <aside class="stack">
+        <section class="panel pad">
+          <div class="section-title">
+            <h2>Game Setup</h2>
+          </div>
+          <div class="grid">
+            <div>
+              <label for="homeTeam">Home team</label>
+              <input id="homeTeam" type="text" value="Home Team">
+            </div>
+            <div>
+              <label for="awayTeam">Away team</label>
+              <input id="awayTeam" type="text" value="Away Team">
+            </div>
+          </div>
+          <div class="section-title" style="margin-top:14px">
+            <h2>Batting Lineup</h2>
+            <button class="btn light" id="resetLineupBtn" type="button">Reset Lineup</button>
+          </div>
+          <div class="lineup-tools">
+            <div>
+              <label for="lineupTeam">Editing lineup</label>
+              <select id="lineupTeam">
+                <option value="away">Visitor lineup</option>
+                <option value="home">Home lineup</option>
+              </select>
+            </div>
+            <button class="btn secondary" id="fillLineupBtn" type="button">Fill Names</button>
+          </div>
+          <div>
+            <label for="bulkLineup">Paste batting order</label>
+            <textarea id="bulkLineup" placeholder="Paste one player per line, then apply to the selected lineup."></textarea>
+            <button class="btn light" id="applyBulkLineupBtn" type="button" style="margin-top:8px">Apply Pasted Lineup</button>
+          </div>
+          <div class="lineup" id="lineup"></div>
+        </section>
+
+        <section class="panel pad">
+          <div class="section-title">
+            <h2>Enter Play</h2>
+          </div>
+          <div class="play-grid">
+            <div>
+              <label for="result">Result</label>
+              <select id="result">
+                <option value="single">Single</option>
+                <option value="double">Double</option>
+                <option value="triple">Triple</option>
+                <option value="homer">Home Run</option>
+                <option value="walk">Walk</option>
+                <option value="hbp">Hit By Pitch</option>
+                <option value="strikeout-swinging">Strikeout (swinging)</option>
+                <option value="strikeout-looking">Strikeout (looking)</option>
+                <option value="groundout">Groundout</option>
+                <option value="flyout">Flyout</option>
+                <option value="lineout">Lineout</option>
+                <option value="popout">Popout</option>
+                <option value="error">Reached On Error</option>
+                <option value="fielders-choice">Fielder's Choice</option>
+                <option value="sac-fly">Sacrifice Fly</option>
+                <option value="sac-bunt">Sacrifice Bunt</option>
+                <option value="double-play">Double Play</option>
+              </select>
+            </div>
+            <div>
+              <label for="fielding">Scoring notation</label>
+              <input id="fielding" type="text" placeholder="6-3, F8, E5, 4-6-3">
+            </div>
+            <div>
+              <label for="hitLocation">Hit location</label>
+              <select id="hitLocation">
+                <option value="none">No ball in play</option>
+                <option value="infield-left">Infield left</option>
+                <option value="infield-middle">Infield middle</option>
+                <option value="infield-right">Infield right</option>
+                <option value="left">Left field</option>
+                <option value="left-center">Left center</option>
+                <option value="center">Center field</option>
+                <option value="right-center">Right center</option>
+                <option value="right">Right field</option>
+              </select>
+            </div>
+            <div>
+              <label for="rbi">RBI</label>
+              <input id="rbi" type="number" inputmode="numeric" min="0" max="4" value="0">
+            </div>
+            <div>
+              <label for="ballsThrown">Balls thrown</label>
+              <input id="ballsThrown" type="number" inputmode="numeric" min="0" max="4" value="0">
+            </div>
+            <div>
+              <label for="strikesThrown">Strikes thrown</label>
+              <input id="strikesThrown" type="number" inputmode="numeric" min="0" value="0">
+            </div>
+            <div>
+              <label for="totalPitches">Total pitches</label>
+              <input id="totalPitches" type="number" inputmode="numeric" min="0" placeholder="Auto">
+            </div>
+            <div>
+              <label for="pitchNote">Pitch note</label>
+              <input id="pitchNote" type="text" placeholder="Optional pitch count note">
+            </div>
+            <div class="wide">
+              <label>Runner movement</label>
+              <div class="runner-grid">
+                <label class="check"><input id="forceAdvance" type="checkbox" checked> Auto advance runners</label>
+                <label class="check"><input id="runnerOut" type="checkbox"> Runner out on play</label>
+                <label class="check"><input id="runScores" type="checkbox"> Extra run scored</label>
+                <label class="check"><input id="stolenBase" type="checkbox"> Stolen base</label>
+              </div>
+            </div>
+            <div class="wide">
+              <label for="note">Play note</label>
+              <textarea id="note" placeholder="Optional detail, such as runner from second scored, great catch, throwing error, etc."></textarea>
+            </div>
+          </div>
+          <div class="action-row" style="margin-top:10px">
+            <button class="btn" id="applyPlayBtn" type="button">Apply Play</button>
+            <button class="btn light" id="undoBtn" type="button">Undo Last Play</button>
+          </div>
+          <div class="status" id="status" style="margin-top:10px">Set your lineup, then enter the first play.</div>
+        </section>
+
+        <section class="panel pad">
+          <div class="section-title">
+            <h2>Changes</h2>
+          </div>
+          <div class="grid">
+            <div>
+              <label for="changeTeam">Team</label>
+              <select id="changeTeam">
+                <option value="away">Visitor</option>
+                <option value="home">Home</option>
+              </select>
+            </div>
+            <div>
+              <label for="changeType">Change type</label>
+              <select id="changeType">
+                <option value="substitution">Substitution</option>
+                <option value="pitching">Pitching Change</option>
+              </select>
+            </div>
+            <div>
+              <label for="changeSpot">Lineup spot</label>
+              <select id="changeSpot"></select>
+            </div>
+            <div>
+              <label for="changePosition">Position</label>
+              <select id="changePosition">
+                <option value="1">1 - Pitcher</option>
+                <option value="2">2 - Catcher</option>
+                <option value="3">3 - First Base</option>
+                <option value="4">4 - Second Base</option>
+                <option value="5">5 - Third Base</option>
+                <option value="6">6 - Shortstop</option>
+                <option value="7">7 - Left Field</option>
+                <option value="8">8 - Center Field</option>
+                <option value="9">9 - Right Field</option>
+                <option value="DH">DH</option>
+              </select>
+            </div>
+            <div class="wide">
+              <label for="changeName">New player / pitcher</label>
+              <input id="changeName" type="text" placeholder="Enter replacement name">
+            </div>
+          </div>
+          <button class="btn secondary" id="applyChangeBtn" type="button" style="margin-top:10px">Record Change</button>
+        </section>
+
+        <section class="panel pad">
+          <div class="section-title">
+            <h2>Learn Mode</h2>
+          </div>
+          <div class="lesson" id="lesson">
+            <strong>Scorekeeper tip:</strong>
+            <span>Position numbers are the foundation: 1 pitcher, 2 catcher, 3 first base, 4 second base, 5 third base, 6 shortstop, 7 left field, 8 center field, 9 right field.</span>
+          </div>
+        </section>
+      </aside>
+
+      <section class="stack">
+        <section class="panel pad">
+          <div class="game-strip">
+            <div class="stat"><span>Inning</span><strong id="inningText">Top 1</strong></div>
+            <div class="stat"><span>Outs</span><strong id="outsText">0</strong></div>
+            <div class="stat"><span>Score</span><strong id="scoreText">0-0</strong></div>
+            <div class="stat"><span>At Bat</span><strong id="batterText">Player 1</strong></div>
+            <div class="stat"><span>Bases</span><div class="bases" id="bases"></div></div>
+          </div>
+          <div class="section-title">
+            <h2 id="scorebookTitle">Visitor Scorebook</h2>
+            <span id="pitcherText">Pitcher: -</span>
+          </div>
+          <div class="scorebook-wrap" id="scorebookWrap"></div>
+        </section>
+
+        <section class="panel pad">
+          <div class="section-title">
+            <h2>Pitch Counts By Inning</h2>
+          </div>
+          <div id="pitchSummary"></div>
+        </section>
+
+        <section class="panel pad">
+          <div class="section-title">
+            <h2>Play Log</h2>
+            <button class="btn danger" id="newGameBtn" type="button">New Game</button>
+          </div>
+          <div class="edit-panel" id="editPanel">
+            <div class="section-title">
+              <h2>Edit Play</h2>
+              <button class="btn light" id="cancelEditBtn" type="button">Cancel</button>
+            </div>
+            <div class="play-grid">
+              <div>
+                <label for="editResult">Result</label>
+                <select id="editResult"></select>
+              </div>
+              <div>
+                <label for="editCode">Scoring notation</label>
+                <input id="editCode" type="text">
+              </div>
+              <div>
+                <label for="editHitLocation">Hit location</label>
+                <select id="editHitLocation"></select>
+              </div>
+              <div>
+                <label for="editRbi">RBI</label>
+                <input id="editRbi" type="number" inputmode="numeric" min="0" max="4">
+              </div>
+              <div>
+                <label for="editRuns">Runs scored</label>
+                <input id="editRuns" type="number" inputmode="numeric" min="0" max="4">
+              </div>
+              <div>
+                <label for="editOuts">Outs on play</label>
+                <input id="editOuts" type="number" inputmode="numeric" min="0" max="3">
+              </div>
+              <div>
+                <label for="editBalls">Balls</label>
+                <input id="editBalls" type="number" inputmode="numeric" min="0" max="4">
+              </div>
+              <div>
+                <label for="editStrikes">Strikes</label>
+                <input id="editStrikes" type="number" inputmode="numeric" min="0">
+              </div>
+              <div>
+                <label for="editPitches">Total pitches</label>
+                <input id="editPitches" type="number" inputmode="numeric" min="0">
+              </div>
+              <div class="wide">
+                <label for="editNote">Play note</label>
+                <textarea id="editNote"></textarea>
+              </div>
+            </div>
+            <button class="btn secondary" id="saveEditBtn" type="button">Save Edit</button>
+          </div>
+          <div class="log" id="playLog"></div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const storageKey = "baseball-scorekeeping-trainer-v2";
+    const legacyStorageKey = "baseball-scorekeeping-trainer-v1";
+    const inningsToShow = 9;
+    const positions = ["1","2","3","4","5","6","7","8","9","DH"];
+    const teamLabels = { away: "Visitor", home: "Home" };
+
+    const resultInfo = {
+      single: { code: "1B", bases: 1, out: 0, explain: "A single is marked 1B. The batter reaches first base safely." },
+      double: { code: "2B", bases: 2, out: 0, explain: "A double is marked 2B. The batter reaches second base safely." },
+      triple: { code: "3B", bases: 3, out: 0, explain: "A triple is marked 3B. The batter reaches third base safely." },
+      homer: { code: "HR", bases: 4, out: 0, explain: "A home run is marked HR. The batter and all forced runners score." },
+      walk: { code: "BB", bases: 1, out: 0, explain: "A walk is marked BB. The batter is awarded first base." },
+      hbp: { code: "HBP", bases: 1, out: 0, explain: "Hit by pitch is marked HBP. The batter is awarded first base." },
+      "strikeout-swinging": { code: "K", bases: 0, out: 1, explain: "A swinging strikeout is marked K." },
+      "strikeout-looking": { code: "Kc", bases: 0, out: 1, explain: "A called third strike is often shown as a backwards K. This app marks it as Kc for called strikeout." },
+      groundout: { code: "GO", bases: 0, out: 1, explain: "A groundout is scored with the fielders involved, such as 6-3 for shortstop to first." },
+      flyout: { code: "F", bases: 0, out: 1, explain: "A flyout is marked F plus the fielder number, such as F8 for flyout to center field." },
+      lineout: { code: "L", bases: 0, out: 1, explain: "A lineout is marked L plus the fielder number, such as L5 for lineout to third base." },
+      popout: { code: "P", bases: 0, out: 1, explain: "A popout is marked P plus the fielder number, such as P4 for popout to second base." },
+      error: { code: "E", bases: 1, out: 0, explain: "Reached on error is marked E plus the fielder number, such as E5 for an error by third base." },
+      "fielders-choice": { code: "FC", bases: 1, out: 0, explain: "Fielder's choice is marked FC. The batter reaches because the defense chose to retire another runner." },
+      "sac-fly": { code: "SF", bases: 0, out: 1, explain: "A sacrifice fly is marked SF. It counts as an out, but not an official at-bat." },
+      "sac-bunt": { code: "SAC", bases: 0, out: 1, explain: "A sacrifice bunt is marked SAC. It advances runners and counts as an out, but not an official at-bat." },
+      "double-play": { code: "DP", bases: 0, out: 2, explain: "A double play records two outs. Common notation is 6-4-3 or 4-6-3." }
+    };
+
+    function clone(value) { return JSON.parse(JSON.stringify(value)); }
+
+    function makePlayers(label) {
+      return Array.from({ length: 9 }, (_, index) => ({
+        name: `${label} ${index + 1}`,
+        position: String(index + 1),
+        cells: [],
+        changes: []
+      }));
+    }
+
+    function makeTeam(name, label) {
+      const players = makePlayers(label);
+      return { name, players, batterIndex: 0, pitcher: players[0].name, pitchCounts: {}, changes: [] };
+    }
+
+    const freshState = () => ({
+      inning: 1,
+      half: "Top",
+      outs: 0,
+      score: { away: 0, home: 0 },
+      bases: { first: null, second: null, third: null },
+      displayTeam: "away",
+      lineupEditTeam: "away",
+      teams: {
+        away: makeTeam("Away Team", "Visitor Player"),
+        home: makeTeam("Home Team", "Home Player")
+      },
+      plays: [],
+      history: []
+    });
+
+    const state = freshState();
+
+    const homeTeam = document.getElementById("homeTeam");
+    const awayTeam = document.getElementById("awayTeam");
+    const lineupTeam = document.getElementById("lineupTeam");
+    const bulkLineup = document.getElementById("bulkLineup");
+    const lineup = document.getElementById("lineup");
+    const result = document.getElementById("result");
+    const fielding = document.getElementById("fielding");
+    const hitLocation = document.getElementById("hitLocation");
+    const rbi = document.getElementById("rbi");
+    const ballsThrown = document.getElementById("ballsThrown");
+    const strikesThrown = document.getElementById("strikesThrown");
+    const totalPitches = document.getElementById("totalPitches");
+    const pitchNote = document.getElementById("pitchNote");
+    const forceAdvance = document.getElementById("forceAdvance");
+    const runnerOut = document.getElementById("runnerOut");
+    const runScores = document.getElementById("runScores");
+    const stolenBase = document.getElementById("stolenBase");
+    const note = document.getElementById("note");
+    const status = document.getElementById("status");
+    const inningText = document.getElementById("inningText");
+    const outsText = document.getElementById("outsText");
+    const scoreText = document.getElementById("scoreText");
+    const batterText = document.getElementById("batterText");
+    const bases = document.getElementById("bases");
+    const scorebookWrap = document.getElementById("scorebookWrap");
+    const scorebookTitle = document.getElementById("scorebookTitle");
+    const pitcherText = document.getElementById("pitcherText");
+    const pitchSummary = document.getElementById("pitchSummary");
+    const playLog = document.getElementById("playLog");
+    const lesson = document.getElementById("lesson");
+    const editPanel = document.getElementById("editPanel");
+    const editResult = document.getElementById("editResult");
+    const editCode = document.getElementById("editCode");
+    const editHitLocation = document.getElementById("editHitLocation");
+    const editRbi = document.getElementById("editRbi");
+    const editRuns = document.getElementById("editRuns");
+    const editOuts = document.getElementById("editOuts");
+    const editBalls = document.getElementById("editBalls");
+    const editStrikes = document.getElementById("editStrikes");
+    const editPitches = document.getElementById("editPitches");
+    const editNote = document.getElementById("editNote");
+    const changeTeam = document.getElementById("changeTeam");
+    const changeType = document.getElementById("changeType");
+    const changeSpot = document.getElementById("changeSpot");
+    const changePosition = document.getElementById("changePosition");
+    const changeName = document.getElementById("changeName");
+    const showAwayBookBtn = document.getElementById("showAwayBookBtn");
+    const showHomeBookBtn = document.getElementById("showHomeBookBtn");
+    let editingPlayIndex = null;
+
+    function escapeHtml(value) {
+      return String(value ?? "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+    }
+
+    function teamName(key) { return state.teams[key].name; }
+    function offenseKey() { return state.half === "Top" ? "away" : "home"; }
+    function defenseKey() { return offenseKey() === "away" ? "home" : "away"; }
+    function offenseTeam() { return state.teams[offenseKey()]; }
+    function defenseTeam() { return state.teams[defenseKey()]; }
+    function currentBatter() { return offenseTeam().players[offenseTeam().batterIndex] || offenseTeam().players[0]; }
+    function halfInningKey() { return `${state.half} ${state.inning}`; }
+
+    function normalizeLoaded(data) {
+      if (data.teams) return data;
+      const upgraded = freshState();
+      upgraded.teams.away.name = data.awayTeam || "Away Team";
+      upgraded.teams.home.name = data.homeTeam || "Home Team";
+      upgraded.teams.away.players = data.players || makePlayers("Visitor Player");
+      upgraded.teams.away.batterIndex = data.batterIndex || 0;
+      upgraded.inning = data.inning || 1;
+      upgraded.half = data.half || "Top";
+      upgraded.outs = data.outs || 0;
+      upgraded.score = data.score || { away: 0, home: 0 };
+      upgraded.bases = data.bases || { first: null, second: null, third: null };
+      upgraded.plays = data.plays || [];
+      upgraded.history = [];
+      return upgraded;
+    }
+
+    function saveLocal() {
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    }
+
+    function loadLocal() {
+      const saved = localStorage.getItem(storageKey) || localStorage.getItem(legacyStorageKey);
+      if (!saved) return false;
+      try {
+        Object.assign(state, normalizeLoaded(JSON.parse(saved)));
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function snapshot() {
+      state.history.push(JSON.stringify({
+        inning: state.inning,
+        half: state.half,
+        outs: state.outs,
+        score: state.score,
+        bases: state.bases,
+        displayTeam: state.displayTeam,
+        lineupEditTeam: state.lineupEditTeam,
+        teams: state.teams,
+        plays: state.plays
+      }));
+      if (state.history.length > 100) state.history.shift();
+    }
+
+    function restore(snapshotText) {
+      Object.assign(state, JSON.parse(snapshotText));
+    }
+
+    function scoreCode(info) {
+      const custom = fielding.value.trim();
+      return custom ? custom.toUpperCase() : info.code;
+    }
+
+    function scoreRun(playerName) {
+      state.score[offenseKey()] += 1;
+      return playerName;
+    }
+
+    function advanceExistingRunners(basesEarned, autoAdvance) {
+      const scored = [];
+      const previous = { ...state.bases };
+      state.bases = { first: null, second: null, third: null };
+      [["third", 3], ["second", 2], ["first", 1]].forEach(([base, baseNumber]) => {
+        const runner = previous[base];
+        if (!runner) return;
+        const nextBase = baseNumber + (autoAdvance ? basesEarned : 0);
+        if (nextBase >= 4) scored.push(scoreRun(runner));
+        else if (nextBase === 3) state.bases.third = runner;
+        else if (nextBase === 2) state.bases.second = runner;
+        else state.bases.first = runner;
+      });
+      return scored;
+    }
+
+    function placeBatter(playerName, basesEarned) {
+      if (basesEarned >= 4) return scoreRun(playerName);
+      if (basesEarned === 3) state.bases.third = playerName;
+      if (basesEarned === 2) state.bases.second = playerName;
+      if (basesEarned === 1) state.bases.first = playerName;
+      return null;
+    }
+
+    function addPitchCount() {
+      const balls = Number(ballsThrown.value || 0);
+      const strikes = Number(strikesThrown.value || 0);
+      const manualTotal = totalPitches.value === "" ? null : Number(totalPitches.value);
+      const total = Number.isFinite(manualTotal) && manualTotal !== null ? manualTotal : balls + strikes;
+      const team = defenseTeam();
+      const key = halfInningKey();
+      if (!team.pitchCounts[key]) {
+        team.pitchCounts[key] = { inning: key, pitcher: team.pitcher || "-", balls: 0, strikes: 0, total: 0, notes: [] };
+      }
+      team.pitchCounts[key].pitcher = team.pitcher || team.pitchCounts[key].pitcher || "-";
+      team.pitchCounts[key].balls += balls;
+      team.pitchCounts[key].strikes += strikes;
+      team.pitchCounts[key].total += total;
+      if (pitchNote.value.trim()) team.pitchCounts[key].notes.push(pitchNote.value.trim());
+      return { balls, strikes, total };
+    }
+
+    function nextHalfInning() {
+      state.outs = 0;
+      state.bases = { first: null, second: null, third: null };
+      if (state.half === "Top") state.half = "Bottom";
+      else {
+        state.half = "Top";
+        state.inning += 1;
+      }
+      state.displayTeam = offenseKey();
+    }
+
+    function applyPlay() {
+      snapshot();
+      const offense = offenseTeam();
+      const batter = currentBatter();
+      const info = resultInfo[result.value];
+      const code = scoreCode(info);
+      const pitch = addPitchCount();
+      let outsAdded = info.out;
+      const scored = [];
+      let detail = "";
+
+      if (runnerOut.checked) outsAdded += 1;
+      if (stolenBase.checked) {
+        if (state.bases.first && !state.bases.second) {
+          state.bases.second = state.bases.first;
+          state.bases.first = null;
+          detail = "Runner on first stole second.";
+        } else if (state.bases.second && !state.bases.third) {
+          state.bases.third = state.bases.second;
+          state.bases.second = null;
+          detail = "Runner on second stole third.";
+        }
+      } else {
+        scored.push(...advanceExistingRunners(info.bases, forceAdvance.checked));
+        const batterScore = placeBatter(batter.name, info.bases);
+        if (batterScore) scored.push(batterScore);
+      }
+
+      if (runScores.checked) scored.push(scoreRun("Extra runner"));
+      state.outs += outsAdded;
+
+      const cell = {
+        id: `cell-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        inning: state.inning,
+        half: state.half,
+        code,
+        result: result.value,
+        note: note.value.trim() || detail,
+        hitLocation: hitLocation.value,
+        runs: scored.length,
+        rbi: Number(rbi.value || 0),
+        outs: outsAdded,
+        pitches: pitch.total,
+        balls: pitch.balls,
+        strikes: pitch.strikes,
+        pitchingTeamKey: defenseKey(),
+        pitcher: defenseTeam().pitcher || "-"
+      };
+      batter.cells.push(cell);
+
+      state.plays.push({
+        type: "play",
+        teamKey: offenseKey(),
+        playerIndex: offense.batterIndex,
+        cellId: cell.id,
+        inning: halfInningKey(),
+        team: teamName(offenseKey()),
+        batter: batter.name,
+        code,
+        result: result.options[result.selectedIndex].text,
+        resultKey: result.value,
+        note: cell.note,
+        rbi: cell.rbi,
+        runs: cell.runs,
+        balls: cell.balls,
+        strikes: cell.strikes,
+        hitLocation: cell.hitLocation,
+        pitches: pitch.total,
+        score: `${teamName("away")} ${state.score.away}, ${teamName("home")} ${state.score.home}`,
+        outs: state.outs
+      });
+
+      if (!stolenBase.checked) offense.batterIndex = (offense.batterIndex + 1) % offense.players.length;
+      if (state.outs >= 3) {
+        nextHalfInning();
+        status.textContent = `Three outs. Moving to ${state.half} ${state.inning}.`;
+      } else {
+        status.textContent = `${batter.name}: ${code}. ${state.outs} out${state.outs === 1 ? "" : "s"}.`;
+      }
+      updateLesson(info, code, cell);
+      clearPlayForm();
+      render();
+    }
+
+    function clearPlayForm() {
+      fielding.value = "";
+      hitLocation.value = "none";
+      rbi.value = "0";
+      ballsThrown.value = "0";
+      strikesThrown.value = "0";
+      totalPitches.value = "";
+      pitchNote.value = "";
+      runnerOut.checked = false;
+      runScores.checked = false;
+      stolenBase.checked = false;
+      note.value = "";
+      forceAdvance.checked = true;
+    }
+
+    function updateLesson(info, code, cell) {
+      lesson.innerHTML = `
+        <strong>${escapeHtml(code)}: ${escapeHtml(info.explain)}</strong>
+        <span>Outs: ${cell.outs}. Runs: ${cell.runs}. RBI: ${cell.rbi}. Pitches logged: ${cell.pitches} (${cell.strikes} strikes / ${cell.balls} balls).</span>
+        <span>Tip: use the notation box for entries like 6-3, F8, E5, BB, K, or 4-6-3.</span>
+      `;
+    }
+
+    function resultLabel(key) {
+      const option = [...result.options].find((item) => item.value === key);
+      return option?.textContent || key || "Play";
+    }
+
+    function normalizeResultKey(key) {
+      return key === "strikeout" ? "strikeout-swinging" : key;
+    }
+
+    function populateEditSelects() {
+      editResult.innerHTML = result.innerHTML;
+      editHitLocation.innerHTML = hitLocation.innerHTML;
+    }
+
+    function findCellForPlay(play) {
+      if (!play || play.type !== "play") return null;
+      if (play.teamKey && play.cellId) {
+        const player = state.teams[play.teamKey]?.players?.[play.playerIndex];
+        const cell = player?.cells?.find((item) => item.id === play.cellId);
+        if (cell) return cell;
+      }
+      const teamKey = play.teamKey || (play.inning?.startsWith("Top") ? "away" : "home");
+      const team = state.teams[teamKey];
+      if (!team) return null;
+      const player = team.players.find((item) => item.name === play.batter);
+      if (!player) return null;
+      return player.cells.find((cell) => `${cell.half} ${cell.inning}` === play.inning && cell.code === play.code) || null;
+    }
+
+    function startEditPlay(index) {
+      const play = state.plays[index];
+      const cell = findCellForPlay(play);
+      if (!play || play.type !== "play" || !cell) {
+        status.textContent = "This log entry cannot be edited from here.";
+        return;
+      }
+      editingPlayIndex = index;
+      populateEditSelects();
+      editResult.value = normalizeResultKey(cell.result || play.resultKey || "single");
+      editCode.value = cell.code || play.code || "";
+      editHitLocation.value = cell.hitLocation || play.hitLocation || "none";
+      editRbi.value = cell.rbi || 0;
+      editRuns.value = cell.runs || 0;
+      editOuts.value = cell.outs || 0;
+      editBalls.value = cell.balls || 0;
+      editStrikes.value = cell.strikes || 0;
+      editPitches.value = cell.pitches ?? ((cell.balls || 0) + (cell.strikes || 0));
+      editNote.value = cell.note || play.note || "";
+      editPanel.classList.add("open");
+      status.textContent = `Editing ${play.batter}'s play from ${play.inning}.`;
+    }
+
+    function saveEditedPlay() {
+      if (editingPlayIndex === null) return;
+      const play = state.plays[editingPlayIndex];
+      const cell = findCellForPlay(play);
+      if (!cell) {
+        status.textContent = "Could not find the scorebook cell for that play.";
+        return;
+      }
+      snapshot();
+      const resultKey = editResult.value;
+      const code = editCode.value.trim().toUpperCase() || resultInfo[resultKey]?.code || cell.code;
+      cell.result = resultKey;
+      cell.code = code;
+      cell.hitLocation = editHitLocation.value;
+      cell.rbi = Number(editRbi.value || 0);
+      cell.runs = Number(editRuns.value || 0);
+      cell.outs = Number(editOuts.value || 0);
+      cell.balls = Number(editBalls.value || 0);
+      cell.strikes = Number(editStrikes.value || 0);
+      const editedPitches = editPitches.value === "" ? cell.balls + cell.strikes : Number(editPitches.value || 0);
+      cell.pitches = Number.isFinite(editedPitches) ? editedPitches : cell.balls + cell.strikes;
+      cell.note = editNote.value.trim();
+      play.code = cell.code;
+      play.result = resultLabel(resultKey);
+      play.resultKey = resultKey;
+      play.note = cell.note;
+      play.rbi = cell.rbi;
+      play.runs = cell.runs;
+      play.outs = cell.outs;
+      play.balls = cell.balls;
+      play.strikes = cell.strikes;
+      play.pitches = cell.pitches;
+      play.hitLocation = cell.hitLocation;
+      editingPlayIndex = null;
+      editPanel.classList.remove("open");
+      status.textContent = "Play edit saved. Scorebook mark updated.";
+      render();
+    }
+
+    function renderLineup() {
+      lineupTeam.value = state.lineupEditTeam;
+      const team = state.teams[state.lineupEditTeam];
+      lineup.innerHTML = team.players.map((player, index) => `
+        <div class="player-row">
+          <div class="order">${index + 1}</div>
+          <input type="text" value="${escapeHtml(player.name)}" data-player-name="${index}" aria-label="${teamLabels[state.lineupEditTeam]} player ${index + 1} name">
+          <select data-player-position="${index}" aria-label="${teamLabels[state.lineupEditTeam]} player ${index + 1} position">
+            ${positions.map((pos) => `<option value="${pos}" ${player.position === pos ? "selected" : ""}>${pos}</option>`).join("")}
+          </select>
+        </div>
+      `).join("");
+
+      lineup.querySelectorAll("[data-player-name]").forEach((input) => {
+        input.addEventListener("change", () => {
+          team.players[Number(input.dataset.playerName)].name = input.value.trim() || `${teamLabels[state.lineupEditTeam]} ${Number(input.dataset.playerName) + 1}`;
+          if (Number(input.dataset.playerName) === 0 && !team.pitcher) team.pitcher = input.value.trim();
+          render();
+        });
+      });
+      lineup.querySelectorAll("[data-player-position]").forEach((select) => {
+        select.addEventListener("change", () => {
+          team.players[Number(select.dataset.playerPosition)].position = select.value;
+          render();
+        });
+      });
+    }
+
+    function renderChangeSpots() {
+      changeTeam.value = changeTeam.value || "away";
+      const team = state.teams[changeTeam.value];
+      changeSpot.innerHTML = team.players.map((player, index) => `<option value="${index}">${index + 1}. ${escapeHtml(player.name)} (${escapeHtml(player.position)})</option>`).join("");
+    }
+
+    function applyChange() {
+      const key = changeTeam.value;
+      const team = state.teams[key];
+      const index = Number(changeSpot.value || 0);
+      const name = changeName.value.trim();
+      if (!name) {
+        status.textContent = "Enter the new player or pitcher name first.";
+        return;
+      }
+      snapshot();
+      const old = team.players[index];
+      const type = changeType.value;
+      if (type === "pitching") {
+        team.pitcher = name;
+        if (changePosition.value === "1") {
+          team.players[index] = { ...old, name, position: "1", changes: [...(old.changes || []), `${halfInningKey()}: Pitching change`] };
+        }
+      } else {
+        team.players[index] = { ...old, name, position: changePosition.value, changes: [...(old.changes || []), `${halfInningKey()}: entered for ${old.name}`] };
+        if (changePosition.value === "1") team.pitcher = name;
+      }
+      team.changes.push({ inning: halfInningKey(), type, spot: index + 1, from: old.name, to: name, position: changePosition.value });
+      state.plays.push({ type: "change", inning: halfInningKey(), batter: "Lineup Change", code: type === "pitching" ? "P CHG" : "SUB", result: `${teamName(key)}: ${name} entered for ${old.name}`, note: `Spot ${index + 1}, position ${changePosition.value}`, score: `${teamName("away")} ${state.score.away}, ${teamName("home")} ${state.score.home}`, outs: state.outs });
+      changeName.value = "";
+      status.textContent = `${type === "pitching" ? "Pitching change" : "Substitution"} recorded for ${teamName(key)}.`;
+      render();
+    }
+
+    function renderBases() {
+      bases.innerHTML = `
+        <span class="base second ${state.bases.second ? "on" : ""}" title="Second base"></span>
+        <span class="base third ${state.bases.third ? "on" : ""}" title="Third base"></span>
+        <span class="base first ${state.bases.first ? "on" : ""}" title="First base"></span>
+      `;
+    }
+
+    function basePathMarkup(mark) {
+      const safeResults = ["single", "double", "triple", "homer", "walk", "hbp", "error", "fielders-choice"];
+      if (!safeResults.includes(mark.result) && !mark.runs) return "";
+      const paths = [];
+      if (["single", "walk", "hbp", "error", "fielders-choice", "double", "triple", "homer"].includes(mark.result)) paths.push('<path class="base-path" d="M32 54 L54 32"></path>');
+      if (["double", "triple", "homer"].includes(mark.result)) paths.push('<path class="base-path" d="M54 32 L32 10"></path>');
+      if (["triple", "homer"].includes(mark.result)) paths.push('<path class="base-path" d="M32 10 L10 32"></path>');
+      if (mark.result === "homer" || mark.runs) paths.push('<path class="base-path" d="M10 32 L32 54"></path>');
+      return paths.join("");
+    }
+
+    function markMarkup(mark) {
+      const details = [
+        mark.outs ? `${mark.outs} out${mark.outs === 1 ? "" : "s"}` : "safe",
+        mark.rbi ? `${mark.rbi} RBI` : "",
+        mark.pitches ? `${mark.pitches} pitches` : "",
+        mark.note || ""
+      ].filter(Boolean);
+      return `
+        <div class="mark">
+          <div class="score-diamond">
+            ${mark.runs ? '<span class="run-dot" title="Run scored"></span>' : ""}
+            <span class="hit-line ${escapeHtml(mark.hitLocation || "none")}"></span>
+            <svg class="diamond-svg" viewBox="0 0 64 64" aria-hidden="true">
+              <path class="diamond-path" d="M32 4 L60 32 L32 60 L4 32 Z"></path>
+              ${basePathMarkup(mark)}
+            </svg>
+            <span class="mark-code">${escapeHtml(mark.code)}</span>
+          </div>
+          <div class="mark-details">
+            ${details.slice(0, 3).map((detail) => `<span class="mark-detail">${escapeHtml(detail)}</span>`).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderScorebook() {
+      const team = state.teams[state.displayTeam];
+      const inningHeaders = Array.from({ length: inningsToShow }, (_, index) => `<th>${index + 1}</th>`).join("");
+      const rows = team.players.map((player, playerIndex) => {
+        const cells = Array.from({ length: inningsToShow }, (_, inningIndex) => {
+          const inning = inningIndex + 1;
+          const marks = player.cells.filter((cell) => cell.inning === inning);
+          const active = state.displayTeam === offenseKey() && playerIndex === team.batterIndex && inning === state.inning;
+          return `<td class="atbat ${active ? "active" : ""}">
+            ${marks.map(markMarkup).join("")}
+          </td>`;
+        }).join("");
+        return `<tr><td class="player-cell"><strong>${escapeHtml(player.name)}</strong><span>Position ${escapeHtml(player.position)}</span></td>${cells}</tr>`;
+      }).join("");
+      scorebookTitle.textContent = `${teamName(state.displayTeam)} Scorebook`;
+      scorebookWrap.innerHTML = `<table class="scorebook"><thead><tr><th>${escapeHtml(teamName(state.displayTeam))} Lineup</th>${inningHeaders}</tr></thead><tbody>${rows}</tbody></table>`;
+    }
+
+    function calculatedPitchRows() {
+      const rows = {};
+      ["away", "home"].forEach((battingKey) => {
+        state.teams[battingKey].players.forEach((player) => {
+          player.cells.forEach((cell) => {
+            const pitchingKey = cell.pitchingTeamKey || (cell.half === "Top" ? "home" : "away");
+            const pitcher = cell.pitcher || state.teams[pitchingKey]?.pitcher || "-";
+            const inning = `${cell.half} ${cell.inning}`;
+            const key = `${pitchingKey}|${inning}|${pitcher}`;
+            if (!rows[key]) rows[key] = { inning, team: teamName(pitchingKey), pitcher, balls: 0, strikes: 0, total: 0 };
+            rows[key].balls += Number(cell.balls || 0);
+            rows[key].strikes += Number(cell.strikes || 0);
+            rows[key].total += Number(cell.pitches ?? ((cell.balls || 0) + (cell.strikes || 0)));
+          });
+        });
+      });
+      return Object.values(rows);
+    }
+
+    function renderPitchSummary() {
+      const rows = calculatedPitchRows();
+      if (!rows.length) {
+        pitchSummary.innerHTML = '<div class="empty">Pitch totals will appear here after you enter balls and strikes for plays.</div>';
+        return;
+      }
+      pitchSummary.innerHTML = `<div class="mini-table-wrap"><table class="mini-table"><thead><tr><th>Half inning</th><th>Pitching team</th><th>Pitcher</th><th>Balls</th><th>Strikes</th><th>Total</th></tr></thead><tbody>${rows.map((row) => `<tr><td>${escapeHtml(row.inning)}</td><td>${escapeHtml(row.team)}</td><td>${escapeHtml(row.pitcher)}</td><td>${row.balls}</td><td>${row.strikes}</td><td>${row.total}</td></tr>`).join("")}</tbody></table></div>`;
+    }
+
+    function renderLog() {
+      if (!state.plays.length) {
+        playLog.innerHTML = '<div class="empty">Plays, substitutions, and pitching changes will appear here.</div>';
+        return;
+      }
+      playLog.innerHTML = [...state.plays].reverse().map((play, index) => {
+        const realIndex = state.plays.length - 1 - index;
+        return `
+        <div class="log-entry">
+          <strong>${state.plays.length - index}. ${escapeHtml(play.inning)} - ${escapeHtml(play.batter)}: ${escapeHtml(play.code)}</strong>
+          <div>${escapeHtml(play.result)}${play.note ? ` - ${escapeHtml(play.note)}` : ""}</div>
+          <div>${escapeHtml(play.score)} | Outs: ${escapeHtml(play.outs)}${play.pitches ? ` | Pitches: ${play.pitches}` : ""}</div>
+          ${play.type === "play" ? `<div class="log-actions"><button class="btn light" type="button" data-edit-play="${realIndex}">Edit Play</button></div>` : ""}
+        </div>
+      `;
+      }).join("");
+      playLog.querySelectorAll("[data-edit-play]").forEach((button) => {
+        button.addEventListener("click", () => startEditPlay(Number(button.dataset.editPlay)));
+      });
+    }
+
+    function render() {
+      homeTeam.value = state.teams.home.name;
+      awayTeam.value = state.teams.away.name;
+      inningText.textContent = `${state.half} ${state.inning}`;
+      outsText.textContent = state.outs;
+      scoreText.textContent = `${teamName("away")} ${state.score.away} - ${teamName("home")} ${state.score.home}`;
+      batterText.textContent = `${currentBatter()?.name || "-"} (${teamName(offenseKey())})`;
+      pitcherText.textContent = `Pitcher: ${defenseTeam().pitcher || "-"}`;
+      showAwayBookBtn.classList.toggle("active", state.displayTeam === "away");
+      showHomeBookBtn.classList.toggle("active", state.displayTeam === "home");
+      renderBases();
+      renderLineup();
+      renderChangeSpots();
+      renderScorebook();
+      renderPitchSummary();
+      renderLog();
+      saveLocal();
+    }
+
+    document.getElementById("applyPlayBtn").addEventListener("click", applyPlay);
+    document.getElementById("applyChangeBtn").addEventListener("click", applyChange);
+    document.getElementById("saveEditBtn").addEventListener("click", saveEditedPlay);
+    document.getElementById("cancelEditBtn").addEventListener("click", () => {
+      editingPlayIndex = null;
+      editPanel.classList.remove("open");
+      status.textContent = "Edit canceled.";
+    });
+    document.getElementById("showAwayBookBtn").addEventListener("click", () => { state.displayTeam = "away"; render(); });
+    document.getElementById("showHomeBookBtn").addEventListener("click", () => { state.displayTeam = "home"; render(); });
+    lineupTeam.addEventListener("change", () => { state.lineupEditTeam = lineupTeam.value; render(); });
+    changeTeam.addEventListener("change", renderChangeSpots);
+
+    document.getElementById("fillLineupBtn").addEventListener("click", () => {
+      const key = state.lineupEditTeam;
+      const prefix = teamLabels[key] === "Visitor" ? "Visitor Player" : "Home Player";
+      state.teams[key].players = makePlayers(prefix);
+      state.teams[key].pitcher = state.teams[key].players[0].name;
+      status.textContent = `${teamLabels[key]} lineup filled with starter names.`;
+      render();
+    });
+
+    document.getElementById("applyBulkLineupBtn").addEventListener("click", () => {
+      const names = bulkLineup.value.split(/\r?\n/).map((name) => name.trim()).filter(Boolean);
+      if (!names.length) {
+        status.textContent = "Paste at least one player name first.";
+        return;
+      }
+      const key = state.lineupEditTeam;
+      const team = state.teams[key];
+      team.players = names.slice(0, 12).map((name, index) => ({
+        name,
+        position: team.players[index]?.position || positions[index] || "DH",
+        cells: team.players[index]?.cells || [],
+        changes: team.players[index]?.changes || []
+      }));
+      while (team.players.length < 9) {
+        const index = team.players.length;
+        team.players.push({ name: `${teamLabels[key]} ${index + 1}`, position: positions[index] || "DH", cells: [], changes: [] });
+      }
+      team.batterIndex = Math.min(team.batterIndex, team.players.length - 1);
+      team.pitcher = team.players.find((player) => player.position === "1")?.name || team.pitcher || team.players[0].name;
+      bulkLineup.value = "";
+      status.textContent = `${teamLabels[key]} batting order updated.`;
+      render();
+    });
+
+    document.getElementById("undoBtn").addEventListener("click", () => {
+      const previous = state.history.pop();
+      if (!previous) {
+        status.textContent = "There is no play to undo.";
+        return;
+      }
+      restore(previous);
+      status.textContent = "Last action undone.";
+      render();
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      saveLocal();
+      status.textContent = "Game saved in this browser.";
+    });
+
+    document.getElementById("loadBtn").addEventListener("click", () => {
+      status.textContent = loadLocal() ? "Saved game loaded." : "No saved game was found.";
+      render();
+    });
+
+    document.getElementById("exportBtn").addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const name = `${teamName("away")}-at-${teamName("home")}`.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "baseball-scorebook";
+      link.href = url;
+      link.download = `${name}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      status.textContent = "Scorebook exported as a file.";
+    });
+
+    document.getElementById("printBtn").addEventListener("click", () => window.print());
+
+    document.getElementById("newGameBtn").addEventListener("click", () => {
+      if (!confirm("Start a new scorebook? This clears the current game.")) return;
+      Object.assign(state, freshState());
+      status.textContent = "New game started.";
+      render();
+    });
+
+    document.getElementById("resetLineupBtn").addEventListener("click", () => {
+      const key = state.lineupEditTeam;
+      state.teams[key].players = makePlayers(teamLabels[key] === "Visitor" ? "Visitor Player" : "Home Player");
+      state.teams[key].batterIndex = 0;
+      state.teams[key].pitcher = state.teams[key].players[0].name;
+      status.textContent = `${teamLabels[key]} lineup reset.`;
+      render();
+    });
+
+    homeTeam.addEventListener("change", () => {
+      state.teams.home.name = homeTeam.value.trim() || "Home Team";
+      render();
+    });
+
+    awayTeam.addEventListener("change", () => {
+      state.teams.away.name = awayTeam.value.trim() || "Away Team";
+      render();
+    });
+
+    result.addEventListener("change", () => {
+      const info = resultInfo[result.value];
+      const defaultLocations = {
+        single: "center",
+        double: "left-center",
+        triple: "right-center",
+        homer: "center",
+        "strikeout-swinging": "none",
+        "strikeout-looking": "none",
+        groundout: "infield-middle",
+        flyout: "center",
+        lineout: "left-center",
+        popout: "infield-middle",
+        error: "infield-left",
+        "fielders-choice": "infield-middle",
+        "sac-fly": "right",
+        "sac-bunt": "infield-middle",
+        "double-play": "infield-middle"
+      };
+      hitLocation.value = defaultLocations[result.value] || "none";
+      lesson.innerHTML = `<strong>${escapeHtml(info.code)}:</strong><span>${escapeHtml(info.explain)}</span>`;
+    });
+
+    function syncTotalPitches() {
+      totalPitches.value = String(Number(ballsThrown.value || 0) + Number(strikesThrown.value || 0));
+    }
+
+    ballsThrown.addEventListener("input", syncTotalPitches);
+    strikesThrown.addEventListener("input", syncTotalPitches);
+
+    loadLocal();
+    render();
+  </script>
+</body>
+</html>
