@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Made Yours Pop-Up</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#shop" aria-label="Made Yours Pop-Up home">
+        <span class="brand-mark">MY</span>
+        <span>Made Yours</span>
+      </a>
+      <nav class="nav" aria-label="Store sections">
+        <a href="#shop">Shop</a>
+        <a href="#custom">Custom</a>
+        <a href="#pickup">Payments</a>
+      </nav>
+      <button class="cart-button" type="button" data-open-cart aria-label="Open cart">
+        <span>Cart</span>
+        <strong data-cart-count>0</strong>
+      </button>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-copy">
+          <p class="eyebrow">Limited drop / personalized gifts</p>
+          <h1 id="hero-title">Made Yours Pop-Up</h1>
+          <p>
+            Customized hoodies, drinkware, totes, keychains, and sticker packs
+            made for small batches, gifts, teams, and launch events.
+          </p>
+          <div class="hero-actions">
+            <a class="primary-link" href="#shop">Shop the drop</a>
+            <a class="secondary-link" href="#custom">Build a bundle</a>
+          </div>
+        </div>
+        <img
+          class="hero-image"
+          src="assets/custom-products-hero.png"
+          alt="Customized products displayed on a pop-up shop table"
+        />
+      </section>
+
+      <section id="shop" class="shop-band" aria-labelledby="shop-title">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Today's table</p>
+            <h2 id="shop-title">Customize and add to cart</h2>
+          </div>
+          <p>Every sample item includes live options so you can test the buying flow.</p>
+        </div>
+        <div class="product-grid" data-product-grid></div>
+      </section>
+
+      <section id="custom" class="bundle-band" aria-labelledby="bundle-title">
+        <div class="bundle-copy">
+          <p class="eyebrow">Fast bundle</p>
+          <h2 id="bundle-title">Launch-ready gift sets</h2>
+          <p>
+            Add a prebuilt kit, then adjust each item in the cart. This is useful
+            for pop-up shoppers who want something polished without configuring
+            every product from scratch.
+          </p>
+        </div>
+        <div class="bundle-list">
+          <button class="bundle-option" type="button" data-bundle="starter">
+            <span>
+              <strong>Starter Kit</strong>
+              Hoodie, tumbler, sticker pack
+            </span>
+            <b>$94</b>
+          </button>
+          <button class="bundle-option" type="button" data-bundle="event">
+            <span>
+              <strong>Event Kit</strong>
+              Tote, keychain, tumbler, sticker pack
+            </span>
+            <b>$73</b>
+          </button>
+        </div>
+      </section>
+
+      <section id="pickup" class="details-band" aria-labelledby="pickup-title">
+        <div>
+          <p class="eyebrow">Payment ready</p>
+          <h2 id="pickup-title">Square and PayPal placeholders</h2>
+        </div>
+        <div class="detail-grid">
+          <article>
+            <h3>Square Checkout</h3>
+            <p>Ready to send cart details to a secure Square payment-link endpoint.</p>
+          </article>
+          <article>
+            <h3>PayPal Checkout</h3>
+            <p>Ready for a sandbox client ID and secure order/capture endpoints.</p>
+          </article>
+          <article>
+            <h3>Test Mode</h3>
+            <p>Placeholder payments preview the customer success flow without charging money.</p>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <aside class="cart-drawer" data-cart-drawer aria-hidden="true" aria-label="Shopping cart">
+      <div class="cart-panel">
+        <div class="cart-head">
+          <div>
+            <p class="eyebrow">Your order</p>
+            <h2>Cart</h2>
+          </div>
+          <button class="icon-button" type="button" data-close-cart aria-label="Close cart">x</button>
+        </div>
+        <div class="cart-items" data-cart-items></div>
+        <div class="cart-empty" data-cart-empty>
+          <h3>Your cart is empty</h3>
+          <p>Add a customized item from the pop-up table.</p>
+        </div>
+        <div class="cart-summary">
+          <div><span>Subtotal</span><strong data-subtotal>$0.00</strong></div>
+          <div><span>Estimated tax</span><strong data-tax>$0.00</strong></div>
+          <div class="total"><span>Total</span><strong data-total>$0.00</strong></div>
+          <button class="checkout-button" type="button" data-checkout>Checkout</button>
+        </div>
+      </div>
+    </aside>
+
+    <dialog class="checkout-modal" data-checkout-modal>
+      <form method="dialog">
+        <button class="icon-button modal-close" value="close" aria-label="Close checkout">x</button>
+        <p class="eyebrow">Payment step</p>
+        <h2>Choose payment</h2>
+        <p>
+          This checkout is wired for test placeholders. Add your Square and
+          PayPal details in <strong>payment-config.js</strong>, then connect the
+          secure server endpoints shown in the setup notes.
+        </p>
+        <div class="payment-preview">
+          <span>Order total</span>
+          <strong data-modal-total>$0.00</strong>
+        </div>
+        <div class="payment-actions">
+          <button class="square-button" type="button" data-pay-square>
+            Pay with Square
+          </button>
+          <button class="paypal-button" type="button" data-pay-paypal>
+            Pay with PayPal
+          </button>
+        </div>
+        <p class="payment-note" data-payment-note>
+          Test mode is active. Placeholder payments send you to the sample
+          confirmation page.
+        </p>
+      </form>
+    </dialog>
+
+    <div class="toast" data-toast role="status" aria-live="polite"></div>
+    <script src="payment-config.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
