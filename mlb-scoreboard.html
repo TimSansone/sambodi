@@ -1,3 +1,5 @@
+
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -976,6 +978,7 @@
         statusFilter: 'all',
         favoriteTeams: new Map(),
         standings: [],
+        pitcherStats: new Map(),
         lastScores: new Map(),
         alerts: false,
         refreshSeconds: 60,
@@ -1073,8 +1076,11 @@
     }
     function pitcherSeasonStats(g, s) {
         const p = pitcher(g, s);
-        const statBlock = (p?.stats || []).find(x => x.group?.displayName === 'pitching' || x.group === 'pitching' || x.group?.displayName === 'Pitching');
-        return statBlock?.stats||p?.stats?.[0]?.stats || {};
+        const statBlock = (p?.stats || []).find(x => {
+            const group = x.group?.displayName || x.group;
+            return String(group).toLowerCase() === 'pitching'
+        });
+        return p?.seasonStats || statBlock?.splits?.[0]?.stat || statBlock?.stats||p?.stats?.[0]?.stats || {};
     }
     function formatPitcherStats(stats) {
         const parts = [];
@@ -1330,6 +1336,21 @@
                 state.feeds[live[i].gamePk] = r.value
         })
     }
+    async function loadProbablePitcherStats() {
+        const season = (els.gameDate.value || todayIso()).slice(0, 4);
+        const ids = [...new Set(state.games.flatMap(g => ['away', 'home'].map(side => pitcher(g, side)?.id).filter(Boolean)))];
+        await Promise.allSettled(ids.map(async id => {
+            if (state.pitcherStats.has(id))
+                return;
+            const data = await fetchJson(`${API_BASE}/people/${id}/stats?stats=season&group=pitching&season=${season}`);
+            state.pitcherStats.set(id, data.stats?.[0]?.splits?.[0]?.stat || {})
+        }));
+        state.games.forEach(g => ['away', 'home'].forEach(side => {
+            const p = pitcher(g, side);
+            if (p && state.pitcherStats.has(p.id))
+                p.seasonStats = state.pitcherStats.get(p.id)
+        }))
+    }
     async function loadGames() {
         const date = els.gameDate.value || todayIso();
         els.gameDate.value = date;
@@ -1337,9 +1358,10 @@
         els.status.value = 'Loading MLB games...';
         renderSkeleton();
         try {
-            const url = `${API_BASE}/schedule?sportId=1&date=${date}&hydrate=team,linescore,probablePitcher(stats(type=season,group=pitching)),venue,decisions`;
+            const url = `${API_BASE}/schedule?sportId=1&date=${date}&hydrate=team,linescore,probablePitcher,venue,decisions`;
             const data = await fetchJson(url);
             state.games = (data.dates || []).flatMap(d => d.games || []);
+            await loadProbablePitcherStats();
             allTeams();
             renderTeamOptions();
             await loadLiveFeeds();
