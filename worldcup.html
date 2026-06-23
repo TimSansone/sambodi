@@ -63,7 +63,15 @@
         display: flex;
         gap: 26px;
         width: max-content;
+        min-width: max-content;
+        will-change: transform;
         animation:ticker 75s linear infinite
+    }
+
+    .ticker-group {
+        display: flex;
+        gap: 26px;
+        flex: 0 0 auto
     }
 
     .ticker-item {
@@ -559,6 +567,56 @@
         background:#fff8e8
     }
 
+    .advancement {
+        display: grid;
+        gap:12px
+    }
+
+    .advance-block {
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        overflow: hidden;
+        background:#fff
+    }
+
+    .advance-title {
+        padding: 10px 12px;
+        background: #f7f9fc;
+        font-weight: 900;
+        color:var(--navy)
+    }
+
+    .advance-list {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding:10px
+    }
+
+    .advance-team {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background:#fbfcfe;
+        font-size:.86rem
+    }
+
+    .advance-team strong {
+        min-width: 0;
+        white-space: normal;
+        overflow-wrap: normal;
+        word-break: normal
+    }
+
+    .advance-team span {
+        color: var(--muted);
+        white-space:nowrap
+    }
+
     .empty, .message {
         padding: 18px;
         color: var(--muted);
@@ -763,6 +821,15 @@
             min-height: 48px;
             font-size: 16px
         }
+
+        .advance-team {
+            grid-template-columns: 1fr;
+            gap: 4px
+        }
+
+        .advance-team span {
+            white-space: normal
+        }
     }
     </style>
 </head>
@@ -886,6 +953,15 @@
                     </div>
                     <div class="standings standings-all" id="standingsPanel">
                         <div class="empty">Standings will appear after matches load.</div>
+                    </div>
+                </section>
+                <section class="panel pad">
+                    <div class="section-head">
+                        <h2>Round of 32 Picture</h2>
+                        <span class="small-note">Pts, GD, GF, wins.</span>
+                    </div>
+                    <div class="advancement" id="advancementPanel">
+                        <div class="empty">Advancement picture will appear after standings load.</div>
                     </div>
                 </section>
             </aside>
@@ -1056,7 +1132,8 @@
         teamSelected: document.getElementById('teamComboSelected'),
         teamSearch: document.getElementById('teamSearch'),
         teamOptions: document.getElementById('teamOptions'),
-        standingsPanel: document.getElementById('standingsPanel')
+        standingsPanel: document.getElementById('standingsPanel'),
+        advancementPanel: document.getElementById('advancementPanel')
     };
     function todayIso() {
         const n = new Date(),
@@ -1301,8 +1378,9 @@
     }
     function renderTicker() {
         const source = [...state.matches].sort((a, b) => new Date(a.date) - new Date(b.date));
-        const items = source.length ? source.map(m => `<span class="ticker-item"><span class="ticker-dot"></span>${esc(m.away.abbr)} ${esc(m.away.score || '-')} vs ${esc(m.home.abbr)} ${esc(m.home.score || '-')} · ${esc(matchStatusLabel(m))}</span>`) : ['<span class="ticker-item"><span class="ticker-dot"></span>No matches loaded</span>'];
-        els.ticker.innerHTML = items.concat(items).join('')
+        const items = source.length ? source.map(m => `<span class="ticker-item"><span class="ticker-dot"></span>${esc(m.away.abbr)} ${esc(displayScore(m.away.score))} vs ${esc(m.home.abbr)} ${esc(displayScore(m.home.score))} &middot; ${esc(matchStatusLabel(m))}</span>`) : ['<span class="ticker-item"><span class="ticker-dot"></span>No matches loaded</span>'];
+        const group = `<div class="ticker-group">${items.join('')}</div>`;
+        els.ticker.innerHTML = group + group
     }
     function cardMarkup(m) {
         const fav = m.away.abbr === state.favoriteTeam || m.home.abbr === state.favoriteTeam;
@@ -1511,19 +1589,53 @@
                     l: statValue(entry, ['losses', 'L']),
                     gf: statValue(entry, ['pointsFor', 'F']),
                     ga: statValue(entry, ['pointsAgainst', 'A']),
-                    pts: statValue(entry, ['points', 'P'])
+                    pts: statValue(entry, ['points', 'P']),
+                    note: entry.note?.description || ''
                 }
             })
         });
         return Object.keys(groups).length ? groups : null
     }
+    function currentStandingsGroups() {
+        return state.liveStandings || standingsFrom(state.allStageMatches.length ? state.allStageMatches : state.matches)
+    }
+    function standingsSort(a, b) {
+        return (b.pts - a.pts) || ((b.gf - b.ga) - (a.gf - a.ga)) || (b.gf - a.gf) || (b.w - a.w) || a.team.name.localeCompare(b.team.name)
+    }
     function renderStandings() {
-        const groups = state.liveStandings || standingsFrom(state.allStageMatches.length ? state.allStageMatches : state.matches);
+        const groups = currentStandingsGroups();
         const keys = Object.keys(GROUPS);
         els.standingsPanel.innerHTML = keys.map(g => {
-            const rows = Object.values(groups[g] || {}).sort((a, b) => (b.pts - a.pts) || ((b.gf - b.ga) - (a.gf - a.ga)) || (b.gf - a.gf) || a.team.name.localeCompare(b.team.name));
+            const rows = Object.values(groups[g] || {}).sort(standingsSort);
             return `<div class="standings-group"><div class="standings-title">Group ${esc(g)}</div><div class="standings-row header"><span>#</span><span>Team</span><span>Pts</span><span>P</span><span>W-D-L</span><span>GD</span><span>GF-GA</span></div>${rows.map((r, i) => `<div class="standings-row ${r.team.abbr === state.favoriteTeam ? 'favorite' : ''}"><span>${i + 1}</span><span>${esc(r.team.abbr)} ${esc(r.team.name)}</span><strong>${r.pts}</strong><span>${r.p}</span><span>${r.w}-${r.d}-${r.l}</span><span>${r.gf - r.ga}</span><span>${r.gf}-${r.ga}</span></div>`).join('')}</div>`
         }).join('')
+    }
+    function teamAdvanceChip(row, label) {
+        return `<div class="advance-team"><strong>${esc(row.team.abbr)} ${esc(row.team.name)}</strong><span>${esc(label)} · ${row.pts} pts · GD ${row.gf - row.ga}</span></div>`
+    }
+    function renderAdvancement() {
+        const groups = currentStandingsGroups();
+        const automatic = [];
+        const thirdPlace = [];
+        Object.keys(GROUPS).forEach(g => {
+            const rows = Object.values(groups[g] || {}).sort(standingsSort);
+            rows.slice(0, 2).forEach((row, i) => automatic.push({
+                ...row,
+                group: g,
+                rank: i + 1
+            }));
+            if (rows[2])
+                thirdPlace.push({
+                    ...rows[2],
+                    group: g,
+                    rank: 3
+                })
+        });
+        const notedThird = thirdPlace.filter(row => /best\s+8|advance/i.test(row.note || ''));
+        const bestThird = (notedThird.length >= 8 ? notedThird : thirdPlace.sort(standingsSort)).slice(0, 8);
+        const autoMarkup = automatic.length ? automatic.map(row => teamAdvanceChip(row, `Group ${row.group} #${row.rank}`)).join('') : '<div class="empty">No automatic qualifiers available yet.</div>';
+        const thirdMarkup = bestThird.length ? bestThird.map((row, i) => teamAdvanceChip(row, `3rd ${i + 1}/8 · Group ${row.group}`)).join('') : '<div class="empty">No third-place ranking available yet.</div>';
+        els.advancementPanel.innerHTML = `<div class="advance-block"><div class="advance-title">Automatic Qualifiers</div><div class="advance-list">${autoMarkup}</div></div><div class="advance-block"><div class="advance-title">Best Third-Place Teams</div><div class="advance-list">${thirdMarkup}</div></div>`
     }
     function renderAll() {
         renderStats();
@@ -1533,6 +1645,7 @@
         renderMatches();
         renderDetail();
         renderStandings();
+        renderAdvancement();
         updateCountdowns()
     }
 
@@ -1680,11 +1793,13 @@
                 state.allStageMatches = uniqueMatches(mergeMatches(open.length ? open : BUILT_IN_MATCHES, espn));
             }
             renderStandings();
+            renderAdvancement();
             updateTeamCombo();
         } catch (e) {
             state.liveStandings = null;
             state.allStageMatches = BUILT_IN_MATCHES;
             renderStandings();
+            renderAdvancement();
             updateTeamCombo();
         }
     }
