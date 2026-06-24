@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Scripture Study App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 0.5rem 1rem;
+      background: #1f2933;
+      color: #f9fafb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    header .file-loaders {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    header label {
+      color: #e5e7eb;
+    }
+
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1.5fr) minmax(0, 1.2fr);
+      gap: 0;
+      min-height: 0;
+    }
+
+    /* Sidebar */
+    #sidebar {
+      border-right: 1px solid #e5e7eb;
+      padding: 0.75rem;
+      overflow-y: auto;
+      background: #f9fafb;
+    }
+
+    #sidebar h2 {
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .nav-section-title {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      color: #6b7280;
+      margin-top: 0.75rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .book-list {
+      list-style: none;
+      margin-bottom: 0.5rem;
+    }
+
+    .book-list li {
+      padding: 0.25rem 0.35rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .book-list li:hover {
+      background: #e5e7eb;
+    }
+
+    .book-list li.active {
+      background: #111827;
+      color: #f9fafb;
+    }
+
+    .chapter-list, .verse-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      margin-top: 0.4rem;
+    }
+
+    .chapter-item, .verse-item {
+      padding: 0.15rem 0.35rem;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      font-size: 0.8rem;
+      cursor: pointer;
+      background: #ffffff;
+    }
+
+    .chapter-item.active, .verse-item.active {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+
+    /* Reader */
+    #reader {
+      border-right: 1px solid #e5e7eb;
+      padding: 0.75rem 1rem;
+      overflow-y: auto;
+    }
+
+    #reader-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 0.5rem;
+    }
+
+    #reader-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    #current-ref {
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    #reader-content {
+      margin-top: 0.5rem;
+      line-height: 1.5;
+      font-size: 0.9rem;
+    }
+
+    .verse-line {
+      margin-bottom: 0.25rem;
+    }
+
+    .verse-number {
+      font-weight: 600;
+      margin-right: 0.25rem;
+      color: #4b5563;
+    }
+
+    /* AI Panel */
+    #assistant {
+      padding: 0.75rem 1rem;
+      overflow-y: auto;
+      background: #f3f4f6;
+    }
+
+    #assistant h2 {
+      font-size: 0.95rem;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .ai-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .ai-button {
+      padding: 0.3rem 0.6rem;
+      font-size: 0.8rem;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      cursor: pointer;
+    }
+
+    .ai-button:hover {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+
+    #ai-prompt-label {
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin-bottom: 0.25rem;
+    }
+
+    #ai-prompt {
+      width: 100%;
+      min-height: 60px;
+      resize: vertical;
+      padding: 0.4rem;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      margin-bottom: 0.5rem;
+    }
+
+    #ai-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    #ai-run {
+      padding: 0.35rem 0.75rem;
+      font-size: 0.85rem;
+      border-radius: 4px;
+      border: none;
+      background: #16a34a;
+      color: #ffffff;
+      cursor: pointer;
+    }
+
+    #ai-run:hover {
+      background: #15803d;
+    }
+
+    #ai-status {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
+    #ai-output {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      background: #ffffff;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      padding: 0.5rem;
+      min-height: 80px;
+      white-space: pre-wrap;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 220px minmax(0, 1.5fr);
+        grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+        grid-template-areas:
+          "sidebar reader"
+          "assistant assistant";
+      }
+      #sidebar { grid-area: sidebar; }
+      #reader { grid-area: reader; }
+      #assistant { grid-area: assistant; }
+    }
+
+    @media (max-width: 640px) {
+      main {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+      }
+      #sidebar, #reader, #assistant {
+        border-right: none;
+        border-bottom: 1px solid #e5e7eb;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Scripture Study App</h1>
+    <div class="file-loaders">
+      <div>
+        <label for="file1">Bible (.txt):</label>
+        <input type="file" id="file1" accept=".txt" />
+      </div>
+      <div>
+        <label for="file2">Rest (.txt):</label>
+        <input type="file" id="file2" accept=".txt" />
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <h2>Navigation</h2>
+      <div class="nav-section-title">Books</div>
+      <ul id="book-list" class="book-list"></ul>
+
+      <div class="nav-section-title">Chapters</div>
+      <div id="chapter-list" class="chapter-list"></div>
+
+      <div class="nav-section-title">Verses</div>
+      <div id="verse-list" class="verse-list"></div>
+    </aside>
+
+    <!-- Reader -->
+    <section id="reader">
+      <div id="reader-header">
+        <h2>Scripture Reader</h2>
+        <span id="current-ref"></span>
+      </div>
+      <div id="reader-content">
+        <p>Load your scripture files above to begin.</p>
+      </div>
+    </section>
+
+    <!-- AI Assistant -->
+    <aside id="assistant">
+      <h2>AI Study Assistant</h2>
+      <div class="ai-buttons">
+        <button class="ai-button" data-type="summarize">Summarize</button>
+        <button class="ai-button" data-type="themes">Key Themes</button>
+        <button class="ai-button" data-type="history">Historical Context</button>
+        <button class="ai-button" data-type="cross">Cross-References</button>
+        <button class="ai-button" data-type="apply">Apply Today</button>
+        <button class="ai-button" data-type="insights">Spiritual Insights</button>
+      </div>
+
+      <div id="ai-prompt-label">Prompt (auto-filled from buttons, editable):</div>
+      <textarea id="ai-prompt"></textarea>
+
+      <div id="ai-actions">
+        <button id="ai-run">Run AI</button>
+        <span id="ai-status"></span>
+      </div>
+
+      <div id="ai-output"></div>
+    </aside>
+  </main>
+
+  <script>
+    // Data structure: { book: { chapter: { verse: text } } }
+    const scriptureData = {};
+    let currentBook = null;
+    let currentChapter = null;
+    let currentVerse = null;
+
+    const bookListEl = document.getElementById('book-list');
+    const chapterListEl = document.getElementById('chapter-list');
+    const verseListEl = document.getElementById('verse-list');
+    const readerContentEl = document.getElementById('reader-content');
+    const currentRefEl = document.getElementById('current-ref');
+    const aiPromptEl = document.getElementById('ai-prompt');
+    const aiOutputEl = document.getElementById('ai-output');
+    const aiStatusEl = document.getElementById('ai-status');
+
+    // --- File loading ---
+    document.getElementById('file1').addEventListener('change', handleFileSelect);
+    document.getElementById('file2').addEventListener('change', handleFileSelect);
+
+    function handleFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const text = e.target.result;
+        parseScriptureText(text);
+        buildBookList();
+      };
+      reader.readAsText(file);
+    }
+
+    // Parse lines like: "Genesis 1:1 In the beginning..."
+    function parseScriptureText(text) {
+      const lines = text.split(/\r?\n/);
+      for (const line of lines) {
+        if (!line.trim()) continue;
+
+        // Basic pattern: BookName Chapter:Verse Text...
+        // Example: "Genesis 1:1 In the beginning..."
+        const match = line.match(/^(.+?)\s+(\d+):(\d+)\s+(.*)$/);
+        if (!match) continue;
+
+        const book = match[1].trim();
+        const chapter = match[2].trim();
+        const verse = match[3].trim();
+        const verseText = match[4].trim();
+
+        if (!scriptureData[book]) scriptureData[book] = {};
+        if (!scriptureData[book][chapter]) scriptureData[book][chapter] = {};
+        scriptureData[book][chapter][verse] = verseText;
+      }
+    }
+
+    // --- Sidebar building ---
+    function buildBookList() {
+      bookListEl.innerHTML = '';
+      const books = Object.keys(scriptureData).sort();
+
+      books.forEach((book) => {
+        const li = document.createElement('li');
+        li.textContent = book;
+        li.addEventListener('click', () => selectBook(book));
+        if (book === currentBook) li.classList.add('active');
+        bookListEl.appendChild(li);
+      });
+
+      if (!currentBook && books.length > 0) {
+        selectBook(books[0]);
+      }
+    }
+
+    function selectBook(book) {
+      currentBook = book;
+      currentChapter = null;
+      currentVerse = null;
+
+      // Highlight active book
+      [...bookListEl.children].forEach((li) => {
+        li.classList.toggle('active', li.textContent === book);
+      });
+
+      buildChapterList();
+      renderReader();
+    }
+
+    function buildChapterList() {
+      chapterListEl.innerHTML = '';
+      verseListEl.innerHTML = '';
+
+      if (!currentBook) return;
+
+      const chapters = Object.keys(scriptureData[currentBook]).sort((a, b) => Number(a) - Number(b));
+
+      chapters.forEach((ch) => {
+        const btn = document.createElement('button');
+        btn.textContent = ch;
+        btn.className = 'chapter-item';
+        btn.addEventListener('click', () => selectChapter(ch));
+        if (ch === currentChapter) btn.classList.add('active');
+        chapterListEl.appendChild(btn);
+      });
+
+      if (!currentChapter && chapters.length > 0) {
+        selectChapter(chapters[0]);
+      }
+    }
+
+    function selectChapter(chapter) {
+      currentChapter = chapter;
+      currentVerse = null;
+
+      [...chapterListEl.children].forEach((btn) => {
+        btn.classList.toggle('active', btn.textContent === chapter);
+      });
+
+      buildVerseList();
+      renderReader();
+    }
+
+    function buildVerseList() {
+      verseListEl.innerHTML = '';
+
+      if (!currentBook || !currentChapter) return;
+
+      const verses = Object.keys(scriptureData[currentBook][currentChapter]).sort((a, b) => Number(a) - Number(b));
+
+      verses.forEach((v) => {
+        const btn = document.createElement('button');
+        btn.textContent = v;
+        btn.className = 'verse-item';
+        btn.addEventListener('click', () => selectVerse(v));
+        if (v === currentVerse) btn.classList.add('active');
+        verseListEl.appendChild(btn);
+      });
+    }
+
+    function selectVerse(verse) {
+      currentVerse = verse;
+
+      [...verseListEl.children].forEach((btn) => {
+        btn.classList.toggle('active', btn.textContent === verse);
+      });
+
+      renderReader();
+    }
+
+    // --- Reader rendering ---
+    function renderReader() {
+      if (!currentBook) {
+        readerContentEl.innerHTML = '<p>Load your scripture files above to begin.</p>';
+        currentRefEl.textContent = '';
+        return;
+      }
+
+      if (!currentChapter) {
+        readerContentEl.innerHTML = '<p>Select a chapter.</p>';
+        currentRefEl.textContent = currentBook;
+        return;
+      }
+
+      const chapterData = scriptureData[currentBook][currentChapter];
+      if (!chapterData) {
+        readerContentEl.innerHTML = '<p>No verses found for this chapter.</p>';
+        currentRefEl.textContent = `${currentBook} ${currentChapter}`;
+        return;
+      }
+
+      const verses = Object.keys(chapterData).sort((a, b) => Number(a) - Number(b);
+
+      const fragment = document.createDocumentFragment();
+      verses.forEach((v) => {
+        const p = document.createElement('p');
+        p.className = 'verse-line';
+        const numSpan = document.createElement('span');
+        numSpan.className = 'verse-number';
+        numSpan.textContent = v;
+        p.appendChild(numSpan);
+        p.appendChild(document.createTextNode(' ' + chapterData[v]));
+        fragment.appendChild(p);
+      });
+
+      readerContentEl.innerHTML = '';
+      readerContentEl.appendChild(fragment);
+
+      if (currentVerse) {
+        currentRefEl.textContent = `${currentBook} ${currentChapter}:${currentVerse}`;
+      } else {
+        currentRefEl.textContent = `${currentBook} ${currentChapter}`;
+      }
+    }
+
+    // --- AI Assistant ---
+    document.querySelectorAll('.ai-button').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const type = btn.dataset.type;
+        const contextText = getCurrentContextText();
+        aiPromptEl.value = buildPrompt(type, contextText);
+      });
+    });
+
+    function getCurrentContextText() {
+      if (!currentBook || !currentChapter) return '';
+
+      const chapterData = scriptureData[currentBook][currentChapter];
+      if (!chapterData) return '';
+
+      if (currentVerse) {
+        const verseText = chapterData[currentVerse] || '';
+        return `${currentBook} ${currentChapter}:${currentVerse} - ${verseText}`;
+      } else {
+        const verses = Object.keys(chapterData).sort((a, b) => Number(a) - Number(b);
+        const joined = verses.map((v) => `${v}. ${chapterData[v]}`).join(' ');
+        return `${currentBook} ${currentChapter} - ${joined}`;
+      }
+    }
+
+    function buildPrompt(type, context) {
+      const base = `You are a scripture study assistant for the Bible, Book of Mormon, Doctrine and Covenants, and Pearl of Great Price.\n\nPassage:\n${context}\n\n`;
+
+      switch (type) {
+        case 'summarize':
+          return base + 'Task: Provide a concise summary of this passage.';
+        case 'themes':
+          return base + 'Task: Identify and explain the key themes in this passage.';
+        case 'history':
+          return base + 'Task: Explain the historical and cultural context relevant to this passage.';
+        case 'cross':
+          return base + 'Task: Suggest cross-references from the Bible and Restoration scriptures that relate to this passage.';
+        case 'apply':
+          return base + 'Task: Describe practical ways this passage can be applied in modern daily life.';
+        case 'insights':
+          return base + 'Task: Offer spiritual insights, reflections, and questions for personal meditation on this passage.';
+        default:
+          return base + 'Task: Help me study and understand this passage.';
+      }
+    }
+
+    document.getElementById('ai-run').addEventListener('click', async () => {
+      const prompt = aiPromptEl.value.trim();
+      if (!prompt) {
+        aiStatusEl.textContent = 'Enter or generate a prompt first.';
+        return;
+      }
+
+      aiStatusEl.textContent = 'Running (placeholder)...';
+      aiOutputEl.textContent = '';
+
+      // TODO: Replace this with your real AI backend call.
+      // Example (pseudo):
+      // const response = await fetch('/api/ai', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ prompt })
+      // });
+      // const data = await response.json();
+      // aiOutputEl.textContent = data.answer;
+
+      // For now, just echo the prompt and show a fake response.
+      setTimeout(() => {
+        aiStatusEl.textContent = 'AI response (demo only).';
+        aiOutputEl.textContent =
+          'This is a placeholder AI response.\n\nPrompt sent:\n\n' + prompt;
+      }, 600);
+    });
+  </script>
+</body>
+</html>
