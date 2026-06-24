@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -521,6 +520,180 @@
         text-transform:uppercase
     }
 
+    .gamecenter {
+        display: grid;
+        gap:14px
+    }
+
+    .gc-title {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+        margin: 2px 0
+    }
+
+    .gc-title h2 {
+        margin: 0;
+        font-size:1.15rem
+    }
+
+    .team-stats {
+        display: grid;
+        gap:10px
+    }
+
+    .team-stat {
+        display: grid;
+        grid-template-columns: 52px minmax(110px, 1fr) 52px;
+        gap: 10px;
+        align-items: center
+    }
+
+    .team-stat strong {
+        font-size: .92rem;
+        text-align:center
+    }
+
+    .stat-bars {
+        display: flex;
+        height: 10px;
+        border-radius: 999px;
+        overflow: hidden;
+        background:#eef3f8
+    }
+
+    .stat-bars span:first-child {
+        background:var(--team-away, var(--blue))
+    }
+
+    .stat-bars span:last-child {
+        background:var(--team-home, var(--red))
+    }
+
+    .stat-name {
+        color: var(--muted);
+        font-size: .78rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing:.05em
+    }
+
+    .pitch {
+        position: relative;
+        min-height: 520px;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid #8bc6a6;
+        background: repeating-linear-gradient(90deg, #147a48 0 12.5%, #188451 12.5% 25%);
+        box-shadow: inset 0 0 0 2px rgba(255,255,255,.36)
+    }
+
+    .pitch:before {
+        content: "";
+        position: absolute;
+        inset: 50% 0 auto;
+        height: 2px;
+        background:rgba(255,255,255,.75)
+    }
+
+    .pitch:after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 118px;
+        height: 118px;
+        border: 2px solid rgba(255,255,255,.75);
+        border-radius: 50%;
+        transform: translate(-50%, -50%)
+    }
+
+    .box {
+        position: absolute;
+        left: 24%;
+        right: 24%;
+        height: 82px;
+        border: 2px solid rgba(255,255,255,.72)
+    }
+
+    .box.away {
+        top:0;
+        border-top:0
+    }
+
+    .box.home {
+        bottom:0;
+        border-bottom:0
+    }
+
+    .player {
+        position: absolute;
+        z-index: 2;
+        width: 84px;
+        display: grid;
+        justify-items: center;
+        gap: 4px;
+        transform: translate(-50%, -50%);
+        text-align: center
+    }
+
+    .player-num {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        color: #fff;
+        background: var(--team-color, var(--navy));
+        border: 2px solid rgba(255,255,255,.9);
+        box-shadow: 0 5px 12px rgba(0,0,0,.22);
+        font-weight: 900;
+        font-size:.82rem
+    }
+
+    .player-name {
+        max-width: 84px;
+        padding: 2px 5px;
+        border-radius: 8px;
+        background: rgba(255,255,255,.9);
+        color: #10223a;
+        font-size: .7rem;
+        font-weight: 900;
+        line-height: 1.12;
+        overflow-wrap:anywhere
+    }
+
+    .pitch-empty {
+        position: absolute;
+        inset: auto 16px 16px;
+        z-index: 3;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: rgba(255,255,255,.92);
+        color: var(--muted);
+        font-size: .86rem;
+        line-height:1.35
+    }
+
+    .lineup-head {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px
+    }
+
+    .lineup-team {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        min-width: 0;
+        font-weight: 900
+    }
+
+    .lineup-team:last-child {
+        justify-content:flex-end
+    }
+
     .standings {
         display: grid;
         gap:12px
@@ -829,6 +1002,28 @@
 
         .advance-team span {
             white-space: normal
+        }
+
+        .team-stat {
+            grid-template-columns: 44px minmax(0, 1fr) 44px
+        }
+
+        .pitch {
+            min-height:430px
+        }
+
+        .player {
+            width:66px
+        }
+
+        .player-name {
+            max-width:66px;
+            font-size:.62rem
+        }
+
+        .player-num {
+            width: 29px;
+            height:29px
         }
     }
     </style>
@@ -1205,6 +1400,8 @@
             odds: e.odds || [],
             broadcasts: comp.broadcasts || [],
             competitors: comps,
+            stats: normalizeStatsFromCompetitors(comps),
+            lineups: normalizeLineupsFromCompetitors(comps),
             details: e.competitions?.[0]?.details || [],
             shootout: comp.situation?.shootout || null
         };
@@ -1221,6 +1418,103 @@
             record: c.records?.[0]?.summary || '',
             form: c.curatedRank?.current || ''
         }
+    }
+    function hasStats(stats) {
+        return Object.values(stats || {}).some(team => Object.values(team || {}).some(v => v !== '' && v != null))
+    }
+    function hasLineups(lineups) {
+        return Object.values(lineups || {}).some(team => Array.isArray(team) && team.length)
+    }
+    function numberFrom(value) {
+        if (value == null || value === '')
+            return '';
+        const n = Number(String(value).replace('%', ''));
+        return Number.isFinite(n) ? n : ''
+    }
+    function statEntryValue(entry) {
+        return numberFrom(entry?.value ?? entry?.displayValue ?? entry?.summary)
+    }
+    function statKey(text) {
+        return String(text || '').toLowerCase().replace(/[^a-z0-9]/g, '')
+    }
+    const STAT_DEFS = [
+        { key: 'possession', label: 'Possession', aliases: ['possession', 'possessionpct', 'possessionpercentage', 'possessionpercent'], suffix: '%' },
+        { key: 'passes', label: 'Passes completed', aliases: ['passescompleted', 'accuratepasses', 'completedpasses', 'passes'], suffix: '' },
+        { key: 'shots', label: 'Total shots', aliases: ['totalshots', 'shots', 'shotstotal'], suffix: '' },
+        { key: 'shotsOnGoal', label: 'Shots on goal', aliases: ['shotsongoal', 'shotsontarget', 'sog'], suffix: '' },
+        { key: 'yellowCards', label: 'Yellow cards', aliases: ['yellowcards', 'yellowcard'], suffix: '' },
+        { key: 'redCards', label: 'Red cards', aliases: ['redcards', 'redcard'], suffix: '' }
+    ];
+    function normalizeStatList(stats) {
+        const out = {};
+        (stats || []).forEach(s => {
+            const names = [s.name, s.displayName, s.shortDisplayName, s.abbreviation, s.type].map(statKey);
+            STAT_DEFS.forEach(def => {
+                if (names.some(name => def.aliases.includes(name))) {
+                    const value = statEntryValue(s);
+                    if (value !== '')
+                        out[def.key] = value
+                }
+            })
+        });
+        return out
+    }
+    function normalizeStatsFromCompetitors(comps) {
+        const out = {};
+        (comps || []).forEach(c => {
+            const side = c.homeAway === 'home' ? 'home' : c.homeAway === 'away' ? 'away' : '';
+            if (side)
+                out[side] = normalizeStatList(c.statistics || c.stats || [])
+        });
+        return out
+    }
+    function normalizeOpenStats(g, awayAbbr, homeAbbr) {
+        const raw = g.stats || g.statistics || g.match_stats || {};
+        const pick = team => normalizeStatList(raw[team] || raw[team.toLowerCase()] || raw[team.toUpperCase()] || []);
+        return {
+            away: pick('away').possession || pick(awayAbbr).possession ? { ...pick('away'), ...pick(awayAbbr) } : pick('away'),
+            home: pick('home').possession || pick(homeAbbr).possession ? { ...pick('home'), ...pick(homeAbbr) } : pick('home')
+        }
+    }
+    function playerFromEntry(entry) {
+        const a = entry?.athlete || entry?.player || entry || {};
+        const number = a.jersey || a.jerseyNumber || a.number || entry?.jersey || entry?.number || '';
+        const position = a.position?.abbreviation || a.position?.name || entry?.position?.abbreviation || entry?.position || '';
+        return {
+            id: a.id || entry?.id || '',
+            name: a.displayName || a.shortName || a.fullName || a.name || entry?.name || '',
+            number,
+            position,
+            starter: entry?.starter ?? entry?.didStart ?? entry?.active ?? true
+        }
+    }
+    function normalizeLineupList(raw) {
+        const list = Array.isArray(raw) ? raw : (raw?.entries || raw?.athletes || raw?.players || []);
+        return list.map(playerFromEntry).filter(p => p.name || p.number).slice(0, 26)
+    }
+    function normalizeLineupsFromCompetitors(comps) {
+        const out = {};
+        (comps || []).forEach(c => {
+            const side = c.homeAway === 'home' ? 'home' : c.homeAway === 'away' ? 'away' : '';
+            const lineup = normalizeLineupList(c.lineup || c.roster || c.athletes);
+            if (side && lineup.length)
+                out[side] = lineup
+        });
+        return out
+    }
+    function normalizeOpenLineups(g, awayAbbr, homeAbbr) {
+        const raw = g.lineups || g.lineup || g.rosters || {};
+        return {
+            away: normalizeLineupList(raw.away || raw[awayAbbr] || raw.away_team),
+            home: normalizeLineupList(raw.home || raw[homeAbbr] || raw.home_team)
+        }
+    }
+    function teamSide(m, t) {
+        if (String(t?.abbr || '') === String(m.away?.abbr || ''))
+            return 'away';
+        if (String(t?.abbr || '') === String(m.home?.abbr || ''))
+            return 'home';
+        return ''
     }
     function scoreNum(v) {
         const n = Number(v);
@@ -1272,6 +1566,9 @@
             stage: m.stage || old.stage,
             venue: m.venue || old.venue,
             details: m.details?.length ? m.details : old.details,
+            stats: hasStats(m.stats) ? m.stats : old.stats,
+            lineups: hasLineups(m.lineups) ? m.lineups : old.lineups,
+            competitors: m.competitors?.length ? m.competitors : old.competitors,
             broadcasts: m.broadcasts?.length ? m.broadcasts : old.broadcasts
         }
     }
@@ -1479,6 +1776,78 @@
     function selectedMatch() {
         return state.matches.find(m => m.id === state.selectedId) || visibleMatches()[0] || null
     }
+    function sideStats(m, side) {
+        return m.stats?.[side] || normalizeStatsFromCompetitors(m.competitors || [])[side] || {}
+    }
+    function statDisplay(value, suffix = '') {
+        return value === '' || value == null ? '--' : `${value}${suffix}`
+    }
+    function statRows(m) {
+        const away = sideStats(m, 'away');
+        const home = sideStats(m, 'home');
+        return STAT_DEFS.map(def => {
+            const a = away[def.key] ?? '';
+            const h = home[def.key] ?? '';
+            const av = numberFrom(a);
+            const hv = numberFrom(h);
+            const total = av !== '' || hv !== '' ? Math.max((av || 0) + (hv || 0), 1) : 2;
+            const aw = av !== '' || hv !== '' ? Math.max(4, (av || 0) / total * 100) : 50;
+            const hw = av !== '' || hv !== '' ? Math.max(4, (hv || 0) / total * 100) : 50;
+            return `<div class="team-stat"><strong>${esc(statDisplay(a, def.suffix))}</strong><div><div class="stat-name">${esc(def.label)}</div><div class="stat-bars"><span style="width:${aw}%"></span><span style="width:${hw}%"></span></div></div><strong>${esc(statDisplay(h, def.suffix))}</strong></div>`
+        }).join('')
+    }
+    function starterList(lineup) {
+        const starters = (lineup || []).filter(p => p.starter !== false);
+        return (starters.length ? starters : lineup || []).slice(0, 11)
+    }
+    function eventAthleteNames(e) {
+        return (e.athletesInvolved || e.participants || e.athletes || []).map(a => a.displayName || a.shortName || a.fullName || a.name).filter(Boolean)
+    }
+    function applySubstitutions(m, side, lineup) {
+        const active = starterList(lineup).map(p => ({ ...p }));
+        if (!active.length)
+            return active;
+        (m.details || []).filter(e => /sub/i.test(eventTypeText(e)) && eventTeamMatches(e, side === 'away' ? m.away : m.home)).forEach(e => {
+            const names = eventAthleteNames(e);
+            const incoming = names[0] || e.subIn?.displayName || e.playerIn?.name || '';
+            const outgoing = names[1] || e.subOut?.displayName || e.playerOut?.name || '';
+            if (!incoming)
+                return;
+            const idx = active.findIndex(p => outgoing && p.name === outgoing);
+            const player = { name: incoming, number: e.subIn?.jersey || e.playerIn?.number || '', position: idx > -1 ? active[idx].position : '', starter: true };
+            if (idx > -1)
+                active[idx] = player;
+            else if (active.length < 11)
+                active.push(player)
+        });
+        return active.slice(0, 11)
+    }
+    function playerSpots(players, side) {
+        const rows = players.length <= 7 ? [1, 3, 3] : [1, 4, 3, 3];
+        const awayY = [8, 20, 34, 46];
+        const homeY = [92, 80, 66, 54];
+        const yRows = side === 'away' ? awayY : homeY;
+        let index = 0;
+        const spots = [];
+        rows.forEach((count, row) => {
+            for (let i = 0; i < count && index < players.length; i++) {
+                const x = 50 + (i - (count - 1) / 2) * Math.min(70 / Math.max(count, 1), 22);
+                spots.push({ ...players[index++], x, y: yRows[row] })
+            }
+        });
+        return spots
+    }
+    function playerMarkup(player, teamColor) {
+        return `<div class="player" style="left:${player.x}%;top:${player.y}%;--team-color:${teamColor}"><span class="player-num">${esc(player.number || player.position || '?')}</span><span class="player-name">${esc(player.name || 'Player')}</span></div>`
+    }
+    function pitchMarkup(m) {
+        const away = applySubstitutions(m, 'away', m.lineups?.away || []);
+        const home = applySubstitutions(m, 'home', m.lineups?.home || []);
+        const awaySpots = playerSpots(away, 'away').map(p => playerMarkup(p, color(m.away.abbr))).join('');
+        const homeSpots = playerSpots(home, 'home').map(p => playerMarkup(p, color(m.home.abbr))).join('');
+        const empty = away.length || home.length ? '' : '<div class="pitch-empty">Lineups will appear here when the match feed includes player names, numbers, and substitutions.</div>';
+        return `<div class="lineup-head"><div class="lineup-team"><img class="flag" src="${flag(m.away.abbr)}" alt=""><span>${esc(m.away.name)}</span></div><div class="lineup-team"><span>${esc(m.home.name)}</span><img class="flag" src="${flag(m.home.abbr)}" alt=""></div></div><div class="pitch"><div class="box away"></div><div class="box home"></div>${awaySpots}${homeSpots}${empty}</div>`
+    }
     function renderDetail() {
         const m = selectedMatch();
         if (!m) {
@@ -1489,7 +1858,7 @@
         state.selectedId = m.id;
         els.detailMessage.style.display = 'none';
         const events = (m.details || []).slice().reverse().slice(0, 10);
-        els.detail.innerHTML = `<div class="matchup"><div class="match-team"><img class="flag" src="${flag(m.away.abbr)}" alt=""><strong>${esc(m.away.name)}</strong><span>${esc(m.away.record || '')}</span></div><div class="match-score">${esc(displayScore(m.away.score))} - ${esc(displayScore(m.home.score))}</div><div class="match-team"><img class="flag" src="${flag(m.home.abbr)}" alt=""><strong>${esc(m.home.name)}</strong><span>${esc(m.home.record || '')}</span></div></div><div class="mini-grid"><div class="mini"><span>Status</span><strong>${esc(matchStatusLabel(m))}</strong></div><div class="mini"><span>Kickoff</span><strong>${esc(fmtDateTime(m.date))}</strong></div><div class="mini"><span>Venue</span><strong>${esc(m.venue)}</strong></div><div class="mini"><span>Stage</span><strong>${esc(m.stage || 'World Cup')}</strong></div><div class="mini"><span>Favorite shortcut</span><strong>Press F on a card to favorite its home team</strong></div><div class="mini"><span>TV / Stream</span><strong>${esc((m.broadcasts || []).map(b => b.names?.join(', ') || b.name).filter(Boolean).join(' / ') || 'Broadcast info unavailable')}</strong></div></div><div style="margin-top:14px"><h2>Match Events</h2><div class="events">${events.length ? events.map(e => `<div class="event"><span>${esc(eventMinute(e) || 'Match event')}</span>${esc(eventEventText(e))}</div>`).join('') : '<div class="empty">Match events will appear when the feed provides them.</div>'}</div></div>`
+        els.detail.innerHTML = `<div class="gamecenter" style="--team-away:${color(m.away.abbr)};--team-home:${color(m.home.abbr)}"><div class="matchup"><div class="match-team"><img class="flag" src="${flag(m.away.abbr)}" alt=""><strong>${esc(m.away.name)}</strong><span>${esc(m.away.record || '')}</span></div><div class="match-score">${esc(displayScore(m.away.score))} - ${esc(displayScore(m.home.score))}</div><div class="match-team"><img class="flag" src="${flag(m.home.abbr)}" alt=""><strong>${esc(m.home.name)}</strong><span>${esc(m.home.record || '')}</span></div></div><div class="mini-grid"><div class="mini"><span>Status</span><strong>${esc(matchStatusLabel(m))}</strong></div><div class="mini"><span>Kickoff</span><strong>${esc(fmtDateTime(m.date))}</strong></div><div class="mini"><span>Venue</span><strong>${esc(m.venue)}</strong></div><div class="mini"><span>Stage</span><strong>${esc(m.stage || 'World Cup')}</strong></div><div class="mini"><span>Favorite shortcut</span><strong>Press F on a card to favorite its home team</strong></div><div class="mini"><span>TV / Stream</span><strong>${esc((m.broadcasts || []).map(b => b.names?.join(', ') || b.name).filter(Boolean).join(' / ') || 'Broadcast info unavailable')}</strong></div></div><div class="gc-title"><h2>Team Stats</h2><span class="small-note">${hasStats(m.stats) ? 'Live feed' : 'Waiting for stats'}</span></div><div class="team-stats">${statRows(m)}</div><div class="gc-title"><h2>On The Pitch</h2><span class="small-note">Updates on refresh when substitutions are included</span></div>${pitchMarkup(m)}<div class="gc-title"><h2>Match Events</h2><span class="small-note">Latest first</span></div><div class="events">${events.length ? events.map(e => `<div class="event"><span>${esc(eventMinute(e) || 'Match event')}</span>${esc(eventEventText(e))}</div>`).join('') : '<div class="empty">Match events will appear when the feed provides them.</div>'}</div></div>`
     }
     function canonicalAbbr(abbr) {
         return ({
@@ -1699,6 +2068,8 @@
                 score: hs,
                 record: ''
             },
+            stats: normalizeOpenStats(g, awayAbbr, homeAbbr),
+            lineups: normalizeOpenLineups(g, awayAbbr, homeAbbr),
             details: g.events || g.goals || [],
             broadcasts: []
         }
