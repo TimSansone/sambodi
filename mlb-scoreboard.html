@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -1598,6 +1599,7 @@
                 </div>
                 <button class="btn secondary" id="todayBtn" type="button">Today</button>
                 <button class="btn" id="refreshBtn" type="button">Refresh</button>
+                <button class="btn secondary" id="autoRefreshBtn" type="button" aria-pressed="true">Auto Refresh On</button>
                 <button class="btn secondary" id="topLiveBtn" type="button">Live</button>
                 <button class="btn secondary" id="alertsBtn" type="button">Enable Alerts</button>
             </div>
@@ -1734,6 +1736,7 @@
         pitcherStats: new Map(),
         lastScores: new Map(),
         alerts: false,
+        autoRefresh: true,
         refreshSeconds: 30,
         refreshRemaining: 30,
         refreshTimer: null,
@@ -1746,6 +1749,7 @@
         next: $('nextDayBtn'),
         today: $('todayBtn'),
         refresh: $('refreshBtn'),
+        autoRefresh: $('autoRefreshBtn'),
         topLive: $('topLiveBtn'),
         alerts: $('alertsBtn'),
         status: $('statusText'),
@@ -2601,6 +2605,11 @@
     function startTimers() {
         clearInterval(state.refreshTimer);
         clearInterval(state.countdownTimer);
+        if (!state.autoRefresh) {
+            els.countdown.textContent = 'Off';
+            return
+        }
+        els.countdown.textContent = state.refreshRemaining + 's';
         state.refreshTimer = setInterval(() => {
             if (els.gameDate.value === todayIso() && state.games.some(g => gameState(g) === 'live'))
                 loadGames()
@@ -2611,6 +2620,19 @@
             if (state.refreshRemaining === 0)
                 state.refreshRemaining = state.refreshSeconds
         }, 1000)
+    }
+    function setAutoRefresh(on) {
+        state.autoRefresh = on;
+        els.autoRefresh.textContent = on ? 'Auto Refresh On' : 'Auto Refresh Off';
+        els.autoRefresh.setAttribute('aria-pressed', String(on));
+        if (on) {
+            state.refreshRemaining = state.refreshSeconds;
+            startTimers()
+        } else {
+            clearInterval(state.refreshTimer);
+            clearInterval(state.countdownTimer);
+            els.countdown.textContent = 'Off'
+        }
     }
     els.prev.onclick = () => {
         els.gameDate.value = addDays(els.gameDate.value || todayIso(), -1);
@@ -2626,6 +2648,7 @@
         loadGames()
     };
     els.refresh.onclick = loadGames;
+    els.autoRefresh.onclick = () => setAutoRefresh(!state.autoRefresh);
     els.topLive.onclick = () => setStatusFilter('live');
     els.gameDate.onchange = loadGames;
     $('standingsRefreshBtn2').onclick = loadStandings;
