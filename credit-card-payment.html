@@ -8,13 +8,16 @@
   <style>
     :root {
       color-scheme: light;
-      --ink: #16202a;
-      --muted: #5d6974;
-      --line: #d8dee4;
+      --ink: #142026;
+      --muted: #64717d;
+      --line: #d7e0e5;
       --surface: #ffffff;
-      --soft: #f5f7f8;
+      --soft: #f4f7f7;
       --accent: #0f766e;
       --accent-strong: #0b5d57;
+      --accent-soft: #dff4ef;
+      --gold: #c18b23;
+      --rose-soft: #fbf0ee;
       --warn: #9f4f12;
       --danger: #a23a3a;
       --good: #26734d;
@@ -30,7 +33,9 @@
       margin: 0;
       min-height: 100vh;
       background:
-        linear-gradient(180deg, rgba(15, 118, 110, 0.08), rgba(255,255,255,0) 38%),
+        radial-gradient(circle at 12% 0%, rgba(15, 118, 110, 0.2), rgba(15, 118, 110, 0) 32%),
+        linear-gradient(135deg, rgba(193, 139, 35, 0.1), rgba(255,255,255,0) 34%),
+        linear-gradient(180deg, rgba(15, 118, 110, 0.1), rgba(255,255,255,0) 42%),
         var(--soft);
       color: var(--ink);
     }
@@ -55,13 +60,18 @@
       grid-template-columns: 1fr auto;
       gap: 20px;
       align-items: end;
-      margin-bottom: 20px;
+      margin-bottom: 22px;
+      padding: 22px;
+      border: 1px solid rgba(15, 118, 110, 0.18);
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.92), rgba(223, 244, 239, 0.74));
+      box-shadow: 0 18px 44px rgba(20, 32, 38, 0.09);
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(2rem, 4.2vw, 4rem);
-      line-height: 0.95;
+      font-size: clamp(2.15rem, 4.4vw, 4.4rem);
+      line-height: 0.98;
       letter-spacing: 0;
       max-width: 820px;
     }
@@ -91,18 +101,24 @@
       padding: 0 14px;
       background: var(--ink);
       color: white;
-      box-shadow: 0 8px 18px rgba(22, 32, 42, 0.12);
+      box-shadow: 0 10px 20px rgba(22, 32, 42, 0.14);
+      transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease, background 120ms ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 24px rgba(22, 32, 42, 0.16);
     }
 
     .button.secondary {
-      background: var(--surface);
+      background: rgba(255,255,255,0.9);
       color: var(--ink);
       border: 1px solid var(--line);
       box-shadow: none;
     }
 
     .button.accent {
-      background: var(--accent);
+      background: linear-gradient(135deg, var(--accent), #12837b);
     }
 
     .button.icon {
@@ -123,11 +139,12 @@
     }
 
     .panel {
-      background: rgba(255, 255, 255, 0.88);
+      background: rgba(255, 255, 255, 0.92);
       border: 1px solid var(--line);
       border-radius: 8px;
-      box-shadow: 0 16px 34px rgba(21, 33, 44, 0.08);
+      box-shadow: 0 18px 40px rgba(21, 33, 44, 0.09);
       overflow: hidden;
+      backdrop-filter: blur(10px);
     }
 
     .panel-head {
@@ -137,7 +154,7 @@
       gap: 12px;
       padding: 16px;
       border-bottom: 1px solid var(--line);
-      background: rgba(255,255,255,0.72);
+      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(244,247,247,0.78));
     }
 
     .panel-head h2 {
@@ -158,9 +175,12 @@
       gap: 10px;
       align-items: end;
       padding: 12px;
-      background: var(--surface);
+      background:
+        linear-gradient(90deg, rgba(15, 118, 110, 0.08), rgba(255,255,255,0) 28%),
+        var(--surface);
       border: 1px solid var(--line);
       border-radius: 8px;
+      box-shadow: 0 8px 20px rgba(20, 32, 38, 0.04);
     }
 
     label, .field-label {
@@ -182,9 +202,13 @@
       min-height: 40px;
       border-radius: 7px;
       border: 1px solid var(--line);
-      background: #fff;
+      background: #fbfdfd;
       color: var(--ink);
       padding: 0 10px;
+    }
+
+    input:hover, select:hover {
+      border-color: rgba(15, 118, 110, 0.38);
     }
 
     input[type="date"] {
@@ -248,7 +272,7 @@
       gap: 10px;
       padding: 14px 16px;
       border-bottom: 1px solid var(--line);
-      background: var(--soft);
+      background: linear-gradient(135deg, var(--accent-soft), #f7faf9);
     }
 
     .metric {
@@ -258,7 +282,7 @@
       gap: 4px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: #fff;
+      background: linear-gradient(180deg, #fff, #f9fbfb);
       padding: 12px;
     }
 
@@ -287,7 +311,8 @@
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 12px;
-      background: #fff;
+      background: linear-gradient(180deg, #fff, #fbfdfd);
+      box-shadow: 0 8px 18px rgba(20, 32, 38, 0.04);
     }
 
     .result-row h3 {
@@ -615,10 +640,10 @@
     <header>
       <div>
         <h1>Credit Card Payment Planner</h1>
-        <p class="subtitle">Enter each card, choose how much cash you can put toward payments, and get a split that covers minimums first, then attacks your balances using the strategy you pick.</p>
+        <p class="subtitle">Your cards are ready each month. Update balances, due dates, and minimums, then get a payment split plus a ranked purchase guide for the next billing cycle.</p>
       </div>
       <div class="toolbar" aria-label="Plan actions">
-        <button class="button secondary" id="sampleBtn" type="button" title="Load example cards">Example</button>
+        <button class="button secondary" id="sampleBtn" type="button" title="Load demo cards">Demo</button>
         <button class="button secondary" id="exportBtn" type="button" title="Download your plan">Export</button>
         <button class="button secondary" id="calendarBtn" type="button" title="Download calendar reminders">Calendar</button>
         <button class="button secondary" id="pdfBtn" type="button" title="Save this plan as a PDF">PDF</button>
@@ -710,8 +735,10 @@
     const todayIso = new Date().toISOString().slice(0, 10);
 
     let cards = [
-      createCard("Card 1", 1200, 24.99, todayIso, 35),
-      createCard("Card 2", 650, 18.49, todayIso, 25)
+      createCard("JetBlue Card", 0, 29.49, todayIso, 0),
+      createCard("CreditOne AMEX", 0, 28.74, todayIso, 0),
+      createCard("Capital One QuickSilver", 0, 28.99, todayIso, 0),
+      createCard("Capital One Savor", 0, 28.99, todayIso, 0)
     ];
 
     function createCard(name = "", balance = 0, apr = 0, dueDate = todayIso, minimum = 0) {
