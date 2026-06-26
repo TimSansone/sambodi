@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Live MLB GameCenter</title>
     <style>
+    /* Theme tokens used throughout the app: colors, reusable shadow, corner radius, and base font. */
     :root {
         --ink: #162033;
         --muted: #667187;
@@ -21,10 +22,12 @@
         font-family: Arial, Helvetica, sans-serif;
     }
 
+    /* Keep sizing predictable so padding and borders do not unexpectedly expand cards or panels. */
     * {
         box-sizing:border-box
     }
 
+    /* Page background and default text color for the whole dashboard. */
     body {
         margin: 0;
         min-height: 100vh;
@@ -40,12 +43,14 @@
         touch-action:manipulation
     }
 
+    /* Main app shell: caps the layout width but remains fluid on smaller screens. */
     .app {
         width: min(1580px, 100%);
         margin: 0 auto;
         padding: clamp(10px, 2.4vw, 24px)
     }
 
+    /* Sticky top ticker showing compact score/status text for every loaded game. */
     .score-ticker {
         position: sticky;
         top: 0;
@@ -182,6 +187,7 @@
         margin-bottom: 18px
     }
 
+    /* Top control strip: team filter, status message, date controls, refresh, live filter, and alerts. */
     .toolbar {
         display: grid;
         grid-template-columns: minmax(240px, 320px) minmax(180px, 1fr) auto auto auto;
@@ -276,6 +282,7 @@
         color: var(--muted)
     }
 
+    /* Summary counters under the toolbar. These are updated after every schedule load. */
     .status-row {
         display: grid;
         grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -323,6 +330,7 @@
         gap:18px
     }
 
+    /* Scoreboard card grid. align-items prevents cards from stretching when another card's details are open. */
     .games-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
@@ -372,6 +380,7 @@
         font-size: 1.18rem
     }
 
+    /* Individual game card: score, status, starters, live state, line score, and win estimate. */
     .game-card {
         --team: #2f6fca;
         position: relative;
@@ -552,6 +561,7 @@
         color:var(--ink)
     }
 
+    /* Live-only card content: base graphic, count/outs, current pitcher, and current batter. */
     .live-card-details {
         display: grid;
         gap: 10px;
@@ -649,6 +659,7 @@
         line-height:1.35
     }
 
+    /* In-app win estimate display. This is not sportsbook data; it is calculated from game state. */
     .win-odds {
         display: grid;
         gap: 8px;
@@ -713,6 +724,7 @@
         text-decoration: underline
     }
 
+    /* Expanded details drawer that appears directly below the selected game card. */
     .inline-detail {
         border: 1px solid color-mix(in srgb, var(--team) 38%, var(--line));
         border-radius: 14px;
@@ -758,6 +770,7 @@
         gap:18px
     }
 
+    /* Compact standings styles used by sidebar/summary standings layouts. */
     .standings-bar {
         display: grid;
         gap:12px
@@ -900,6 +913,7 @@
 
 
 
+    /* League leaders section: grouped by league and hitting/pitching category. */
     .leaders-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -1080,12 +1094,14 @@
     }
 
 
+    /* Tab navigation switches between Scores, Standings, League Leaders, and Stats & Trends. */
     .tabs-nav { display:flex; gap:8px; flex-wrap:wrap; margin:0 0 18px; padding:10px; border:1px solid var(--line); border-radius:var(--radius); background:rgba(255,255,255,.92); box-shadow:var(--shadow) }
     .tab-btn { min-height:42px; border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--ink); padding:9px 14px; cursor:pointer; font-weight:900 }
     .tab-btn.active { background:var(--navy); border-color:var(--navy); color:#fff }
     .tab-panel { display:none }
     .tab-panel.active { display:block }
     .dashboard-layout { display:grid; grid-template-columns:minmax(0, 1.3fr) minmax(330px, .72fr); gap:18px; align-items:start }
+    /* Stats & Trends cards summarize live/final/upcoming games and daily player impact stats. */
     .trend-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px }
     .trend-card { border:1px solid var(--line); border-radius:14px; background:#fff; padding:14px; box-shadow:0 10px 24px rgba(23,32,51,.08) }
     .trend-card h3 { margin:0 0 10px; font-size:.98rem }
@@ -1098,6 +1114,7 @@
     .trend-player-media .leader-headshot { width:38px; height:38px; border-radius:999px; object-fit:cover; background:#eef3f9 }
     .trend-player-media img:not(.leader-headshot) { position:absolute; right:0; bottom:-2px; width:20px; height:20px; padding:2px; border-radius:999px; background:#fff; border:1px solid var(--line) }
     .trend-summary { grid-column:1 / -1 }
+    /* Full standings tab, including division and wild card tables. */
     .standings-dashboard { display:grid; gap:20px }
     .standings-section { display:grid; gap:14px }
     .standings-section-title { margin:0; padding:12px 14px; border-radius:12px; background:var(--navy); color:#fff; font-size:1.05rem }
@@ -1118,6 +1135,7 @@
     .standings-value { text-align:right; white-space:nowrap }
     .standings-league-split { display:grid; grid-template-columns:repeat(auto-fit, minmax(330px, 1fr)); gap:16px }
 
+    /* Tablet layout: stack the header/main columns and relax sticky side panels. */
     @media (max-width: 1100px) {
         header, main, .toolbar, .dashboard-layout {
             grid-template-columns:1fr
@@ -1136,6 +1154,7 @@
         }
     }
 
+    /* Phone layout: single-column controls/cards and smaller score/team elements. */
     @media (max-width: 680px) {
         .app {
             padding:10px
@@ -1558,6 +1577,7 @@
     </style>
 </head>
 <body>
+    <!-- Sticky ticker: populated from loaded games so users can scan scores while scrolling. -->
     <div class="score-ticker" aria-label="Scrolling scores">
         <div id="scoreTicker" class="ticker-track">
             <span class="ticker-item">
@@ -1567,6 +1587,7 @@
         </div>
     </div>
     <div class="app">
+        <!-- Header: app title plus date navigation for loading a specific MLB schedule day. -->
         <header>
             <div>
                 <h1>MLB GameCenter</h1>
@@ -1578,6 +1599,7 @@
                 <button class="btn secondary" id="nextDayBtn" type="button">Next</button>
             </div>
         </header>
+        <!-- Top dashboard controls: filters, manual refresh, auto-refresh toggle, live-only view, and alerts. -->
         <section class="panel pad top-panel">
             <div class="toolbar">
                 <div>
@@ -1625,6 +1647,7 @@
                 </div>
             </div>
         </section>
+        <!-- Main dashboard tabs. Each button maps to a tab panel by data-tab/id. -->
         <nav class="tabs-nav" aria-label="Dashboard sections">
             <button class="tab-btn active" type="button" data-tab="scoresTab">⚾ Scores</button>
             <button class="tab-btn" type="button" data-tab="standingsTab">📊 Standings</button>
@@ -1632,6 +1655,7 @@
             <button class="tab-btn" type="button" data-tab="trendsTab">📈 Stats & Trends</button>
         </nav>
 
+        <!-- Scores tab: the primary GameCenter card grid. -->
         <section id="scoresTab" class="tab-panel active">
             <section class="panel pad">
                 <div class="section-head">
@@ -1646,6 +1670,7 @@
             </section>
         </section>
 
+        <!-- Standings tab: division and wild-card tables loaded from MLB standings endpoints. -->
         <section id="standingsTab" class="tab-panel">
             <section class="panel pad">
                 <div class="section-head">
@@ -1659,6 +1684,7 @@
             </section>
         </section>
 
+        <!-- League leaders tab: AL/NL hitting and pitching leaderboards. -->
         <section id="leadersTab" class="tab-panel">
             <section class="panel pad">
                 <div class="section-head">
@@ -1671,6 +1697,7 @@
             </section>
         </section>
 
+        <!-- Trends tab: daily impact stats, live-game watch lists, and leader snapshots. -->
         <section id="trendsTab" class="tab-panel">
             <section class="panel pad">
                 <div class="section-head">
@@ -1683,10 +1710,13 @@
             </section>
         </section>
     </div>
+    <!-- Toast container for temporary score/alert messages. -->
     <div class="toast" id="toast"></div>
     <script>
+    // MLB Stats API endpoints used by the whole app.
     const API_BASE = 'https://statsapi.mlb.com/api/v1';
     const LIVE_BASE = 'https://statsapi.mlb.com/api/v1.1/game';
+    // Team color lookup used to tint cards, odds bars, and selected-game styling.
     const TEAM_COLORS = {
         108: ['#ba0021', '#0c2340'],
         109: ['#a71930', '#e3d4ad'],
@@ -1719,20 +1749,28 @@
         147: ['#0c2340', '#c8102e'],
         158: ['#ab0003', '#14225a']
     };
+    // Central app state. Render functions read from this object instead of querying the DOM for data.
     const state = {
+        // Schedule/game data currently loaded for the selected date.
         games: [],
+        // Live feed responses keyed by gamePk. Used for count, bases, plays, pitcher/batter, etc.
         feeds: {},
         selected: null,
         selectedFeed: null,
+        // Current team and status filters applied to the scoreboard grid.
         teams: [],
         teamFilter: '',
         statusFilter: 'all',
+        // User-selected favorite teams are persisted in localStorage.
         favoriteTeams: new Map(),
+        // Secondary dashboard datasets.
         standings: [],
         wildCardStandings: [],
         leagueLeaders: { AL: { hitting: [], pitching: [] }, NL: { hitting: [], pitching: [] } },
         todayImpact: { homeRuns: [], rbi: [], doubles: [], triples: [], pitcherStrikeouts: [] },
+        // Cache probable starter season stats so the app does not re-fetch the same pitcher repeatedly.
         pitcherStats: new Map(),
+        // Last known scores are used to detect changes for optional page alerts.
         lastScores: new Map(),
         alerts: false,
         autoRefresh: true,
@@ -1741,6 +1779,7 @@
         refreshTimer: null,
         countdownTimer: null
     };
+    // Convenience DOM lookup plus a single registry of elements used throughout the app.
     const $ = id => document.getElementById(id);
     const els = {
         gameDate: $('gameDate'),
@@ -1772,6 +1811,7 @@
         leaders: $('leagueLeaders'),
         trends: $('statsTrends')
     };
+    // Date/string helpers keep date math and HTML escaping consistent across render functions.
     function todayIso() {
         const n = new Date(),
             o = n.getTimezoneOffset();
@@ -1791,6 +1831,7 @@
     function colors(team) {
         return TEAM_COLORS[team?.id] || ['#2f6fca', '#13294b']
     }
+    // Shared fetch wrapper: disables browser cache and turns non-2xx API responses into errors.
     function fetchJson(u) {
         return fetch(u, {
             cache: 'no-store'
@@ -1800,6 +1841,7 @@
             return r.json()
         })
     }
+    // Normalize MLB's various status strings into the three states the UI cares about.
     function gameState(g) {
         const a=g.status?.abstractGameState,
             d = g.status?.detailedState || '';
@@ -1831,6 +1873,7 @@
         const r=g.teams?.[s]?.leagueRecord;
         return r ? `${r.wins || 0}-${r.losses || 0}` : 'Record unavailable'
     }
+    // Pitcher helpers read probable starters and format their season record/ERA/WHIP.
     function pitcher(g, s) {
         return g.teams?.[s]?.probablePitcher || null
     }
@@ -1861,6 +1904,7 @@
     function note(g, s) {
         return gameState(g) === 'scheduled' ? `SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
     }
+    // Favorite-team helpers persist and apply the user's highlighted teams.
     function isFav(id) {
         return state.favoriteTeams.has(String(id))
     }
@@ -1884,6 +1928,7 @@
         saveFavs();
         renderAll()
     }
+    // Build the inning-by-inning line score table. Live-feed data takes priority over schedule data.
     function lineScore(g) {
         const l = state.feeds[g.gamePk]?.liveData?.linescore || g.linescore || {};
         const inn = l.innings || [];
@@ -1901,6 +1946,7 @@
             hn = g.teams.home.team.abbreviation || 'Home';
         return `<div class="line-score"><table><thead><tr><th>Team</th>${head}<th class="total">R</th><th class="total">H</th><th class="total">E</th></tr></thead><tbody><tr><td>${esc(an)}</td>${cells('away')}<td class="total">${totals('away').runs ?? score(g, 'away')}</td><td class="total">${totals('away').hits ?? '-'}</td><td class="total">${totals('away').errors ?? '-'}</td></tr><tr><td>${esc(hn)}</td>${cells('home')}<td class="total">${totals('home').runs ?? score(g, 'home')}</td><td class="total">${totals('home').hits ?? '-'}</td><td class="total">${totals('home').errors ?? '-'}</td></tr></tbody></table></div>`
     }
+    // Live-feed helpers pull richer in-game data: bases, count, current matchup, and box score stats.
     function feedFor(g) {
         return state.feeds[g.gamePk] || (state.selected === g.gamePk ? state.selectedFeed : null)
     }
@@ -1965,6 +2011,8 @@
         const offense = liveLinescore(g).offense || {};
         return ['first', 'second', 'third'].filter(base => offense[base]).length
     }
+    // Estimate each team's chance to win from score, inning, half-inning, outs, and baserunners.
+    // This is a simple in-app estimate, not sportsbook odds.
     function winOdds(g) {
         const away = g.teams.away.team,
             home = g.teams.home.team,
@@ -2002,6 +2050,7 @@
             batterInfo = batterLine(g);
         return `<div class="live-card-details"><div class="live-diamond-row">${baseGraphic(g)}<div class="live-count">${liveCountSummary(g)}</div></div><div class="live-matchup"><div class="live-player"><span>Pitcher</span><strong>${esc(pitcherInfo.name)}</strong><small>${esc(pitcherInfo.detail)}</small></div><div class="live-player"><span>Batter</span><strong>${esc(batterInfo.name)}</strong><small>${esc(batterInfo.detail)}</small></div></div></div>`
     }
+    // Apply user filters and sort games so live games appear first, then scheduled, then final.
     function visibleGames() {
         let games = [...state.games];
         if (state.teamFilter)
@@ -2017,6 +2066,7 @@
         };
         return games.sort((a, b) => (order[gameState(a)] - order[gameState(b)]) || (new Date(a.gameDate) - new Date(b.gameDate)))
     }
+    // Render loading placeholders while the schedule request is in progress.
     function renderSkeleton() {
         els.grid.innerHTML = Array.from({
             length: 6
@@ -2034,6 +2084,7 @@
         els.final.textContent = c.final;
         els.scheduled.textContent = c.scheduled
     }
+    // Render the main GameCenter card grid and wire card/favorite interactions.
     function renderGames() {
         const games = visibleGames();
         if (!games.length) {
@@ -2079,6 +2130,7 @@
             }
         })
     }
+    // Rebuild the sticky scrolling ticker from the same game data used by the cards.
     function renderTicker() {
         const items = state.games.map(g => {
             const a = g.teams.away.team.abbreviation || g.teams.away.team.name,
@@ -2087,6 +2139,7 @@
         });
         els.ticker.innerHTML = (items.length ? items.concat(items) : ['<span class="ticker-item"><span class="ticker-dot"></span>No MLB games found for this date.</span>']).join('')
     }
+    // Extract all teams in the current schedule so the team filter only shows relevant options.
     function allTeams() {
         const m = new Map();
         state.games.forEach(g => ['away', 'home'].forEach(s => {
@@ -2113,6 +2166,7 @@
         els.teamBtn.setAttribute('aria-expanded', 'false');
         renderGames()
     }
+    // Play helpers power the expanded game drawer's Recent Plays and Scoring Plays sections.
     function simplePlays(feed) {
         return (feed?.liveData?.plays?.allPlays || []).slice(-8).reverse()
     }
@@ -2152,6 +2206,7 @@
     function current(feed, role) {
         return feed?.liveData?.plays?.currentPlay?.matchup?.[role]?.fullName || 'Unavailable'
     }
+    // Expanded game drawer shown directly below a selected scorecard.
     function detailHtml(g) {
         const feed = state.selected === g.gamePk ? state.selectedFeed || state.feeds[g.gamePk] : state.feeds[g.gamePk];
         const a = g.teams.away.team,
@@ -2172,6 +2227,7 @@
         els.detailMsg.style.display = 'none';
         els.detail.innerHTML = detailHtml(g)
     }
+    // Selecting a game immediately opens the detail drawer, then fetches live feed data for richer details.
     async function selectGame(pk) {
         state.selected = pk;
         state.selectedFeed = null;
@@ -2184,6 +2240,7 @@
         renderDetail();
         renderGames()
     }
+    // Standings helpers convert MLB standings records into division and wild-card tables.
     function standingLeagueName(rec) {
         const leagueName = rec.league?.name || '';
         if (leagueName.includes('American')) return 'American League';
@@ -2233,6 +2290,7 @@
             : `${divisionHtml}${wildCardHtml}`;
         if (els.standingsFull) els.standingsFull.innerHTML = fullHtml;
     }
+    // Fetch division and wild-card standings for both leagues for the selected season.
     async function loadStandings() {
         if (els.standings) els.standings.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
         if (els.standingsFull) els.standingsFull.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
@@ -2270,6 +2328,7 @@
             { key: 'saves', label: 'Saves', shortLabel: 'SV' }
         ]
     };
+    // League leader helpers normalize MLB leader rows, which can vary slightly by stat category.
     function leaderPlayerName(row) {
         return row.person?.fullName || row.player?.fullName || row.fullName || 'Player unavailable'
     }
@@ -2322,6 +2381,7 @@
         }
         els.leaders.innerHTML = LEAGUES.map(leagueLeadersHtml).join('')
     }
+    // Fetch a single hitting/pitching leaderboard category for one league.
     async function fetchLeaderCategory(group, category, season, leagueId) {
         const keys = Array.isArray(category.key) ? category.key : [category.key];
         for (const key of keys) {
@@ -2356,6 +2416,7 @@
         renderLeagueLeaders()
     }
 
+    // Temporary notification message used for score alerts and user feedback.
     function toast(msg) {
         const n = document.createElement('div');
         n.className = 'toast-item';
@@ -2375,6 +2436,7 @@
     }
 
 
+    // Stats & Trends helpers summarize today's player impact stats and game watch lists.
     function emptyImpactStats() {
         return { homeRuns: [], rbi: [], doubles: [], triples: [], pitcherStrikeouts: [] }
     }
@@ -2391,6 +2453,7 @@
     function playerHeadshot(id) {
         return `https://img.mlbstatic.com/mlb-photos/image/upload/w_80,q_auto:best/v1/people/${id}/headshot/67/current`
     }
+    // Build daily impact totals by reading box scores for today's games.
     async function loadTodayImpactStats() {
         const impact = {
             homeRuns: new Map(),
@@ -2498,6 +2561,7 @@
         ].filter(Boolean);
         return rows.map(r => `<div class="trend-row"><img src="${logo(r.team.id)}" alt=""><span><strong>${esc(r.pitcher.fullName || 'TBD')}</strong><small>${esc(r.team.abbreviation || r.team.name)} · ${esc(r.text.replace((r.pitcher.fullName || '') + ' — ', ''))}</small></span><strong>SP</strong></div>`).join('')
     }
+    // Render the Stats & Trends tab from loaded games, daily impact data, and league leaders.
     function renderStatsTrends() {
         if (!els.trends) return;
         const live = state.games.filter(g => gameState(g) === 'live');
@@ -2527,12 +2591,14 @@
         const todayStrikeoutsHtml = todayImpactRows('pitcherStrikeouts', 'K', 'No pitcher strikeout totals available yet today.');
         els.trends.innerHTML = `<div class="trend-card trend-summary"><h3>📊 Today Snapshot</h3><div class="mini-grid"><div class="mini"><span>Games</span><strong>${state.games.length}</strong></div><div class="mini"><span>Live</span><strong>${live.length}</strong></div><div class="mini"><span>Final</span><strong>${state.games.filter(g => gameState(g) === 'final').length}</strong></div><div class="mini"><span>Upcoming</span><strong>${state.games.filter(g => gameState(g) === 'scheduled').length}</strong></div></div></div><div class="trend-card"><h3>💥 Home Runs Today</h3><div class="trend-list">${todayHrHtml}</div></div><div class="trend-card"><h3>🏃 RBI Today</h3><div class="trend-list">${todayRbiHtml}</div></div><div class="trend-card"><h3>📏 Doubles Today</h3><div class="trend-list">${todayDoublesHtml}</div></div><div class="trend-card"><h3>⚡ Triples Today</h3><div class="trend-list">${todayTriplesHtml}</div></div><div class="trend-card"><h3>🔥 Pitcher Strikeouts Today</h3><div class="trend-list">${todayStrikeoutsHtml}</div></div><div class="trend-card"><h3>💣 MLB Power Watch</h3><div class="trend-list">${powerHtml}</div></div><div class="trend-card"><h3>💨 MLB Speed Watch</h3><div class="trend-list">${speedHtml}</div></div><div class="trend-card"><h3>🔥 Batting Average Leaders</h3><div class="trend-list">${averageHtml}</div></div><div class="trend-card"><h3>🧢 ERA Leaders</h3><div class="trend-list">${eraHtml}</div></div><div class="trend-card"><h3>⚡ Strikeout Leaders</h3><div class="trend-list">${strikeoutHtml}</div></div><div class="trend-card"><h3>🔒 Saves Leaders</h3><div class="trend-list">${savesHtml}</div></div><div class="trend-card"><h3>🎯 Probable Starters Today</h3><div class="trend-list">${startersHtml}</div></div><div class="trend-card"><h3>📈 Highest Scoring Games</h3><div class="trend-list">${highScoringHtml}</div></div><div class="trend-card"><h3>⚔️ Close Game Watch</h3><div class="trend-list">${closeHtml}</div></div><div class="trend-card"><h3>🔴 Live Games</h3><div class="trend-list">${liveHtml}</div></div><div class="trend-card"><h3>✅ Recent Finals</h3><div class="trend-list">${finalHtml}</div></div><div class="trend-card"><h3>⏰ Upcoming First Pitches</h3><div class="trend-list">${upcomingHtml}</div></div><div class="trend-card"><h3>⭐ Favorite Team Watch</h3><div class="trend-list">${favoriteHtml}</div></div>`
     }
+    // Simple tab controller: activates one panel and marks its button active.
     function activateTab(tabId) {
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === tabId));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
         if (tabId === 'trendsTab') renderStatsTrends();
     }
 
+    // One render pass for all dashboard areas that depend on the current state.
     function renderAll() {
         renderStats();
         renderGames();
@@ -2542,10 +2608,12 @@
         renderStatsTrends();
         renderDetail()
     }
+    // Change scoreboard status filter without reloading data from MLB.
     function setStatusFilter(filter) {
         state.statusFilter = filter;
         renderGames()
     }
+    // Fetch live-feed details for games in progress only. Scheduled/final games do not need this polling.
     async function loadLiveFeeds() {
         const live = state.games.filter(g => gameState(g) === 'live');
         const res = await Promise.allSettled(live.map(g => fetchJson(`${LIVE_BASE}/${g.gamePk}/feed/live`)));
@@ -2554,6 +2622,7 @@
                 state.feeds[live[i].gamePk] = r.value
         })
     }
+    // Fetch season pitching stats for probable starters and attach them to each game object.
     async function loadProbablePitcherStats() {
         const season = (els.gameDate.value || todayIso()).slice(0, 4);
         const ids = [...new Set(state.games.flatMap(g => ['away', 'home'].map(side => pitcher(g, side)?.id).filter(Boolean)))];
@@ -2569,6 +2638,7 @@
                 p.seasonStats = state.pitcherStats.get(p.id)
         }))
     }
+    // Main data-loading pipeline: schedule -> pitcher stats -> live feeds -> alerts -> all renders.
     async function loadGames() {
         const date = els.gameDate.value || todayIso();
         els.gameDate.value = date;
@@ -2576,20 +2646,25 @@
         els.status.value = 'Loading MLB games...';
         renderSkeleton();
         try {
+            // Schedule endpoint gives the list of games for a date plus teams, probable pitchers, venue, and line score.
             const url = `${API_BASE}/schedule?sportId=1&date=${date}&hydrate=team,linescore,probablePitcher,venue,decisions`;
             const data = await fetchJson(url);
             state.games = (data.dates || []).flatMap(d => d.games || []);
+            // Enrich schedule data before rendering cards so starters and live details are available immediately.
             await loadProbablePitcherStats();
             allTeams();
             renderTeamOptions();
             await loadLiveFeeds();
             checkAlerts();
+            // Prefer selecting a live game; otherwise select the first game so the details drawer has a target.
             if (!state.selected || !state.games.some(g => g.gamePk === state.selected))
                 state.selected = state.games.find(g => gameState(g) === 'live')?.gamePk||state.games[0]?.gamePk || null;
             els.status.value = state.games.length ? `Loaded ${state.games.length} game${state.games.length === 1 ? '' : 's'} for ${date}.` : 'No MLB games found for this date.';
             renderAll();
+            // Fetch full live feed for the selected game after first render so the page feels responsive.
             if (state.selected)
                 selectGame(state.selected);
+            // Secondary dashboard data can load after the primary scoreboard is visible.
             loadStandings();
             loadLeagueLeaders();
             loadTodayImpactStats()
@@ -2601,6 +2676,7 @@
             state.refreshRemaining = state.refreshSeconds
         }
     }
+    // Start or restart auto-refresh and countdown timers. Auto-refresh only reloads today's live games.
     function startTimers() {
         clearInterval(state.refreshTimer);
         clearInterval(state.countdownTimer);
@@ -2610,6 +2686,7 @@
         }
         els.countdown.textContent = state.refreshRemaining + 's';
         state.refreshTimer = setInterval(() => {
+            // Only auto-refresh current-day live games; historical/future dates stay stable unless manually refreshed.
             if (els.gameDate.value === todayIso() && state.games.some(g => gameState(g) === 'live'))
                 loadGames()
         }, state.refreshSeconds * 1000);
@@ -2620,6 +2697,7 @@
                 state.refreshRemaining = state.refreshSeconds
         }, 1000)
     }
+    // Toggle auto-refresh without affecting the manual Refresh button.
     function setAutoRefresh(on) {
         state.autoRefresh = on;
         els.autoRefresh.textContent = on ? 'Auto Refresh On' : 'Auto Refresh Off';
@@ -2633,6 +2711,7 @@
             els.countdown.textContent = 'Off'
         }
     }
+    // Event bindings for date navigation and dashboard controls.
     els.prev.onclick = () => {
         els.gameDate.value = addDays(els.gameDate.value || todayIso(), -1);
         loadGames()
@@ -2657,11 +2736,13 @@
     $('showAllBtn').onclick = () => setStatusFilter('all');
     $('showLiveBtn').onclick = () => setStatusFilter('live');
     $('showFavBtn').onclick = () => setStatusFilter('favorites');
+    // Alerts are page-local: they compare newly loaded scores with the last score snapshot.
     els.alerts.onclick = () => {
         state.alerts = !state.alerts;
         els.alerts.textContent = state.alerts ? 'Alerts On' : 'Enable Alerts';
         toast(state.alerts ? 'Score alerts enabled for this page.' : 'Score alerts turned off.')
     };
+    // Team combo behavior: open/close the custom list and support keyboard navigation.
     els.teamBtn.onclick = () => {
         els.teamCombo.classList.toggle('open');
         els.teamBtn.setAttribute('aria-expanded', els.teamCombo.classList.contains('open'));
@@ -2693,6 +2774,7 @@
         if (e.key === 'Escape')
             els.teamCombo.classList.remove('open')
     };
+    // Initial app startup: restore favorites, load today's games, and start auto-refresh countdowns.
     loadFavs();
     els.gameDate.value = todayIso();
     loadGames();
