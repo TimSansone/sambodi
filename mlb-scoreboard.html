@@ -1,11 +1,9 @@
-
-
 <!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Live MLB GameCenter Pro</title>
+    <title>Live MLB GameCenter Pro 2.0</title>
     <style>
     :root {
         --ink: #162033;
@@ -337,6 +335,28 @@
         gap: 10px;
         align-content: start;
         align-self:start
+    }
+
+
+    .game-slot.selected-slot {
+        grid-column: 1 / -1;
+        grid-template-columns: minmax(330px, 430px) minmax(0, 1fr);
+        gap: 14px;
+        align-items: start;
+        position: relative;
+        z-index: 2;
+    }
+
+    .game-slot.selected-slot .game-card {
+        position: sticky;
+        top: 98px;
+        z-index: 3;
+    }
+
+    .game-slot.selected-slot .inline-detail {
+        min-width: 0;
+        width: 100%;
+        overflow: hidden;
     }
 
     .section-head {
@@ -878,6 +898,148 @@
         background:#fbfcfe
     }
 
+
+
+    .leaders-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 16px;
+    }
+
+    .leader-group {
+        display: grid;
+        gap: 12px;
+        align-content: start;
+    }
+
+    .leader-group h2 {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .league-leaders-section {
+        display: grid;
+        gap: 14px;
+    }
+
+    .league-leaders-section > h2 {
+        margin: 0;
+        padding: 12px 14px;
+        border-radius: 12px;
+        background: var(--navy);
+        color: #fff;
+        font-size: 1.05rem;
+    }
+
+    .league-leaders-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 16px;
+    }
+
+    .leader-category {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 10px 24px rgba(23, 32, 51, .07);
+    }
+
+    .leader-category h3 {
+        margin: 0;
+        padding: 11px 12px;
+        background: linear-gradient(90deg, #f7f9fc, #fff);
+        font-size: .92rem;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .leader-list {
+        display: grid;
+        gap: 0;
+    }
+
+    .leader-row {
+        display: grid;
+        grid-template-columns: 26px 46px minmax(0, 1fr) auto;
+        gap: 9px;
+        align-items: center;
+        padding: 9px 10px;
+        border-top: 1px solid var(--line);
+        font-size: .86rem;
+    }
+
+    .leader-row:first-child {
+        border-top: 0;
+        background: #fbfcfe;
+    }
+
+    .leader-rank {
+        color: var(--muted);
+        font-weight: 900;
+        text-align: center;
+    }
+
+    .leader-player-media {
+        position: relative;
+        width: 42px;
+        height: 42px;
+    }
+
+    .leader-headshot {
+        width: 42px;
+        height: 42px;
+        border-radius: 999px;
+        object-fit: cover;
+        background: #eef3f9;
+        border: 1px solid var(--line);
+    }
+
+    .leader-team-logo {
+        position: absolute;
+        right: -4px;
+        bottom: -4px;
+        width: 21px;
+        height: 21px;
+        object-fit: contain;
+        padding: 2px;
+        border-radius: 999px;
+        background: #fff;
+        border: 1px solid var(--line);
+        box-shadow: 0 3px 8px rgba(23, 32, 51, .16);
+    }
+
+    .leader-player-name {
+        min-width: 0;
+    }
+
+    .leader-player-name strong {
+        display: block;
+        overflow-wrap: anywhere;
+    }
+
+    .leader-player-name small {
+        display: block;
+        color: var(--muted);
+        margin-top: 2px;
+    }
+
+    .leader-stat {
+        color: var(--navy);
+        font-size: 1.02rem;
+        font-weight: 900;
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .leader-stat small {
+        display: block;
+        color: var(--muted);
+        font-size: .68rem;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+    }
+
     .toast {
         position: fixed;
         right: 18px;
@@ -917,8 +1079,47 @@
         opacity: .9
     }
 
+
+    .tabs-nav { display:flex; gap:8px; flex-wrap:wrap; margin:0 0 18px; padding:10px; border:1px solid var(--line); border-radius:var(--radius); background:rgba(255,255,255,.92); box-shadow:var(--shadow) }
+    .tab-btn { min-height:42px; border:1px solid var(--line); border-radius:999px; background:#fff; color:var(--ink); padding:9px 14px; cursor:pointer; font-weight:900 }
+    .tab-btn.active { background:var(--navy); border-color:var(--navy); color:#fff }
+    .tab-panel { display:none }
+    .tab-panel.active { display:block }
+    .dashboard-layout { display:grid; grid-template-columns:minmax(0, 1.3fr) minmax(330px, .72fr); gap:18px; align-items:start }
+    .trend-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px }
+    .trend-card { border:1px solid var(--line); border-radius:14px; background:#fff; padding:14px; box-shadow:0 10px 24px rgba(23,32,51,.08) }
+    .trend-card h3 { margin:0 0 10px; font-size:.98rem }
+    .trend-list { display:grid; gap:8px }
+    .trend-row { display:grid; grid-template-columns:34px 1fr auto; gap:8px; align-items:center; padding:8px; border:1px solid var(--line); border-radius:10px; background:#fbfcfe; font-size:.86rem }
+    .trend-row img { width:28px; height:28px; object-fit:contain }
+    .trend-row small { display:block; color:var(--muted) }
+    .trend-player-row { grid-template-columns:48px 1fr auto }
+    .trend-player-media { position:relative; width:46px; height:38px; display:inline-flex; align-items:center; justify-content:center }
+    .trend-player-media .leader-headshot { width:38px; height:38px; border-radius:999px; object-fit:cover; background:#eef3f9 }
+    .trend-player-media img:not(.leader-headshot) { position:absolute; right:0; bottom:-2px; width:20px; height:20px; padding:2px; border-radius:999px; background:#fff; border:1px solid var(--line) }
+    .trend-summary { grid-column:1 / -1 }
+    .standings-dashboard { display:grid; gap:20px }
+    .standings-section { display:grid; gap:14px }
+    .standings-section-title { margin:0; padding:12px 14px; border-radius:12px; background:var(--navy); color:#fff; font-size:1.05rem }
+    .standings-card-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(330px, 1fr)); gap:16px }
+    .standings-card { border:1px solid var(--line); border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 10px 24px rgba(23,32,51,.07) }
+    .standings-card h3 { margin:0; padding:11px 12px; background:linear-gradient(90deg, #f7f9fc, #fff); font-size:.92rem; border-bottom:1px solid var(--line) }
+    .standings-table { display:grid }
+    .standings-header, .standings-team-row { display:grid; grid-template-columns:34px minmax(150px, 1fr) 52px 52px 58px 58px 62px; gap:8px; align-items:center }
+    .standings-header { padding:8px 10px; color:var(--muted); font-size:.68rem; font-weight:900; text-transform:uppercase; letter-spacing:.06em; background:#fbfcfe }
+    .standings-team-row { padding:9px 10px; border-top:1px solid var(--line); font-size:.84rem }
+    .standings-team-row:first-of-type { background:#fbfcfe }
+    .standings-team-row.favorite { background:#fff7dc; font-weight:900 }
+    .standings-team-row img { width:24px; height:24px; object-fit:contain }
+    .standings-team-name { min-width:0; display:flex; align-items:center; gap:8px; font-weight:900 }
+    .standings-team-name span { overflow-wrap:anywhere }
+    .standings-team-name small { display:block; margin-top:2px; color:var(--muted); font-size:.72rem; font-weight:800 }
+    .standings-team-row small { color:var(--muted); font-weight:700 }
+    .standings-value { text-align:right; white-space:nowrap }
+    .standings-league-split { display:grid; grid-template-columns:repeat(auto-fit, minmax(330px, 1fr)); gap:16px }
+
     @media (max-width: 1100px) {
-        header, main, .toolbar {
+        header, main, .toolbar, .dashboard-layout {
             grid-template-columns:1fr
         }
 
@@ -954,6 +1155,17 @@
 
         .games-grid {
             grid-template-columns:1fr
+        }
+
+
+        .game-slot.selected-slot {
+            grid-column: auto;
+            grid-template-columns: 1fr;
+        }
+
+        .game-slot.selected-slot .game-card {
+            position: relative;
+            top: auto;
         }
 
         .game-card {
@@ -1005,10 +1217,344 @@
             display:grid
         }
 
+        .standings-header, .standings-team-row {
+            grid-template-columns:28px minmax(120px, 1fr) 42px 42px 46px;
+        }
+
+        .standings-header span:nth-child(6), .standings-header span:nth-child(7),
+        .standings-team-row .standings-value:nth-child(6), .standings-team-row .standings-value:nth-child(7) {
+            display:none;
+        }
+
         .btn {
             width: 100%
         }
     }
+
+
+    /* Mobile polish pass */
+    html { -webkit-text-size-adjust: 100%; }
+    body { overflow-x: hidden; }
+    img { max-width: 100%; }
+    .tab-btn, .btn, .fav-btn, .combo-button { -webkit-tap-highlight-color: transparent; }
+
+    @media (min-width: 1101px) {
+        .tab-panel > .panel.pad { padding: 18px; }
+        #standingsFull .standings-card-grid,
+        #leagueLeaders .league-leaders-grid {
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+        }
+    }
+
+    @media (max-width: 900px) {
+        .tabs-nav {
+            position: sticky;
+            top: 40px;
+            z-index: 9;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .tab-btn {
+            width: 100%;
+            justify-content: center;
+            padding: 10px 8px;
+            font-size: .9rem;
+        }
+
+        .standings-card-grid,
+        .standings-league-split,
+        .league-leaders-grid,
+        .leaders-grid,
+        .trend-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 680px) {
+        .score-ticker {
+            top: 0;
+            margin: -10px -10px 12px;
+            padding: 7px 0;
+        }
+
+        .ticker-item {
+            font-size: .78rem;
+        }
+
+        header {
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .subtitle {
+            font-size: .92rem;
+        }
+
+        .controls {
+            grid-template-columns: 72px minmax(0, 1fr) 72px;
+            gap: 7px;
+            padding: 9px;
+        }
+
+        .controls .btn {
+            width: auto;
+            padding: 9px 8px;
+        }
+
+        .tabs-nav {
+            top: 34px;
+            margin-bottom: 12px;
+            padding: 8px;
+            border-radius: 12px;
+        }
+
+        .tab-btn {
+            min-height: 40px;
+            border-radius: 12px;
+            font-size: .82rem;
+            line-height: 1.15;
+        }
+
+        .panel.pad,
+        .top-panel {
+            padding: 12px;
+        }
+
+        .section-head {
+            align-items: stretch;
+            flex-direction: column;
+        }
+
+        .section-head .card-actions,
+        .toolbar {
+            width: 100%;
+        }
+
+        .toolbar .btn,
+        .card-actions .btn {
+            min-height: 42px;
+        }
+
+        .status-row {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .stat {
+            padding: 11px;
+        }
+
+        .stat span {
+            font-size: .68rem;
+        }
+
+        .game-top {
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .game-top > span:last-child {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .fav-btn {
+            width: 100%;
+            padding: 7px 6px;
+            font-size: .78rem;
+        }
+
+        .team-name strong,
+        .leader-player-name strong,
+        .standings-team-name span {
+            font-size: .9rem;
+        }
+
+        .team-name span,
+        .leader-player-name small,
+        .standings-team-name small {
+            font-size: .74rem;
+        }
+
+        .line-score table {
+            min-width: 360px;
+        }
+
+        .live-card-details,
+        .win-odds,
+        .inline-detail {
+            border-radius: 12px;
+        }
+
+        .leader-category,
+        .standings-card,
+        .trend-card {
+            border-radius: 12px;
+        }
+
+        .leader-row {
+            grid-template-columns: 24px 42px minmax(0, 1fr) auto;
+            gap: 8px;
+            padding: 8px;
+        }
+
+        .leader-player-media,
+        .leader-headshot {
+            width: 38px;
+            height: 38px;
+        }
+
+        .leader-team-logo {
+            width: 19px;
+            height: 19px;
+        }
+
+        .leader-stat {
+            font-size: .95rem;
+        }
+
+        .trend-row,
+        .trend-player-row {
+            grid-template-columns: 42px minmax(0, 1fr) auto;
+        }
+
+        .trend-summary {
+            grid-column: 1 / -1;
+        }
+
+        .standings-section-title,
+        .league-leaders-section > h2 {
+            padding: 10px 12px;
+            font-size: .96rem;
+        }
+
+        .standings-card h3,
+        .leader-category h3 {
+            padding: 10px;
+        }
+
+        .standings-header,
+        .standings-team-row {
+            grid-template-columns: 26px minmax(112px, 1fr) 38px 38px 48px;
+            gap: 6px;
+        }
+
+        .standings-header span:nth-child(5),
+        .standings-header span:nth-child(7),
+        .standings-team-row .standings-value:nth-child(5),
+        .standings-team-row .standings-value:nth-child(7) {
+            display: none;
+        }
+
+        .standings-header span:nth-child(6)::after {
+            content: '';
+        }
+
+        .standings-team-row {
+            padding: 8px;
+            font-size: .78rem;
+        }
+
+        .standings-team-name {
+            gap: 6px;
+        }
+
+        .standings-team-row img {
+            width: 22px;
+            height: 22px;
+        }
+
+        .toast {
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+        }
+    }
+
+    @media (max-width: 420px) {
+        .app {
+            padding: 8px;
+        }
+
+        h1 {
+            font-size: 1.85rem;
+        }
+
+        .controls {
+            grid-template-columns: 1fr;
+        }
+
+        .controls .btn {
+            width: 100%;
+        }
+
+        .tabs-nav {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .tab-btn {
+            font-size: .78rem;
+            padding: 9px 6px;
+        }
+
+        .status-row {
+            grid-template-columns: 1fr;
+        }
+
+        .team-row {
+            grid-template-columns: 30px minmax(0, 1fr) 34px;
+            gap: 8px;
+        }
+
+        .leader-row {
+            grid-template-columns: 22px 38px minmax(0, 1fr) auto;
+            font-size: .8rem;
+        }
+
+        .leader-player-media,
+        .leader-headshot {
+            width: 36px;
+            height: 36px;
+        }
+
+        .standings-header,
+        .standings-team-row {
+            grid-template-columns: 22px minmax(100px, 1fr) 34px 34px 44px;
+            gap: 5px;
+        }
+
+        .standings-header {
+            font-size: .62rem;
+            padding: 7px;
+        }
+
+        .standings-team-row {
+            padding: 7px;
+        }
+    }
+
+
+    /* Keep GB and streak visible in the redesigned standings on all screen sizes. */
+    #standingsFull .standings-card { overflow-x: auto; }
+    #standingsFull .standings-table { min-width: 540px; }
+    #standingsFull .standings-header,
+    #standingsFull .standings-team-row {
+        grid-template-columns: 30px minmax(170px, 1fr) 44px 44px 54px 54px 62px;
+    }
+    #standingsFull .standings-header span,
+    #standingsFull .standings-team-row .standings-value {
+        display: block !important;
+    }
+    @media (max-width: 680px) {
+        #standingsFull .standings-table { min-width: 560px; }
+        #standingsFull .standings-card { -webkit-overflow-scrolling: touch; }
+        #standingsFull .standings-team-name small { display:block; }
+    }
+
     </style>
 </head>
 <body>
@@ -1023,8 +1569,8 @@
     <div class="app">
         <header>
             <div>
-                <h1>Live MLB GameCenter</h1>
-                <p class="subtitle">Live scores, team colors, favorites, inning-by-inning lines, standings, pitcher records, countdown refresh, alerts, and mobile-friendly controls.</p>
+                <h1>Live MLB GameCenter 2.0</h1>
+                <p class="subtitle">A tabbed MLB dashboard with live scores, division and wild card standings, AL/NL league leaders, trends, countdown refresh, alerts, and mobile-friendly controls.</p>
             </div>
             <div class="controls">
                 <button class="btn secondary" id="prevDayBtn" type="button">Prev</button>
@@ -1078,32 +1624,63 @@
                 </div>
             </div>
         </section>
-        <main>
-            <div class="content-stack">
-                <section class="panel pad">
-                    <div class="section-head">
-                        <h2>Scoreboard</h2>
-                        <div class="card-actions">
-                            <button class="btn secondary" id="showAllBtn" type="button">All</button>
-                            <button class="btn secondary" id="showLiveBtn" type="button">Live</button>
-                            <button class="btn secondary" id="showFavBtn" type="button">Favorites</button>
-                        </div>
+        <nav class="tabs-nav" aria-label="Dashboard sections">
+            <button class="tab-btn active" type="button" data-tab="scoresTab">⚾ Scores</button>
+            <button class="tab-btn" type="button" data-tab="standingsTab">📊 Standings</button>
+            <button class="tab-btn" type="button" data-tab="leadersTab">🏆 League Leaders</button>
+            <button class="tab-btn" type="button" data-tab="trendsTab">📈 Stats & Trends</button>
+        </nav>
+
+        <section id="scoresTab" class="tab-panel active">
+            <section class="panel pad">
+                <div class="section-head">
+                    <h2>Scoreboard</h2>
+                    <div class="card-actions">
+                        <button class="btn secondary" id="showAllBtn" type="button">All</button>
+                        <button class="btn secondary" id="showLiveBtn" type="button">Live</button>
+                        <button class="btn secondary" id="showFavBtn" type="button">Favorites</button>
                     </div>
-                    <div class="games-grid" id="gamesGrid"></div>
-                </section>
-            </div>
-            <aside class="detail">
-                <section class="panel pad">
-                    <div class="section-head">
-                        <h2>Standings</h2>
-                        <button class="btn secondary" id="standingsRefreshBtn" type="button">Reload</button>
-                    </div>
-                    <div id="standingsBar" class="standings-bar">
-                        <div class="empty">Standings will load with the scoreboard.</div>
-                    </div>
-                </section>
-            </aside>
-        </main>
+                </div>
+                <div class="games-grid" id="gamesGrid"></div>
+            </section>
+        </section>
+
+        <section id="standingsTab" class="tab-panel">
+            <section class="panel pad">
+                <div class="section-head">
+                    <h2>Division & Wild Card Standings</h2>
+                    <button class="btn secondary" id="standingsRefreshBtn2" type="button">Reload</button>
+                </div>
+                <p class="subtitle" style="margin:0 0 14px">GB shows how many games back each team is from the division or wild-card leader.</p>
+                <div id="standingsFull" class="standings-dashboard">
+                    <div class="empty">Standings will load with the scoreboard.</div>
+                </div>
+            </section>
+        </section>
+
+        <section id="leadersTab" class="tab-panel">
+            <section class="panel pad">
+                <div class="section-head">
+                    <h2>AL & NL League Leaders</h2>
+                    <button class="btn secondary" id="leadersRefreshBtn" type="button">Reload</button>
+                </div>
+                <div id="leagueLeaders" class="leaders-grid">
+                    <div class="empty">League leaders will load with the scoreboard.</div>
+                </div>
+            </section>
+        </section>
+
+        <section id="trendsTab" class="tab-panel">
+            <section class="panel pad">
+                <div class="section-head">
+                    <h2>Stats & Trends</h2>
+                    <button class="btn secondary" id="trendsRefreshBtn" type="button">Refresh Trends</button>
+                </div>
+                <div id="statsTrends" class="trend-grid">
+                    <div class="empty">Trends will load with the scoreboard.</div>
+                </div>
+            </section>
+        </section>
     </div>
     <div class="toast" id="toast"></div>
     <script>
@@ -1152,6 +1729,8 @@
         favoriteTeams: new Map(),
         standings: [],
         wildCardStandings: [],
+        leagueLeaders: { AL: { hitting: [], pitching: [] }, NL: { hitting: [], pitching: [] } },
+        todayImpact: { homeRuns: [], rbi: [], doubles: [], triples: [], pitcherStrikeouts: [] },
         pitcherStats: new Map(),
         lastScores: new Map(),
         alerts: false,
@@ -1185,7 +1764,10 @@
         teamSearch: $('teamSearch'),
         teamOptions: $('teamOptions'),
         toast: $('toast'),
-        standings: $('standingsBar')
+        standings: $('standingsBar'),
+        standingsFull: $('standingsFull'),
+        leaders: $('leagueLeaders'),
+        trends: $('statsTrends')
     };
     function todayIso() {
         const n = new Date(),
@@ -1464,7 +2046,7 @@
                 winnerAway = st === 'final' && Number(score(g, 'away')) > Number(score(g, 'home')),
                 winnerHome = st === 'final' && Number(score(g, 'home')) > Number(score(g, 'away')),
                 detail = state.selected === g.gamePk ? `<div class="inline-detail" style="--team:${c1};--team2:${c2}">${detailHtml(g)}</div>` : '';
-            return `<div class="game-slot">${`<article class="game-card ${st} ${fav ? 'favorite-game' : ''} ${state.selected === g.gamePk ? 'active' : ''}" style="--team:${c1};--team2:${c2}" role="button" tabindex="0" data-game="${g.gamePk}"><div class="game-top"><span class="badge ${st}">${st}</span><span class="badge">${esc(statusLabel(g))}</span><span><button class="fav-btn ${isFav(away.id) ? 'active' : ''}" data-fav="${away.id}" data-name="${esc(away.name)}" data-abbr="${esc(away.abbreviation || '')}">★ ${esc(away.abbreviation || 'Away')}</button> <button class="fav-btn ${isFav(home.id) ? 'active' : ''}" data-fav="${home.id}" data-name="${esc(home.name)}" data-abbr="${esc(home.abbreviation || '')}">★ ${esc(home.abbreviation || 'Home')}</button></span></div><div class="team-row ${winnerAway ? 'winner' : ''}"><img class="logo" src="${logo(away.id)}" alt=""><div class="team-name"><strong>${esc(away.name)}</strong><span>${esc(note(g, 'away'))}</span></div><div class="score">${score(g, 'away')}</div></div><div class="team-row ${winnerHome ? 'winner' : ''}"><img class="logo" src="${logo(home.id)}" alt=""><div class="team-name"><strong>${esc(home.name)}</strong><span>${esc(note(g, 'home'))}</span></div><div class="score">${score(g, 'home')}</div></div>${liveCardDetails(g)}${lineScore(g)}<div class="game-info"><div><strong>Venue:</strong> ${esc(g.venue?.name || 'Venue TBD')}</div><div><strong>First pitch/status:</strong> ${esc(statusLabel(g))}</div><div class="card-actions"><a class="small-link" target="_blank" rel="noopener" href="https://www.mlb.com/gameday/${g.gamePk}">Open MLB box score</a></div></div>${winOddsHtml(g)}</article>`}${detail}</div>`
+            return `<div class="game-slot ${state.selected === g.gamePk ? 'selected-slot' : ''}">${`<article class="game-card ${st} ${fav ? 'favorite-game' : ''} ${state.selected === g.gamePk ? 'active' : ''}" style="--team:${c1};--team2:${c2}" role="button" tabindex="0" data-game="${g.gamePk}"><div class="game-top"><span class="badge ${st}">${st}</span><span class="badge">${esc(statusLabel(g))}</span><span><button class="fav-btn ${isFav(away.id) ? 'active' : ''}" data-fav="${away.id}" data-name="${esc(away.name)}" data-abbr="${esc(away.abbreviation || '')}">★ ${esc(away.abbreviation || 'Away')}</button> <button class="fav-btn ${isFav(home.id) ? 'active' : ''}" data-fav="${home.id}" data-name="${esc(home.name)}" data-abbr="${esc(home.abbreviation || '')}">★ ${esc(home.abbreviation || 'Home')}</button></span></div><div class="team-row ${winnerAway ? 'winner' : ''}"><img class="logo" src="${logo(away.id)}" alt=""><div class="team-name"><strong>${esc(away.name)}</strong><span>${esc(note(g, 'away'))}</span></div><div class="score">${score(g, 'away')}</div></div><div class="team-row ${winnerHome ? 'winner' : ''}"><img class="logo" src="${logo(home.id)}" alt=""><div class="team-name"><strong>${esc(home.name)}</strong><span>${esc(note(g, 'home'))}</span></div><div class="score">${score(g, 'home')}</div></div>${liveCardDetails(g)}${lineScore(g)}<div class="game-info"><div><strong>Venue:</strong> ${esc(g.venue?.name || 'Venue TBD')}</div><div><strong>First pitch/status:</strong> ${esc(statusLabel(g))}</div><div class="card-actions"><a class="small-link" target="_blank" rel="noopener" href="https://www.mlb.com/gameday/${g.gamePk}">Open MLB box score</a></div></div>${winOddsHtml(g)}</article>`}${detail}</div>`
         }).join('');
         els.grid.querySelectorAll('.fav-btn').forEach(b => b.onclick = e => {
             e.stopPropagation();
@@ -1599,22 +2181,58 @@
         renderDetail();
         renderGames()
     }
-    function standingRows(records, type = 'division') {
-        return (records || []).map(rec => `<div class="standing-division"><h3>${esc(rec.division?.name || rec.league?.name || 'Standings')}</h3>${(rec.teamRecords || []).map((r, i) => {const t = r.team; const rank = type === 'wildCard' ? r.wildCardRank : r.divisionRank; const gb = type === 'wildCard' ? r.wildCardGamesBack : r.gamesBack; return `<div class="standing-row ${isFav(t.id) ? 'favorite' : ''}"><img src="${logo(t.id)}" alt=""><span>${i + 1}. ${esc(t.name)}<br><small>${esc(rank ? `Rank ${rank}` : '')}</small></span><strong>${r.wins}-${r.losses}</strong><small>${esc(gb || '-')} GB</small></div>`}).join('')}</div>`).join('')
+    function standingLeagueName(rec) {
+        const leagueName = rec.league?.name || '';
+        if (leagueName.includes('American')) return 'American League';
+        if (leagueName.includes('National')) return 'National League';
+        return leagueName || 'League';
+    }
+    function standingCardHtml(rec, type = 'division') {
+        const title = type === 'wildCard'
+            ? standingLeagueName(rec)
+            : (rec.division?.name || rec.league?.name || 'Standings');
+        const rows = rec.teamRecords || [];
+        return `<div class="standings-card"><h3>${esc(title)}</h3><div class="standings-table"><div class="standings-header"><span>#</span><span>Team</span><span class="standings-value">W</span><span class="standings-value">L</span><span class="standings-value">PCT</span><span class="standings-value">GB</span><span class="standings-value">STRK</span></div>${rows.map((r, i) => standingTeamRow(r, i, type)).join('')}</div></div>`
+    }
+    function standingGamesBack(r, type = 'division') {
+        const candidates = type === 'wildCard'
+            ? [r.wildCardGamesBack, r.gamesBack, r.leagueGamesBack]
+            : [r.divisionGamesBack, r.gamesBack, r.leagueGamesBack];
+        const raw = candidates.find(v => v !== undefined && v !== null && v !== '');
+        if (raw === undefined || raw === null || raw === '') return '-';
+        const value = String(raw);
+        return value === '0.0' ? '0' : value;
+    }
+    function standingStreak(r) {
+        if (r.streak?.streakCode) return r.streak.streakCode;
+        if (r.streak?.streakType && r.streak?.streakNumber) return `${r.streak.streakType}${r.streak.streakNumber}`;
+        if (r.streak?.streakNumber) return String(r.streak.streakNumber);
+        return '-';
+    }
+    function standingTeamRow(r, i, type = 'division') {
+        const t = r.team || {};
+        const rank = type === 'wildCard' ? (r.wildCardRank || i + 1) : (r.divisionRank || i + 1);
+        const gb = standingGamesBack(r, type);
+        const gbText = String(gb) === '-' || String(gb) === '0' ? 'Leader' : `${gb} games back`;
+        const pct = r.winningPercentage || (r.wins && r.losses ? (r.wins / (r.wins + r.losses)).toFixed(3).replace(/^0/, '') : '-');
+        const streak = standingStreak(r);
+        return `<div class="standings-team-row ${isFav(t.id) ? 'favorite' : ''}"><span class="leader-rank">${esc(rank)}</span><div class="standings-team-name"><img src="${logo(t.id)}" alt=""><span>${esc(t.name || 'Team')}<small>${esc(gbText)} · Streak ${esc(streak)}</small></span></div><strong class="standings-value">${esc(r.wins ?? '-')}</strong><strong class="standings-value">${esc(r.losses ?? '-')}</strong><span class="standings-value">${esc(pct)}</span><span class="standings-value" title="Games Back">${esc(gb)}</span><span class="standings-value" title="Current Streak">${esc(streak)}</span></div>`
+    }
+    function standingsSectionHtml(title, records, type) {
+        const html = (records || []).map(rec => standingCardHtml(rec, type)).join('');
+        return `<div class="standings-section"><h2 class="standings-section-title">${esc(title)}</h2><div class="standings-card-grid">${html || '<div class="empty">Standings unavailable right now.</div>'}</div></div>`
     }
     function renderStandings() {
-        const regularHtml = standingRows(state.standings, 'division');
-        const wildCardHtml = standingRows(state.wildCardStandings, 'wildCard');
-
-        if (!regularHtml && !wildCardHtml) {
-            els.standings.innerHTML = '<div class="empty">Standings unavailable right now.</div>';
-            return
-        }
-
-        els.standings.innerHTML = `${regularHtml || '<div class="empty">Division standings unavailable right now.</div>'}<div class="section-head" style="margin:6px 0 0"><h2>Wild Card Standings</h2></div>${wildCardHtml || '<div class="empty">Wild card standings unavailable right now.</div>'}`
+        const divisionHtml = standingsSectionHtml('Division Standings', state.standings, 'division');
+        const wildCardHtml = standingsSectionHtml('Wild Card Standings', state.wildCardStandings, 'wildCard');
+        const fullHtml = (!state.standings.length && !state.wildCardStandings.length)
+            ? '<div class="empty">Standings unavailable right now.</div>'
+            : `${divisionHtml}${wildCardHtml}`;
+        if (els.standingsFull) els.standingsFull.innerHTML = fullHtml;
     }
     async function loadStandings() {
-        els.standings.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
+        if (els.standings) els.standings.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
+        if (els.standingsFull) els.standingsFull.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
         try {
             const season = els.gameDate.value.slice(0, 4) || new Date().getFullYear();
             const [regular, wildCard] = await Promise.all([
@@ -1629,6 +2247,112 @@
         }
         renderStandings()
     }
+
+    const LEADER_CATEGORIES = {
+        hitting: [
+            { key: 'homeRuns', label: 'Home Runs', shortLabel: 'HR' },
+            { key: 'battingAverage', label: 'Batting Average', shortLabel: 'AVG' },
+            { key: ['runsBattedIn', 'rbi'], label: 'RBI', shortLabel: 'RBI' },
+            { key: 'sluggingPercentage', label: 'Slugging', shortLabel: 'SLG' },
+            { key: 'onBasePlusSlugging', label: 'OPS', shortLabel: 'OPS' },
+            { key: 'doubles', label: 'Doubles', shortLabel: '2B' },
+            { key: 'triples', label: 'Triples', shortLabel: '3B' },
+            { key: 'stolenBases', label: 'Stolen Bases', shortLabel: 'SB' }
+        ],
+        pitching: [
+            { key: 'wins', label: 'Wins', shortLabel: 'W' },
+            { key: ['strikeOuts', 'strikeouts'], label: 'Strikeouts', shortLabel: 'K' },
+            { key: 'earnedRunAverage', label: 'ERA', shortLabel: 'ERA' },
+            { key: 'walksAndHitsPerInningPitched', label: 'WHIP', shortLabel: 'WHIP' },
+            { key: 'saves', label: 'Saves', shortLabel: 'SV' }
+        ]
+    };
+    function leaderPlayerName(row) {
+        return row.person?.fullName || row.player?.fullName || row.fullName || 'Player unavailable'
+    }
+    function leaderPlayerId(row) {
+        return row.person?.id || row.player?.id || row.playerId || row.id || null
+    }
+    function leaderTeamId(row) {
+        return row.team?.id || row.teamId || row.player?.currentTeam?.id || row.person?.currentTeam?.id || null
+    }
+    function leaderTeamName(row) {
+        return row.team?.abbreviation || row.team?.name || row.teamName || ''
+    }
+    function leaderValue(row) {
+        return row.value ?? row.statValue ?? row.stat ?? '-'
+    }
+    function leaderHeadshot(id) {
+        return id ? `https://img.mlbstatic.com/mlb-photos/image/upload/w_96,q_auto:best/v1/people/${id}/headshot/67/current` : ''
+    }
+    function leaderMediaHtml(row) {
+        const playerId = leaderPlayerId(row), teamId = leaderTeamId(row);
+        const head = playerId ? `<img class="leader-headshot" src="${leaderHeadshot(playerId)}" alt="" loading="lazy" onerror="this.style.display='none'">` : '<span class="leader-headshot" aria-hidden="true"></span>';
+        const team = teamId ? `<img class="leader-team-logo" src="${logo(teamId)}" alt="" loading="lazy">` : '';
+        return `<span class="leader-player-media">${head}${team}</span>`
+    }
+    function leaderRowsHtml(category) {
+        const rows = category.leaders || [];
+        return rows.length ? `<div class="leader-list">${rows.slice(0, 5).map((r, i) => `<div class="leader-row"><span class="leader-rank">${i + 1}</span>${leaderMediaHtml(r)}<span class="leader-player-name"><strong>${esc(leaderPlayerName(r))}</strong><small>${esc(leaderTeamName(r))}</small></span><span class="leader-stat">${esc(leaderValue(r))}<small>${esc(category.shortLabel || category.label)}</small></span></div>`).join('')}</div>` : '<div class="empty">Unavailable</div>'
+    }
+    function leaderCategoryHtml(category) {
+        return `<div class="leader-category"><h3>🏆 ${esc(category.label)}</h3>${leaderRowsHtml(category)}</div>`
+    }
+    const LEAGUES = [
+        { id: 103, key: 'AL', label: 'American League' },
+        { id: 104, key: 'NL', label: 'National League' }
+    ];
+    function leaderGroupHtml(title, categories) {
+        return `<div class="leader-group"><h2>${title}</h2>${(categories || []).map(leaderCategoryHtml).join('')}</div>`
+    }
+    function leagueLeadersHtml(league) {
+        const data = state.leagueLeaders[league.key] || { hitting: [], pitching: [] };
+        return `<div class="league-leaders-section"><h2>${esc(league.label)}</h2><div class="league-leaders-grid">${leaderGroupHtml('⚾ Hitting Leaders', data.hitting)}${leaderGroupHtml('🧢 Pitching Leaders', data.pitching)}</div></div>`
+    }
+    function renderLeagueLeaders() {
+        if (!els.leaders)
+            return;
+        const hasLeaders = LEAGUES.some(l => (state.leagueLeaders[l.key]?.hitting || []).some(c => (c.leaders || []).length) || (state.leagueLeaders[l.key]?.pitching || []).some(c => (c.leaders || []).length));
+        if (!hasLeaders) {
+            els.leaders.innerHTML = '<div class="empty">League leaders unavailable right now.</div>';
+            return
+        }
+        els.leaders.innerHTML = LEAGUES.map(leagueLeadersHtml).join('')
+    }
+    async function fetchLeaderCategory(group, category, season, leagueId) {
+        const keys = Array.isArray(category.key) ? category.key : [category.key];
+        for (const key of keys) {
+            try {
+                const url = `${API_BASE}/stats/leaders?leaderCategories=${key}&statGroup=${group}&season=${season}&sportId=1&leagueId=${leagueId}&leaderGameTypes=R&limit=5`;
+                const data = await fetchJson(url);
+                const leaders = data.leagueLeaders?.[0]?.leaders || [];
+                if (leaders.length)
+                    return { ...category, key, leaders }
+            } catch {}
+        }
+        return { ...category, key: keys[0], leaders: [] }
+    }
+    async function fetchLeagueLeaders(league, season) {
+        const [hitting, pitching] = await Promise.all([
+            Promise.all(LEADER_CATEGORIES.hitting.map(c => fetchLeaderCategory('hitting', c, season, league.id))),
+            Promise.all(LEADER_CATEGORIES.pitching.map(c => fetchLeaderCategory('pitching', c, season, league.id)))
+        ]);
+        return [league.key, { hitting, pitching }]
+    }
+    async function loadLeagueLeaders() {
+        if (!els.leaders)
+            return;
+        els.leaders.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>';
+        try {
+            const season = (els.gameDate.value || todayIso()).slice(0, 4) || new Date().getFullYear();
+            const entries = await Promise.all(LEAGUES.map(league => fetchLeagueLeaders(league, season)));
+            state.leagueLeaders = Object.fromEntries(entries)
+        } catch {
+            state.leagueLeaders = { AL: { hitting: [], pitching: [] }, NL: { hitting: [], pitching: [] } }
+        }
+        renderLeagueLeaders()
+    }
+
     function toast(msg) {
         const n = document.createElement('div');
         n.className = 'toast-item';
@@ -1646,11 +2370,173 @@
             state.lastScores.set(key, val)
         })
     }
+
+
+    function emptyImpactStats() {
+        return { homeRuns: [], rbi: [], doubles: [], triples: [], pitcherStrikeouts: [] }
+    }
+    function addImpact(map, key, info, amount) {
+        const n = Number(amount) || 0;
+        if (n <= 0) return;
+        const existing = map.get(key);
+        if (existing) {
+            existing.value += n;
+        } else {
+            map.set(key, { ...info, value: n });
+        }
+    }
+    function playerHeadshot(id) {
+        return `https://img.mlbstatic.com/mlb-photos/image/upload/w_80,q_auto:best/v1/people/${id}/headshot/67/current`
+    }
+    async function loadTodayImpactStats() {
+        const impact = {
+            homeRuns: new Map(),
+            rbi: new Map(),
+            doubles: new Map(),
+            triples: new Map(),
+            pitcherStrikeouts: new Map()
+        };
+        const completedOrLive = state.games.filter(g => gameState(g) !== 'scheduled');
+        if (!completedOrLive.length) {
+            state.todayImpact = emptyImpactStats();
+            renderStatsTrends();
+            return;
+        }
+        const results = await Promise.allSettled(completedOrLive.map(g => fetchJson(`${API_BASE}/game/${g.gamePk}/boxscore`)));
+        results.forEach((result, index) => {
+            if (result.status !== 'fulfilled') return;
+            const g = completedOrLive[index];
+            const box = result.value?.teams || {};
+            ['away', 'home'].forEach(side => {
+                const team = g.teams?.[side]?.team || box[side]?.team || {};
+                const players = box[side]?.players || {};
+                Object.values(players).forEach(p => {
+                    const person = p.person || {};
+                    const id = person.id;
+                    if (!id) return;
+                    const info = {
+                        id,
+                        name: person.fullName || 'Unknown Player',
+                        teamId: team.id,
+                        teamName: team.name || '',
+                        teamAbbr: team.abbreviation || team.teamCode || team.fileCode || ''
+                    };
+                    const batting = p.stats?.batting || {};
+                    addImpact(impact.homeRuns, id, info, batting.homeRuns);
+                    addImpact(impact.rbi, id, info, batting.rbi);
+                    addImpact(impact.doubles, id, info, batting.doubles);
+                    addImpact(impact.triples, id, info, batting.triples);
+                    const pitching = p.stats?.pitching || {};
+                    addImpact(impact.pitcherStrikeouts, id, info, pitching.strikeOuts);
+                });
+            });
+        });
+        const sortRows = map => [...map.values()].sort((a, b) => b.value - a.value || a.name.localeCompare(b.name));
+        state.todayImpact = {
+            homeRuns: sortRows(impact.homeRuns),
+            rbi: sortRows(impact.rbi),
+            doubles: sortRows(impact.doubles),
+            triples: sortRows(impact.triples),
+            pitcherStrikeouts: sortRows(impact.pitcherStrikeouts)
+        };
+        renderStatsTrends();
+    }
+    function todayImpactRow(row, suffix) {
+        const head = row.id ? `<img class="leader-headshot" src="${playerHeadshot(row.id)}" alt="" loading="lazy" onerror="this.style.display='none'">` : '';
+        const team = row.teamId ? `<img src="${logo(row.teamId)}" alt="" loading="lazy">` : '';
+        return `<div class="trend-row trend-player-row"><span class="trend-player-media">${head}${team}</span><span><strong>${esc(row.name)}</strong><small>${esc(row.teamAbbr || row.teamName || 'Team unavailable')}</small></span><strong>${esc(row.value)} ${esc(suffix)}</strong></div>`
+    }
+    function todayImpactRows(key, suffix, emptyText) {
+        const rows = state.todayImpact?.[key] || [];
+        return rows.length ? rows.slice(0, 10).map(r => todayImpactRow(r, suffix)).join('') : `<div class="empty">${esc(emptyText)}</div>`
+    }
+
+    function trendGameRow(g) {
+        const away = g.teams.away.team, home = g.teams.home.team;
+        return `<div class="trend-row"><img src="${logo(home.id)}" alt=""><span><strong>${esc(away.abbreviation || away.name)} ${score(g, 'away')} @ ${esc(home.abbreviation || home.name)} ${score(g, 'home')}</strong><small>${esc(statusLabel(g))}</small></span><strong>${esc(gameState(g))}</strong></div>`
+    }
+    function trendTeamLine(g, side) {
+        const t = g.teams[side].team;
+        return { team: t, runs: Number(score(g, side)) || 0, label: `${t.abbreviation || t.name} ${score(g, side)}` }
+    }
+    function trendTotalRuns(g) {
+        return (Number(score(g, 'away')) || 0) + (Number(score(g, 'home')) || 0)
+    }
+    function trendCloseMargin(g) {
+        return Math.abs((Number(score(g, 'away')) || 0) - (Number(score(g, 'home')) || 0))
+    }
+    function trendPlayerRow(row, label) {
+        const playerId = leaderPlayerId(row), teamId = leaderTeamId(row);
+        const head = playerId ? `<img class="leader-headshot" src="${leaderHeadshot(playerId)}" alt="" loading="lazy" onerror="this.style.display='none'">` : '';
+        const team = teamId ? `<img src="${logo(teamId)}" alt="" loading="lazy">` : '';
+        return `<div class="trend-row trend-player-row"><span class="trend-player-media">${head}${team}</span><span><strong>${esc(leaderPlayerName(row))}</strong><small>${esc(leaderTeamName(row))}</small></span><strong>${esc(leaderValue(row))} ${esc(label || '')}</strong></div>`
+    }
+    function trendCategoryRows(category, emptyText) {
+        const rows = category?.leaders || [];
+        return rows.length ? rows.slice(0, 5).map(r => trendPlayerRow(r, category.shortLabel)).join('') : `<div class="empty">${esc(emptyText || 'Unavailable right now.')}</div>`
+    }
+    function allLeagueCategory(group, shortLabel) {
+        const rows = [];
+        LEAGUES.forEach(league => {
+            const categories = state.leagueLeaders[league.key]?.[group] || [];
+            const cat = categories.find(c => c.shortLabel === shortLabel || c.label === shortLabel);
+            if (cat?.leaders?.length) rows.push(...cat.leaders);
+        });
+        const asNum = v => parseFloat(String(v ?? '').replace(/[^0-9.]/g, ''));
+        const lowIsGood = ['ERA', 'WHIP'].includes(shortLabel);
+        rows.sort((a, b) => lowIsGood ? asNum(leaderValue(a)) - asNum(leaderValue(b)) : asNum(leaderValue(b)) - asNum(leaderValue(a)));
+        return { shortLabel, leaders: rows.slice(0, 5) }
+    }
+    function trendPitcherRow(g) {
+        const away = pitcher(g, 'away'), home = pitcher(g, 'home');
+        const rows = [
+            away ? { team: g.teams.away.team, pitcher: away, text: pitcherRecord(g, 'away') } : null,
+            home ? { team: g.teams.home.team, pitcher: home, text: pitcherRecord(g, 'home') } : null
+        ].filter(Boolean);
+        return rows.map(r => `<div class="trend-row"><img src="${logo(r.team.id)}" alt=""><span><strong>${esc(r.pitcher.fullName || 'TBD')}</strong><small>${esc(r.team.abbreviation || r.team.name)} · ${esc(r.text.replace((r.pitcher.fullName || '') + ' — ', ''))}</small></span><strong>SP</strong></div>`).join('')
+    }
+    function renderStatsTrends() {
+        if (!els.trends) return;
+        const live = state.games.filter(g => gameState(g) === 'live');
+        const finals = state.games.filter(g => gameState(g) === 'final').slice(0, 5);
+        const upcoming = state.games.filter(g => gameState(g) === 'scheduled').slice(0, 5);
+        const favorites = state.games.filter(g => isFav(g.teams.away.team.id) || isFav(g.teams.home.team.id)).slice(0, 5);
+        const highScoring = state.games.filter(g => gameState(g) !== 'scheduled').sort((a, b) => trendTotalRuns(b) - trendTotalRuns(a)).slice(0, 5);
+        const closeGames = state.games.filter(g => gameState(g) !== 'scheduled' && trendCloseMargin(g) <= 2).sort((a, b) => trendCloseMargin(a) - trendCloseMargin(b)).slice(0, 5);
+        const probableStarters = state.games.filter(g => gameState(g) === 'scheduled').slice(0, 5).map(trendPitcherRow).join('');
+        const liveHtml = live.length ? live.slice(0, 5).map(trendGameRow).join('') : '<div class="empty">No live games right now.</div>';
+        const finalHtml = finals.length ? finals.map(trendGameRow).join('') : '<div class="empty">No finals yet for this date.</div>';
+        const upcomingHtml = upcoming.length ? upcoming.map(trendGameRow).join('') : '<div class="empty">No upcoming games left for this date.</div>';
+        const favoriteHtml = favorites.length ? favorites.map(trendGameRow).join('') : '<div class="empty">Star your favorite teams to see them here.</div>';
+        const highScoringHtml = highScoring.length ? highScoring.map(trendGameRow).join('') : '<div class="empty">Run totals will appear after games begin.</div>';
+        const closeHtml = closeGames.length ? closeGames.map(trendGameRow).join('') : '<div class="empty">No tight games yet for this date.</div>';
+        const startersHtml = probableStarters || '<div class="empty">No probable starters left for upcoming games today.</div>';
+        const powerHtml = trendCategoryRows(allLeagueCategory('hitting', 'HR'), 'Home run leaders unavailable.');
+        const speedHtml = trendCategoryRows(allLeagueCategory('hitting', 'SB'), 'Stolen base leaders unavailable.');
+        const averageHtml = trendCategoryRows(allLeagueCategory('hitting', 'AVG'), 'Batting average leaders unavailable.');
+        const eraHtml = trendCategoryRows(allLeagueCategory('pitching', 'ERA'), 'ERA leaders unavailable.');
+        const strikeoutHtml = trendCategoryRows(allLeagueCategory('pitching', 'K'), 'Strikeout leaders unavailable.');
+        const savesHtml = trendCategoryRows(allLeagueCategory('pitching', 'SV'), 'Saves leaders unavailable.');
+        const todayHrHtml = todayImpactRows('homeRuns', 'HR', 'No home runs recorded yet today.');
+        const todayRbiHtml = todayImpactRows('rbi', 'RBI', 'No RBI recorded yet today.');
+        const todayDoublesHtml = todayImpactRows('doubles', '2B', 'No doubles recorded yet today.');
+        const todayTriplesHtml = todayImpactRows('triples', '3B', 'No triples recorded yet today.');
+        const todayStrikeoutsHtml = todayImpactRows('pitcherStrikeouts', 'K', 'No pitcher strikeout totals available yet today.');
+        els.trends.innerHTML = `<div class="trend-card trend-summary"><h3>📊 Today Snapshot</h3><div class="mini-grid"><div class="mini"><span>Games</span><strong>${state.games.length}</strong></div><div class="mini"><span>Live</span><strong>${live.length}</strong></div><div class="mini"><span>Final</span><strong>${state.games.filter(g => gameState(g) === 'final').length}</strong></div><div class="mini"><span>Upcoming</span><strong>${state.games.filter(g => gameState(g) === 'scheduled').length}</strong></div></div></div><div class="trend-card"><h3>💥 Home Runs Today</h3><div class="trend-list">${todayHrHtml}</div></div><div class="trend-card"><h3>🏃 RBI Today</h3><div class="trend-list">${todayRbiHtml}</div></div><div class="trend-card"><h3>📏 Doubles Today</h3><div class="trend-list">${todayDoublesHtml}</div></div><div class="trend-card"><h3>⚡ Triples Today</h3><div class="trend-list">${todayTriplesHtml}</div></div><div class="trend-card"><h3>🔥 Pitcher Strikeouts Today</h3><div class="trend-list">${todayStrikeoutsHtml}</div></div><div class="trend-card"><h3>💣 MLB Power Watch</h3><div class="trend-list">${powerHtml}</div></div><div class="trend-card"><h3>💨 MLB Speed Watch</h3><div class="trend-list">${speedHtml}</div></div><div class="trend-card"><h3>🔥 Batting Average Leaders</h3><div class="trend-list">${averageHtml}</div></div><div class="trend-card"><h3>🧢 ERA Leaders</h3><div class="trend-list">${eraHtml}</div></div><div class="trend-card"><h3>⚡ Strikeout Leaders</h3><div class="trend-list">${strikeoutHtml}</div></div><div class="trend-card"><h3>🔒 Saves Leaders</h3><div class="trend-list">${savesHtml}</div></div><div class="trend-card"><h3>🎯 Probable Starters Today</h3><div class="trend-list">${startersHtml}</div></div><div class="trend-card"><h3>📈 Highest Scoring Games</h3><div class="trend-list">${highScoringHtml}</div></div><div class="trend-card"><h3>⚔️ Close Game Watch</h3><div class="trend-list">${closeHtml}</div></div><div class="trend-card"><h3>🔴 Live Games</h3><div class="trend-list">${liveHtml}</div></div><div class="trend-card"><h3>✅ Recent Finals</h3><div class="trend-list">${finalHtml}</div></div><div class="trend-card"><h3>⏰ Upcoming First Pitches</h3><div class="trend-list">${upcomingHtml}</div></div><div class="trend-card"><h3>⭐ Favorite Team Watch</h3><div class="trend-list">${favoriteHtml}</div></div>`
+    }
+    function activateTab(tabId) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === tabId));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
+        if (tabId === 'trendsTab') renderStatsTrends();
+    }
+
     function renderAll() {
         renderStats();
         renderGames();
         renderTicker();
         renderStandings();
+        renderLeagueLeaders();
+        renderStatsTrends();
         renderDetail()
     }
     function setStatusFilter(filter) {
@@ -1701,7 +2587,9 @@
             renderAll();
             if (state.selected)
                 selectGame(state.selected);
-            loadStandings()
+            loadStandings();
+            loadLeagueLeaders();
+            loadTodayImpactStats()
         } catch (e) {
             els.grid.innerHTML = '<div class="empty">Could not load games. Check your connection and try Refresh.</div>';
             els.status.value = 'Unable to load MLB games.'
@@ -1740,7 +2628,10 @@
     els.refresh.onclick = loadGames;
     els.topLive.onclick = () => setStatusFilter('live');
     els.gameDate.onchange = loadGames;
-    $('standingsRefreshBtn').onclick = loadStandings;
+    $('standingsRefreshBtn2').onclick = loadStandings;
+    $('leadersRefreshBtn').onclick = loadLeagueLeaders;
+    $('trendsRefreshBtn').onclick = () => { renderStatsTrends(); loadTodayImpactStats(); };
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.onclick = () => activateTab(btn.dataset.tab));
     $('showAllBtn').onclick = () => setStatusFilter('all');
     $('showLiveBtn').onclick = () => setStatusFilter('live');
     $('showFavBtn').onclick = () => setStatusFilter('favorites');
