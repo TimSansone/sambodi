@@ -1750,6 +1750,7 @@
         games: [],
         feeds: {},
         selected: null,
+        detailsCollapsed: false,
         selectedFeed: null,
         teams: [],
         teamFilter: '',
@@ -2113,7 +2114,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
                 winnerAway = st === 'final' && Number(score(g, 'away')) > Number(score(g, 'home')),
                 winnerHome = st === 'final' && Number(score(g, 'home')) > Number(score(g, 'away')),
                 detail = state.selected === g.gamePk ? `<div class="inline-detail" style="--team:${c1};--team2:${c2}">${detailHtml(g)}</div>` : '';
-            return `<div class="game-slot ${state.selected === g.gamePk ? 'selected-slot' : ''}">${`<article class="game-card ${st} ${fav ? 'favorite-game' : ''} ${state.selected === g.gamePk ? 'active' : ''}" style="--team:${c1};--team2:${c2}" role="button" tabindex="0" data-game="${g.gamePk}"><div class="game-top"><span class="badge ${st}">${st}</span><span class="badge">${esc(statusLabel(g))}</span><span><button class="fav-btn ${isFav(away.id) ? 'active' : ''}" data-fav="${away.id}" data-name="${esc(away.name)}" data-abbr="${esc(away.abbreviation || '')}">★ ${esc(away.abbreviation || 'Away')}</button> <button class="fav-btn ${isFav(home.id) ? 'active' : ''}" data-fav="${home.id}" data-name="${esc(home.name)}" data-abbr="${esc(home.abbreviation || '')}">★ ${esc(home.abbreviation || 'Home')}</button></span></div><div class="team-row ${winnerAway ? 'winner' : ''}"><img class="logo" src="${logo(away.id)}" alt=""><div class="team-name"><strong>${esc(away.name)}</strong><span>${esc(note(g, 'away'))}</span></div><div class="score">${score(g, 'away')}</div></div><div class="team-row ${winnerHome ? 'winner' : ''}"><img class="logo" src="${logo(home.id)}" alt=""><div class="team-name"><strong>${esc(home.name)}</strong><span>${esc(note(g, 'home'))}</span></div><div class="score">${score(g, 'home')}</div></div>${liveCardDetails(g)}${lineScore(g)}<div class="game-info"><div><strong>Venue:</strong> ${esc(g.venue?.name || 'Venue TBD')}</div><div><strong>First pitch/status:</strong> ${esc(statusLabel(g))}</div><div class="card-actions"><a class="small-link" target="_blank" rel="noopener" href="https://www.mlb.com/gameday/${g.gamePk}">Open MLB box score</a></div></div>${winOddsHtml(g)}</article>`}${detail}</div>`
+            return `<div class="game-slot ${state.selected === g.gamePk ? 'selected-slot' : ''}">${`<article class="game-card ${st} ${fav ? 'favorite-game' : ''} ${state.selected === g.gamePk ? 'active' : ''}" style="--team:${c1};--team2:${c2}" role="button" tabindex="0" data-game="${g.gamePk}" aria-expanded="${state.selected === g.gamePk}"><div class="game-top"><span class="badge ${st}">${st}</span><span class="badge">${esc(statusLabel(g))}</span><span><button class="fav-btn ${isFav(away.id) ? 'active' : ''}" data-fav="${away.id}" data-name="${esc(away.name)}" data-abbr="${esc(away.abbreviation || '')}">★ ${esc(away.abbreviation || 'Away')}</button> <button class="fav-btn ${isFav(home.id) ? 'active' : ''}" data-fav="${home.id}" data-name="${esc(home.name)}" data-abbr="${esc(home.abbreviation || '')}">★ ${esc(home.abbreviation || 'Home')}</button></span></div><div class="team-row ${winnerAway ? 'winner' : ''}"><img class="logo" src="${logo(away.id)}" alt=""><div class="team-name"><strong>${esc(away.name)}</strong><span>${esc(note(g, 'away'))}</span></div><div class="score">${score(g, 'away')}</div></div><div class="team-row ${winnerHome ? 'winner' : ''}"><img class="logo" src="${logo(home.id)}" alt=""><div class="team-name"><strong>${esc(home.name)}</strong><span>${esc(note(g, 'home'))}</span></div><div class="score">${score(g, 'home')}</div></div>${liveCardDetails(g)}${lineScore(g)}<div class="game-info"><div><strong>Venue:</strong> ${esc(g.venue?.name || 'Venue TBD')}</div><div><strong>First pitch/status:</strong> ${esc(statusLabel(g))}</div><div class="card-actions"><a class="small-link" target="_blank" rel="noopener" href="https://www.mlb.com/gameday/${g.gamePk}">Open MLB box score</a></div></div>${winOddsHtml(g)}</article>`}${detail}</div>`
         }).join('');
         els.grid.querySelectorAll('.fav-btn').forEach(b => b.onclick = e => {
             e.stopPropagation();
@@ -2125,7 +2126,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         });
         const cards = [...els.grid.querySelectorAll('.game-card')];
         cards.forEach((card, i) => {
-            const open = () => selectGame(Number(card.dataset.game));
+            const open = () => selectGame(Number(card.dataset.game), true);
             card.onclick = open;
             card.onkeydown = e => {
                 if (e.key === 'Enter' || e.key === ' ') {
@@ -2236,8 +2237,17 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         els.detailMsg.style.display = 'none';
         els.detail.innerHTML = detailHtml(g)
     }
-    async function selectGame(pk) {
+    async function selectGame(pk, allowToggle = false) {
+        if (allowToggle && state.selected === pk) {
+            state.selected = null;
+            state.selectedFeed = null;
+            state.detailsCollapsed = true;
+            renderGames();
+            renderDetail();
+            return
+        }
         state.selected = pk;
+        state.detailsCollapsed = false;
         state.selectedFeed = null;
         renderGames();
         renderDetail();
@@ -2720,7 +2730,9 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             renderTeamOptions();
             await loadLiveFeeds();
             checkAlerts();
-            if (!state.selected || !state.games.some(g => g.gamePk === state.selected))
+            if (state.selected && !state.games.some(g => g.gamePk === state.selected))
+                state.selected = null;
+            if (!state.selected && !state.detailsCollapsed)
                 state.selected = state.games.find(g => gameState(g) === 'live')?.gamePk||state.games[0]?.gamePk || null;
             els.status.value = state.games.length ? `Loaded ${state.games.length} game${state.games.length === 1 ? '' : 's'} for ${date}.` : 'No MLB games found for this date.';
             renderAll();
