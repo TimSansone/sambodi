@@ -1688,6 +1688,82 @@
             font-size: .68rem;
             line-height: 1.1;
         }
+        .inline-detail {
+            padding: 8px;
+            font-size: .76rem;
+        }
+        .inline-detail h2 {
+            margin: 0 0 6px;
+            font-size: .95rem;
+        }
+        .inline-detail .matchup {
+            grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+            gap: 4px;
+            padding: 7px 5px;
+        }
+        .inline-detail .match-team {
+            gap: 2px;
+            min-width: 0;
+        }
+        .inline-detail .match-team img {
+            width: 30px;
+            height: 30px;
+        }
+        .inline-detail .match-team strong {
+            font-size: .7rem;
+            line-height: 1.12;
+            overflow-wrap: anywhere;
+        }
+        .inline-detail .match-team span {
+            font-size: .62rem;
+        }
+        .inline-detail .match-score {
+            min-width: 54px;
+            font-size: 1.25rem;
+            white-space: nowrap;
+        }
+        .inline-detail > div[style] {
+            margin-top: 8px !important;
+        }
+        .inline-detail .mini-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+        }
+        .inline-detail .mini {
+            padding: 6px;
+            border-radius: 8px;
+        }
+        .inline-detail .mini span {
+            font-size: .56rem;
+            letter-spacing: .035em;
+        }
+        .inline-detail .mini strong {
+            margin-top: 2px;
+            font-size: .72rem;
+            line-height: 1.2;
+        }
+        .inline-detail .mini small {
+            margin-top: 2px;
+            font-size: .64rem;
+            line-height: 1.2;
+        }
+        .inline-detail .plays {
+            gap: 5px;
+        }
+        .inline-detail .play {
+            padding: 7px;
+            border-radius: 8px;
+            font-size: .7rem;
+            line-height: 1.28;
+        }
+        .inline-detail .play span {
+            margin-bottom: 2px;
+            font-size: .62rem;
+        }
+        .inline-detail .line-score th,
+        .inline-detail .line-score td {
+            font-size: .78rem;
+        }
     }
     @media (max-width: 420px) {
         .status-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
