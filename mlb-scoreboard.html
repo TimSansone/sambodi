@@ -1675,6 +1675,19 @@
             margin-top: 3px;
             font-size: 1.1rem;
         }
+        .score-filter-actions {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 5px;
+        }
+        .score-filter-actions .btn {
+            width: auto;
+            min-height: 28px;
+            padding: 4px 6px;
+            border-radius: 8px;
+            font-size: .68rem;
+            line-height: 1.1;
+        }
     }
     @media (max-width: 420px) {
         .status-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -1760,7 +1773,7 @@
             <section class="panel pad">
                 <div class="section-head">
                     <h2>Scoreboard</h2>
-                    <div class="card-actions">
+                    <div class="card-actions score-filter-actions">
                         <button class="btn secondary" id="showAllBtn" type="button">All</button>
                         <button class="btn secondary" id="showLiveBtn" type="button">Live</button>
                         <button class="btn secondary" id="showFavBtn" type="button">Favorites</button>
