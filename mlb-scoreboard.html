@@ -1129,7 +1129,7 @@
             padding: 4px 6px
         }
         .toolbar {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 6px;
             margin-bottom: 8px
         }
@@ -1138,10 +1138,10 @@
         }
         .toolbar .btn {
             width: auto;
-            min-height: 32px;
-            padding: 5px 6px;
+            min-height: 28px;
+            padding: 4px 3px;
             border-radius: 8px;
-            font-size: .7rem;
+            font-size: .62rem;
             line-height: 1.1
         }
         .top-panel {
@@ -1643,17 +1643,17 @@
             padding: 4px 6px;
         }
         .toolbar {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 6px;
             margin-bottom: 8px;
         }
         .toolbar > div { grid-column: 1 / -1; }
         .toolbar .btn {
             width: auto;
-            min-height: 32px;
-            padding: 5px 6px;
+            min-height: 28px;
+            padding: 4px 3px;
             border-radius: 8px;
-            font-size: .7rem;
+            font-size: .62rem;
             line-height: 1.1;
         }
         .top-panel { padding: 8px; }
@@ -1722,9 +1722,9 @@
                 </div>
                 <button class="btn secondary" id="todayBtn" type="button">Today</button>
                 <button class="btn" id="refreshBtn" type="button">Refresh</button>
-                <button class="btn secondary" id="autoRefreshBtn" type="button" aria-pressed="true">Auto Refresh On</button>
+                <button class="btn secondary" id="autoRefreshBtn" type="button" aria-pressed="true">Auto On</button>
                 <button class="btn secondary" id="topLiveBtn" type="button">Live</button>
-                <button class="btn secondary" id="alertsBtn" type="button">Enable Alerts</button>
+                <button class="btn secondary" id="alertsBtn" type="button">Alerts</button>
             </div>
             <div class="status-row">
                 <div class="stat">
@@ -2888,7 +2888,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
     }
     function setAutoRefresh(on) {
         state.autoRefresh = on;
-        els.autoRefresh.textContent = on ? 'Auto Refresh On' : 'Auto Refresh Off';
+        els.autoRefresh.textContent = on ? 'Auto On' : 'Auto Off';
         els.autoRefresh.setAttribute('aria-pressed', String(on));
         if (on) {
             state.refreshRemaining = state.refreshSeconds;
@@ -2936,7 +2936,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
     $('showFavBtn').onclick = () => setStatusFilter('favorites');
     els.alerts.onclick = () => {
         state.alerts = !state.alerts;
-        els.alerts.textContent = state.alerts ? 'Alerts On' : 'Enable Alerts';
+        els.alerts.textContent = state.alerts ? 'Alerts On' : 'Alerts';
         toast(state.alerts ? 'Score alerts enabled for this page.' : 'Score alerts turned off.')
     };
     els.teamBtn.onclick = () => {
