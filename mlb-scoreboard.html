@@ -52,44 +52,51 @@
         top: 0;
         z-index: 10;
         margin: -24px -24px 18px;
-        padding: 8px 0;
+        padding: 5px 8px;
         background: var(--navy);
         color: #fff;
-        overflow: hidden;
+        overflow-x: auto;
+        scrollbar-width: thin;
         box-shadow: 0 8px 24px rgba(0, 0, 0, .18)
     }
 
     .ticker-track {
         display: flex;
-        gap: 24px;
+        gap: 6px;
         width: max-content;
-        animation:ticker 70s linear infinite
+        min-width: 100%
     }
 
     .ticker-item {
-        display: flex;
-        gap: 8px;
+        display: grid;
+        grid-template-columns: 18px auto 18px auto;
+        gap: 5px;
         align-items: center;
         white-space: nowrap;
+        min-height: 28px;
+        padding: 3px 7px;
+        border: 1px solid rgba(255,255,255,.22);
+        border-radius: 8px;
+        background: rgba(255,255,255,.09);
+        font-size:.7rem
+    }
+
+    .ticker-item img {
+        width: 18px;
+        height: 18px;
+        object-fit: contain
+    }
+
+    .ticker-item strong {
+        font-size: .78rem;
+        letter-spacing: .02em
+    }
+
+    .ticker-status {
+        color: #dce8f8;
+        font-size: .62rem;
         font-weight: 800;
-        font-size:.88rem
-    }
-
-    .ticker-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 999px;
-        background: var(--gold)
-    }
-
-    @keyframes ticker {
-        from {
-            transform:translateX(0)
-        }
-
-        to {
-            transform: translateX(-50%)
-        }
+        text-transform: uppercase
     }
 
     header {
@@ -191,6 +198,12 @@
         margin-bottom:14px
     }
 
+    .toolbar .btn {
+        min-height: 36px;
+        padding: 7px 10px;
+        font-size: .82rem
+    }
+
     label {
         display: block;
         margin-bottom: 7px;
@@ -284,8 +297,8 @@
     }
 
     .stat {
-        min-height: 80px;
-        padding: 14px;
+        min-height: 64px;
+        padding: 10px;
         border: 1px solid var(--line);
         border-radius: 12px;
         background: #fff;
@@ -303,8 +316,8 @@
 
     .stat strong {
         display: block;
-        margin-top: 6px;
-        font-size: 1.7rem;
+        margin-top: 4px;
+        font-size: 1.45rem;
         line-height:1
     }
 
@@ -1108,6 +1121,54 @@
         .player-search-form { grid-template-columns:1fr 1fr }
         .player-search-form input { grid-column:1 / -1 }
     }
+    @media (max-width: 680px) {
+        .score-ticker {
+            margin: -10px -10px 8px;
+            padding: 4px 6px
+        }
+        .toolbar {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+            margin-bottom: 8px
+        }
+        .toolbar > div {
+            grid-column: 1 / -1
+        }
+        .toolbar .btn {
+            width: auto;
+            min-height: 32px;
+            padding: 5px 6px;
+            border-radius: 8px;
+            font-size: .7rem;
+            line-height: 1.1
+        }
+        .top-panel {
+            padding: 8px
+        }
+        .status-row {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 5px
+        }
+        .stat {
+            min-height: 50px;
+            padding: 7px;
+            border-radius: 9px;
+            box-shadow: none
+        }
+        .stat span {
+            font-size: .58rem;
+            letter-spacing: .035em
+        }
+        .stat strong {
+            margin-top: 3px;
+            font-size: 1.1rem
+        }
+    }
+    @media (max-width: 420px) {
+        .status-row {
+            grid-template-columns: repeat(3, minmax(0, 1fr))
+        }
+    }
     .trend-card { border:1px solid var(--line); border-radius:14px; background:#fff; padding:14px; box-shadow:0 10px 24px rgba(23,32,51,.08) }
     .trend-card h3 { margin:0 0 10px; font-size:.98rem }
     .trend-list { display:grid; gap:8px }
@@ -1574,15 +1635,55 @@
         #standingsFull .standings-table { min-width: 560px; }
         #standingsFull .standings-card { -webkit-overflow-scrolling: touch; }
         #standingsFull .standings-team-name small { display:block; }
+
+        .score-ticker {
+            margin: -10px -10px 8px;
+            padding: 4px 6px;
+        }
+        .toolbar {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .toolbar > div { grid-column: 1 / -1; }
+        .toolbar .btn {
+            width: auto;
+            min-height: 32px;
+            padding: 5px 6px;
+            border-radius: 8px;
+            font-size: .7rem;
+            line-height: 1.1;
+        }
+        .top-panel { padding: 8px; }
+        .status-row {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 5px;
+        }
+        .stat {
+            min-height: 50px;
+            padding: 7px;
+            border-radius: 9px;
+            box-shadow: none;
+        }
+        .stat span {
+            font-size: .58rem;
+            letter-spacing: .035em;
+        }
+        .stat strong {
+            margin-top: 3px;
+            font-size: 1.1rem;
+        }
+    }
+    @media (max-width: 420px) {
+        .status-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
 
     </style>
 </head>
 <body>
-    <div class="score-ticker" aria-label="Scrolling scores">
+    <div class="score-ticker" aria-label="Game scores">
         <div id="scoreTicker" class="ticker-track">
             <span class="ticker-item">
-                <span class="ticker-dot"></span>
                 Loading MLB scores...
             </span>
         </div>
@@ -2153,11 +2254,12 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
     }
     function renderTicker() {
         const items = state.games.map(g => {
-            const a = g.teams.away.team.abbreviation || g.teams.away.team.name,
-                h = g.teams.home.team.abbreviation || g.teams.home.team.name;
-            return `<span class="ticker-item"><span class="ticker-dot"></span>${esc(a)} ${score(g, 'away')} @ ${esc(h)} ${score(g, 'home')} · ${esc(statusLabel(g))}</span>`
+            const away = g.teams.away.team,
+                home = g.teams.home.team,
+                status = gameState(g) === 'final' ? 'Final' : statusLabel(g);
+            return `<span class="ticker-item" title="${esc(away.name)} at ${esc(home.name)}"><img src="${logo(away.id)}" alt="${esc(away.abbreviation || away.name)}"><strong>${score(g, 'away')}-${score(g, 'home')}</strong><img src="${logo(home.id)}" alt="${esc(home.abbreviation || home.name)}"><span class="ticker-status">${esc(status)}</span></span>`
         });
-        els.ticker.innerHTML = (items.length ? items.concat(items) : ['<span class="ticker-item"><span class="ticker-dot"></span>No MLB games found for this date.</span>']).join('')
+        els.ticker.innerHTML = (items.length ? items : ['<span class="ticker-item">No games</span>']).join('')
     }
     function allTeams() {
         const m = new Map();
