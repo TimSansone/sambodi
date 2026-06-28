@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -1090,7 +1091,7 @@
     .dashboard-layout { display:grid; grid-template-columns:minmax(0, 1.3fr) minmax(330px, .72fr); gap:18px; align-items:start }
     .trend-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:12px }
     .player-search-panel { margin:0 0 18px; padding:16px; border:1px solid var(--line); border-radius:14px; background:#f8fafc }
-    .player-search-form { display:grid; grid-template-columns:minmax(220px, 1fr) auto; gap:10px }
+    .player-search-form { display:grid; grid-template-columns:minmax(220px, 1fr) auto auto; gap:10px }
     .player-search-form input { width:100%; min-height:44px; padding:10px 12px; border:1px solid #b9c6d8; border-radius:10px; font:inherit; background:#fff }
     .player-search-results { display:grid; gap:8px; margin-top:12px }
     .player-result { display:grid; grid-template-columns:52px 1fr auto; gap:10px; align-items:center; width:100%; padding:9px 12px; border:1px solid var(--line); border-radius:11px; background:#fff; color:var(--ink); text-align:left; cursor:pointer }
@@ -1103,6 +1104,10 @@
     .player-stat { padding:10px; border-radius:9px; background:#f2f6fb }
     .player-stat span { display:block; color:var(--muted); font-size:.75rem; text-transform:uppercase; letter-spacing:.04em }
     .player-stat strong { display:block; margin-top:3px; font-size:1.05rem }
+    @media (max-width: 720px) {
+        .player-search-form { grid-template-columns:1fr 1fr }
+        .player-search-form input { grid-column:1 / -1 }
+    }
     .trend-card { border:1px solid var(--line); border-radius:14px; background:#fff; padding:14px; box-shadow:0 10px 24px rgba(23,32,51,.08) }
     .trend-card h3 { margin:0 0 10px; font-size:.98rem }
     .trend-list { display:grid; gap:8px }
@@ -1699,6 +1704,7 @@
                     <form class="player-search-form" id="playerSearchForm">
                         <input id="playerSearchInput" type="search" placeholder="Enter a player name, such as Aaron Judge" autocomplete="off" aria-label="Player name">
                         <button class="btn" type="submit">Search Players</button>
+                        <button class="btn secondary" id="resetPlayerSearchBtn" type="button">Reset View</button>
                     </form>
                     <div id="playerSearchStatus" class="subtitle" style="margin-top:10px" aria-live="polite"></div>
                     <div id="playerSearchResults" class="player-search-results"></div>
@@ -1801,6 +1807,7 @@
         trends: $('statsTrends'),
         playerSearchForm: $('playerSearchForm'),
         playerSearchInput: $('playerSearchInput'),
+        resetPlayerSearch: $('resetPlayerSearchBtn'),
         playerSearchStatus: $('playerSearchStatus'),
         playerSearchResults: $('playerSearchResults'),
         playerProfile: $('playerProfile')
@@ -2642,6 +2649,12 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             els.playerSearchStatus.textContent = 'Player search is unavailable right now. Please try again.'
         }
     }
+    function resetPlayerSearch() {
+        els.playerSearchInput.value = '';
+        els.playerSearchStatus.textContent = '';
+        els.playerSearchResults.innerHTML = '';
+        els.playerProfile.innerHTML = ''
+    }
     function renderStatsTrends() {
         if (!els.trends) return;
         const live = state.games.filter(g => gameState(g) === 'live');
@@ -2812,6 +2825,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         }
         searchPlayers(query)
     };
+    els.resetPlayerSearch.onclick = resetPlayerSearch;
     document.querySelectorAll('.tab-btn').forEach(btn => btn.onclick = () => activateTab(btn.dataset.tab));
     $('showAllBtn').onclick = () => setStatusFilter('all');
     $('showLiveBtn').onclick = () => setStatusFilter('live');
