@@ -2274,7 +2274,12 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             abbreviation: t.abbreviation || ''
         });
         saveFavs();
-        renderAll()
+        renderAll();
+        requestAnimationFrame(() => {
+            const scoreStrip = els.ticker.closest('.score-ticker');
+            if (scoreStrip)
+                scoreStrip.scrollLeft = 0
+        })
     }
     function lineScore(g) {
         const l = state.feeds[g.gamePk]?.liveData?.linescore || g.linescore || {};
@@ -2479,7 +2484,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
                 winnerAway = st === 'final' && Number(score(g, 'away')) > Number(score(g, 'home')),
                 winnerHome = st === 'final' && Number(score(g, 'home')) > Number(score(g, 'away')),
                 detail = state.selected === g.gamePk ? `<div class="inline-detail" style="--team:${c1};--team2:${c2}">${detailHtml(g)}</div>` : '';
-            return `<div class="game-slot ${state.selected === g.gamePk ? 'selected-slot' : ''}">${`<article class="game-card ${st} ${fav ? 'favorite-game' : ''} ${state.selected === g.gamePk ? 'active' : ''}" style="--team:${c1};--team2:${c2}" role="button" tabindex="0" data-game="${g.gamePk}" aria-expanded="${state.selected === g.gamePk}"><div class="game-top"><span class="badge ${st}">${st}</span><span class="badge">${esc(statusLabel(g))}</span><span><button class="fav-btn ${isFav(away.id) ? 'active' : ''}" data-fav="${away.id}" data-name="${esc(away.name)}" data-abbr="${esc(away.abbreviation || '')}">★ ${esc(away.abbreviation || 'Away')}</button> <button class="fav-btn ${isFav(home.id) ? 'active' : ''}" data-fav="${home.id}" data-name="${esc(home.name)}" data-abbr="${esc(home.abbreviation || '')}">★ ${esc(home.abbreviation || 'Home')}</button></span></div><div class="team-row ${winnerAway ? 'winner' : ''}"><img class="logo" src="${logo(away.id)}" alt=""><div class="team-name"><strong>${esc(away.name)}</strong><span>${esc(note(g, 'away'))}</span></div><div class="score">${score(g, 'away')}</div></div><div class="team-row ${winnerHome ? 'winner' : ''}"><img class="logo" src="${logo(home.id)}" alt=""><div class="team-name"><strong>${esc(home.name)}</strong><span>${esc(note(g, 'home'))}</span></div><div class="score">${score(g, 'home')}</div></div>${liveCardDetails(g)}${lineScore(g)}<div class="game-info"><div><strong>Venue:</strong> ${esc(g.venue?.name || 'Venue TBD')}</div><div><strong>First pitch/status:</strong> ${esc(statusLabel(g))}</div><div class="card-actions"><a class="small-link" target="_blank" rel="noopener" href="https://www.mlb.com/gameday/${g.gamePk}">Open MLB box score</a></div></div>${winOddsHtml(g)}</article>`}${detail}</div>`
+            return `<div class="game-slot ${state.selected === g.gamePk ? 'selected-slot' : ''}" style="order:${fav ? 0 : 1}" data-favorite="${fav}">${`<article class="game-card ${st} ${fav ? 'favorite-game' : ''} ${state.selected === g.gamePk ? 'active' : ''}" style="--team:${c1};--team2:${c2}" role="button" tabindex="0" data-game="${g.gamePk}" aria-expanded="${state.selected === g.gamePk}"><div class="game-top"><span class="badge ${st}">${st}</span><span class="badge">${esc(statusLabel(g))}</span><span><button class="fav-btn ${isFav(away.id) ? 'active' : ''}" data-fav="${away.id}" data-name="${esc(away.name)}" data-abbr="${esc(away.abbreviation || '')}">★ ${esc(away.abbreviation || 'Away')}</button> <button class="fav-btn ${isFav(home.id) ? 'active' : ''}" data-fav="${home.id}" data-name="${esc(home.name)}" data-abbr="${esc(home.abbreviation || '')}">★ ${esc(home.abbreviation || 'Home')}</button></span></div><div class="team-row ${winnerAway ? 'winner' : ''}"><img class="logo" src="${logo(away.id)}" alt=""><div class="team-name"><strong>${esc(away.name)}</strong><span>${esc(note(g, 'away'))}</span></div><div class="score">${score(g, 'away')}</div></div><div class="team-row ${winnerHome ? 'winner' : ''}"><img class="logo" src="${logo(home.id)}" alt=""><div class="team-name"><strong>${esc(home.name)}</strong><span>${esc(note(g, 'home'))}</span></div><div class="score">${score(g, 'home')}</div></div>${liveCardDetails(g)}${lineScore(g)}<div class="game-info"><div><strong>Venue:</strong> ${esc(g.venue?.name || 'Venue TBD')}</div><div><strong>First pitch/status:</strong> ${esc(statusLabel(g))}</div><div class="card-actions"><a class="small-link" target="_blank" rel="noopener" href="https://www.mlb.com/gameday/${g.gamePk}">Open MLB box score</a></div></div>${winOddsHtml(g)}</article>`}${detail}</div>`
         }).join('');
         els.grid.querySelectorAll('.fav-btn').forEach(b => b.onclick = e => {
             e.stopPropagation();
@@ -2518,7 +2523,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             const away = g.teams.away.team,
                 home = g.teams.home.team,
                 status = gameState(g) === 'final' ? 'Final' : statusLabel(g);
-            return `<span class="ticker-item" title="${esc(away.name)} at ${esc(home.name)}"><img src="${logo(away.id)}" alt="${esc(away.abbreviation || away.name)}"><strong>${score(g, 'away')}-${score(g, 'home')}</strong><img src="${logo(home.id)}" alt="${esc(home.abbreviation || home.name)}"><span class="ticker-status">${esc(status)}</span></span>`
+            return `<span class="ticker-item" style="order:${isFavoriteGame(g) ? 0 : 1}" title="${esc(away.name)} at ${esc(home.name)}"><img src="${logo(away.id)}" alt="${esc(away.abbreviation || away.name)}"><strong>${score(g, 'away')}-${score(g, 'home')}</strong><img src="${logo(home.id)}" alt="${esc(home.abbreviation || home.name)}"><span class="ticker-status">${esc(status)}</span></span>`
         });
         els.ticker.innerHTML = (items.length ? items : ['<span class="ticker-item">No games</span>']).join('')
     }
