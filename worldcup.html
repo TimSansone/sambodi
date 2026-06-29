@@ -1066,6 +1066,30 @@
             font-size:.62rem
         }
     }
+    .bracket-modal { position:fixed; inset:0; z-index:100; display:none; align-items:center; justify-content:center; padding:16px; background:rgba(10,24,45,.72); backdrop-filter:blur(4px) }
+    .bracket-modal.open { display:flex }
+    .bracket-dialog { width:min(1120px, 100%); max-height:calc(100vh - 32px); overflow:auto; border-radius:18px; background:#f4f7fb; box-shadow:0 28px 80px rgba(0,0,0,.34) }
+    .bracket-header { position:sticky; top:0; z-index:2; display:flex; justify-content:space-between; gap:12px; align-items:center; padding:14px 16px; border-bottom:1px solid var(--line); background:rgba(255,255,255,.96) }
+    .bracket-header h2 { margin:0 }
+    .bracket-content { padding:14px }
+    .bracket-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:10px }
+    .bracket-match { display:grid; gap:9px; padding:12px; border:1px solid var(--line); border-radius:13px; background:#fff }
+    .bracket-match-top { display:flex; justify-content:space-between; gap:8px; color:var(--muted); font-size:.76rem; font-weight:900 }
+    .bracket-team { display:grid; grid-template-columns:30px minmax(0, 1fr) auto; gap:8px; align-items:center }
+    .bracket-team img { width:30px; height:22px; object-fit:cover; border-radius:4px }
+    .bracket-team strong { overflow-wrap:anywhere }
+    .bracket-score { font-size:1.25rem }
+    .bracket-meta { display:grid; gap:2px; padding-top:8px; border-top:1px solid var(--line); color:var(--muted); font-size:.78rem }
+    .bracket-top-btn { margin-top:10px }
+    @media (max-width:680px) {
+        .bracket-modal { padding:7px }
+        .bracket-dialog { max-height:calc(100vh - 14px); border-radius:13px }
+        .bracket-header { padding:10px }
+        .bracket-header h2 { font-size:1.1rem }
+        .bracket-content { padding:8px }
+        .bracket-grid { grid-template-columns:1fr; gap:7px }
+        .bracket-match { padding:9px; gap:7px }
+    }
     </style>
 </head>
 <body>
@@ -1081,7 +1105,7 @@
         <header>
             <div>
                 <h1>World Cup MatchCenter</h1>
-                <p class="subtitle">A live-style World Cup dashboard with match cards, favorite team highlights, group standings, countdowns, score alerts, keyboard navigation, and a scrolling score ticker.</p>
+                <button class="btn bracket-top-btn" id="round32BracketBtn" type="button">View Round of 32 Bracket</button>
             </div>
             <div class="controls">
                 <button class="btn secondary" id="prevDayBtn" type="button">Prev</button>
@@ -1202,6 +1226,20 @@
             </aside>
         </main>
     </div>
+    <div class="bracket-modal" id="round32BracketModal" aria-hidden="true">
+        <section class="bracket-dialog" role="dialog" aria-modal="true" aria-labelledby="round32BracketTitle">
+            <div class="bracket-header">
+                <div>
+                    <h2 id="round32BracketTitle">Round of 32 Bracket</h2>
+                    <span class="small-note">Matchups update automatically as results become official.</span>
+                </div>
+                <button class="btn secondary" id="round32BracketCloseBtn" type="button">Close</button>
+            </div>
+            <div class="bracket-content" id="round32BracketContent">
+                <div class="empty">Loading the Round of 32 bracket...</div>
+            </div>
+        </section>
+    </div>
     <script>
     const ESPN_SCOREBOARD = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard';
     const ESPN_SUMMARY = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/summary';
@@ -1209,7 +1247,7 @@
     const OPEN_WC_GAMES = 'https://worldcup26.ir/get/games';
     const OPEN_WC_GROUPS = 'https://worldcup26.ir/get/groups';
     const WC_START = '2026-06-11',
-        WC_END = '2026-06-30';
+        WC_END = '2026-07-19';
     const BUILT_IN_MATCHES = [
     ['66457022', '2026-06-22T13:00:00-04:00', 'Group J', 'Argentina', 'ARG', 'Austria', 'AUT'], ['66457010', '2026-06-22T17:00:00-04:00', 'Group I', 'France', 'FRA', 'Iraq', 'IRQ'], ['66457012', '2026-06-22T20:00:00-04:00', 'Group I', 'Norway', 'NOR', 'Senegal', 'SEN'], ['66457024', '2026-06-22T23:00:00-04:00', 'Group J', 'Jordan', 'JOR', 'Algeria', 'DZA'],
     ['66457034', '2026-06-23T13:00:00-04:00', 'Group K', 'Portugal', 'POR', 'Uzbekistan', 'UZB'], ['66457046', '2026-06-23T16:00:00-04:00', 'Group L', 'England', 'ENG', 'Ghana', 'GHA'], ['66457048', '2026-06-23T19:00:00-04:00', 'Group L', 'Panama', 'PAN', 'Croatia', 'CRO'], ['66457036', '2026-06-23T22:00:00-04:00', 'Group K', 'Colombia', 'COL', 'DR Congo', 'COD'],
@@ -1369,7 +1407,11 @@
         teamSearch: document.getElementById('teamSearch'),
         teamOptions: document.getElementById('teamOptions'),
         standingsPanel: document.getElementById('standingsPanel'),
-        advancementPanel: document.getElementById('advancementPanel')
+        advancementPanel: document.getElementById('advancementPanel'),
+        bracketButton: document.getElementById('round32BracketBtn'),
+        bracketModal: document.getElementById('round32BracketModal'),
+        bracketClose: document.getElementById('round32BracketCloseBtn'),
+        bracketContent: document.getElementById('round32BracketContent')
     };
     function todayIso() {
         const n = new Date(),
@@ -1598,7 +1640,16 @@
         return match ? `Group ${match[1].toUpperCase()}` : ''
     }
     function stageFromEvent(e, comp) {
-        return groupNameFromText(comp?.altGameNote) || groupNameFromText(e?.group?.name) || groupNameFromText(e?.notes?.[0]?.headline) || e?.notes?.[0]?.headline || e?.group?.name || e?.season?.slug || e?.name || ''
+        const competitionNote = comp?.notes?.[0]?.headline || comp?.altGameNote || '';
+        return groupNameFromText(competitionNote)
+            || groupNameFromText(e?.group?.name)
+            || groupNameFromText(e?.notes?.[0]?.headline)
+            || competitionNote
+            || e?.notes?.[0]?.headline
+            || e?.group?.name
+            || e?.season?.slug
+            || e?.name
+            || ''
     }
     function normalizedTeamKey(t) {
         const abbr = canonicalAbbr(String(t?.abbr || '').trim().toUpperCase());
@@ -1619,8 +1670,15 @@
         return `${kickoff.toISOString().slice(0, 10)}|${teams}`
     }
     function knockoutSlotKey(m) {
-        const stage = String(m?.stage || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
-        if (!stage || !/(roundof|round32|round16|quarter|semi|thirdplace|final)/.test(stage))
+        const rawStage = String(m?.stage || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+        const stage = /roundof32|round32/.test(rawStage) ? 'roundof32'
+            : /roundof16|round16/.test(rawStage) ? 'roundof16'
+            : /quarter/.test(rawStage) ? 'quarterfinal'
+            : /semi/.test(rawStage) ? 'semifinal'
+            : /thirdplace/.test(rawStage) ? 'thirdplace'
+            : /final/.test(rawStage) ? 'final'
+            : '';
+        if (!stage)
             return '';
         const kickoff = new Date(m?.date);
         if (Number.isNaN(kickoff.getTime()))
@@ -2116,6 +2174,28 @@
         const thirdMarkup = bestThird.length ? bestThird.map((row, i) => teamAdvanceChip(row, `3rd ${i + 1}/8 · Group ${row.group}`)).join('') : '<div class="empty">No third-place ranking available yet.</div>';
         els.advancementPanel.innerHTML = `<div class="advance-block"><div class="advance-title">Automatic Qualifiers</div><div class="advance-list">${autoMarkup}</div></div><div class="advance-block"><div class="advance-title">Best Third-Place Teams</div><div class="advance-list">${thirdMarkup}</div></div>`
     }
+    function bracketTeamMarkup(team, match) {
+        const image = hasRealTeam(team) ? `<img src="${flag(team.abbr)}" alt="">` : '<span></span>';
+        const score = match.status === 'upcoming' ? '' : displayScore(team.score);
+        return `<div class="bracket-team">${image}<strong>${esc(team.name || 'TBD')}</strong><strong class="bracket-score">${esc(score)}</strong></div>`
+    }
+    function renderRound32Bracket() {
+        if (!els.bracketContent)
+            return;
+        const matches = uniqueMatches(state.allStageMatches)
+            .filter(m => /round\s*(of\s*)?32/i.test(m.stage || ''))
+            .sort((a, b) => new Date(a.date) - new Date(b.date))
+            .slice(0, 16);
+        if (!matches.length) {
+            els.bracketContent.innerHTML = '<div class="empty">The Round of 32 schedule is loading. Try Refresh in a moment.</div>';
+            return
+        }
+        els.bracketContent.innerHTML = `<div class="bracket-grid">${matches.map((m, index) => {
+            const location = m.venueLocation ? `<span>${esc(m.venueLocation)}</span>` : '';
+            const status = m.status === 'final' ? (m.statusDetail || 'Final') : m.status === 'live' ? (m.statusDetail || 'Live') : 'Scheduled';
+            return `<article class="bracket-match"><div class="bracket-match-top"><span>Match ${index + 1}</span><span>${esc(status)}</span></div>${bracketTeamMarkup(m.away, m)}${bracketTeamMarkup(m.home, m)}<div class="bracket-meta"><strong>${esc(fmtDateTime(m.date))}</strong><span>${esc(m.venue || 'Venue TBD')}</span>${location}</div></article>`
+        }).join('')}</div>`
+    }
     function renderAll() {
         renderStats();
         updateTeamCombo();
@@ -2125,6 +2205,7 @@
         renderDetail();
         renderStandings();
         renderAdvancement();
+        renderRound32Bracket();
         updateCountdowns()
     }
 
@@ -2225,6 +2306,13 @@
     }
     function mergeMatches(primary, overlay) {
         return uniqueMatches([...(primary || []), ...(overlay || [])])
+    }
+    async function refreshBracketData() {
+        try {
+            const latest = await fetchEspnRange();
+            state.allStageMatches = uniqueMatches(mergeMatches(state.allStageMatches, latest));
+            renderRound32Bracket()
+        } catch {}
     }
     function captureMatchViewport() {
         const cards = [...els.grid.querySelectorAll('.match-card')];
@@ -2330,6 +2418,7 @@
             }
             renderStandings();
             renderAdvancement();
+            renderRound32Bracket();
             renderMatches();
             updateTeamCombo();
         } catch (e) {
@@ -2337,6 +2426,7 @@
             state.allStageMatches = BUILT_IN_MATCHES;
             renderStandings();
             renderAdvancement();
+            renderRound32Bracket();
             renderMatches();
             updateTeamCombo();
         }
@@ -2377,7 +2467,10 @@
         els.date.value = todayIso();
         loadDay()
     });
-    els.refresh.addEventListener('click', loadDay);
+    els.refresh.addEventListener('click', () => {
+        loadDay();
+        refreshBracketData()
+    });
     els.date.addEventListener('change', loadDay);
     els.stage.addEventListener('change', () => {
         state.stageFilter = els.stage.value;
@@ -2400,6 +2493,27 @@
         els.teamSearch.focus()
     });
     els.teamSearch.addEventListener('input', updateTeamCombo);
+    els.bracketButton.addEventListener('click', () => {
+        renderRound32Bracket();
+        els.bracketModal.classList.add('open');
+        els.bracketModal.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        refreshBracketData()
+    });
+    function closeRound32Bracket() {
+        els.bracketModal.classList.remove('open');
+        els.bracketModal.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = ''
+    }
+    els.bracketClose.addEventListener('click', closeRound32Bracket);
+    els.bracketModal.addEventListener('click', event => {
+        if (event.target === els.bracketModal)
+            closeRound32Bracket()
+    });
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && els.bracketModal.classList.contains('open'))
+            closeRound32Bracket()
+    });
     document.addEventListener('click', e => {
         if (!els.teamCombo.contains(e.target)) {
             els.teamCombo.classList.remove('open');
@@ -2408,8 +2522,10 @@
     });
     setInterval(updateCountdowns, 1000);
     setInterval(() => {
-        if (els.date.value === todayIso())
-            loadDay()
+        if (els.date.value === todayIso()) {
+            loadDay();
+            refreshBracketData()
+        }
     }, 60000);
     els.date.value = todayIso();
     loadStageRange();
