@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Live MLB GameCenter</title>
+    <title>MLB GameCenter</title>
     <style>
     :root {
         --ink: #162033;
@@ -1817,6 +1817,21 @@
         .status-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
 
+    /* Keep the compact score strip inset so edge tiles are not clipped by mobile browsers. */
+    .score-ticker {
+        box-sizing: border-box;
+        width: calc(100% - 24px);
+        margin: 8px auto 14px;
+        border-radius: 10px;
+        scroll-padding-inline: 8px;
+    }
+    @media (max-width: 680px) {
+        .score-ticker {
+            width: calc(100% - 16px);
+            margin: 6px auto 8px;
+        }
+    }
+
     </style>
 </head>
 <body>
@@ -1830,8 +1845,7 @@
     <div class="app">
         <header>
             <div>
-                <h1>Live MLB GameCenter</h1>
-                <p class="subtitle">A tabbed MLB dashboard with live scores, division and wild card standings, AL/NL league leaders, trends, countdown refresh, alerts, and mobile-friendly controls.</p>
+                <h1>MLB GameCenter</h1>
             </div>
             <div class="controls">
                 <button class="btn secondary" id="prevDayBtn" type="button">Prev</button>
@@ -2145,6 +2159,9 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
     function isFav(id) {
         return state.favoriteTeams.has(String(id))
     }
+    function isFavoriteGame(g) {
+        return isFav(g?.teams?.away?.team?.id) || isFav(g?.teams?.home?.team?.id)
+    }
     function saveFavs() {
         localStorage.setItem('mlbFavorites', JSON.stringify([...state.favoriteTeams.values()]))
     }
@@ -2296,7 +2313,14 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             scheduled: 1,
             final: 2
         };
-        return games.sort((a, b) => (order[gameState(a)] - order[gameState(b)]) || (new Date(a.gameDate) - new Date(b.gameDate)))
+        return games.sort((a, b) => {
+            const favoriteOrder = Number(isFavoriteGame(b)) - Number(isFavoriteGame(a));
+            if (favoriteOrder)
+                return favoriteOrder;
+            if (isFavoriteGame(a) && isFavoriteGame(b))
+                return new Date(a.gameDate) - new Date(b.gameDate);
+            return (order[gameState(a)] - order[gameState(b)]) || (new Date(a.gameDate) - new Date(b.gameDate))
+        })
     }
     function renderSkeleton() {
         els.grid.innerHTML = Array.from({
@@ -2392,7 +2416,11 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         })
     }
     function renderTicker() {
-        const items = state.games.map(g => {
+        const tickerGames = [...state.games].sort((a, b) =>
+            (Number(isFavoriteGame(b)) - Number(isFavoriteGame(a)))
+            || (new Date(a.gameDate) - new Date(b.gameDate))
+        );
+        const items = tickerGames.map(g => {
             const away = g.teams.away.team,
                 home = g.teams.home.team,
                 status = gameState(g) === 'final' ? 'Final' : statusLabel(g);
