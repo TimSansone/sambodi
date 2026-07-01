@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -1344,8 +1343,6 @@
         canvas.width = 1200;
         canvas.height = 1200;
         const context = canvas.getContext("2d");
-        context.fillStyle = "#eef3f7";
-        context.fillRect(0, 0, canvas.width, canvas.height);
         await drawProductToCanvas(context);
         await drawDesignToCanvas(context);
         const blob = await canvasToBlob(canvas);
