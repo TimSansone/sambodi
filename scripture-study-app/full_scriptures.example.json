@@ -1,0 +1,24 @@
+[
+  {
+    "source": "Bible",
+    "book": "2 Samuel",
+    "chapter": 1,
+    "text": "Full chapter text would go here."
+  },
+  {
+    "source": "Book of Mormon",
+    "book": "Alma",
+    "chapter": 32,
+    "verse": 21,
+    "reference": "Alma 32:21",
+    "text": "Faith is not to have a perfect knowledge of things..."
+  },
+  {
+    "source": "Doctrine and Covenants",
+    "book": "Doctrine and Covenants",
+    "chapter": 6,
+    "verse": 36,
+    "reference": "Doctrine and Covenants 6:36",
+    "text": "Look unto me in every thought; doubt not, fear not."
+  }
+]

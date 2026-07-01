@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Deeper Scripture Study</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="panel selector-panel" aria-label="Scripture selector">
+        <header>
+          <p class="eyebrow">Scripture Study</p>
+          <h1>Deeper Scripture Study</h1>
+        </header>
+
+        <form id="selectorForm" class="selector-form">
+          <label>
+            <span>Standard Work</span>
+            <select id="workSelect"></select>
+          </label>
+
+          <label>
+            <span>Book</span>
+            <select id="bookSelect"></select>
+          </label>
+
+          <label>
+            <span id="chapterLabel">Chapter or Section</span>
+            <select id="chapterSelect"></select>
+          </label>
+
+          <div class="verse-row">
+            <label>
+              <span>Verse From</span>
+              <input id="verseStart" type="number" min="1" placeholder="Optional" />
+            </label>
+            <label>
+              <span>Verse To</span>
+              <input id="verseEnd" type="number" min="1" placeholder="Optional" />
+            </label>
+          </div>
+
+          <button type="submit" class="primary-button">Load Passage</button>
+        </form>
+      </section>
+
+      <section class="panel passage-panel" aria-label="Full passage display">
+        <header class="panel-heading">
+          <div>
+            <p class="eyebrow">Selected Passage</p>
+            <h2 id="passageTitle">Choose a passage</h2>
+          </div>
+        </header>
+        <article id="passageDisplay" class="passage-display">
+          <p class="muted">Use the selector on the left to load a sample passage.</p>
+        </article>
+      </section>
+
+      <section class="panel ai-panel" aria-label="AI deep dive panel">
+        <header class="panel-heading">
+          <div>
+            <p class="eyebrow">AI Study Tools</p>
+            <h2>Deep Dive</h2>
+          </div>
+        </header>
+
+        <div class="mode-buttons">
+          <button type="button" data-mode="Deep Dive">Deep Dive</button>
+          <button type="button" data-mode="Historical Context">Historical Context</button>
+          <button type="button" data-mode="Doctrine & Principles">Doctrine &amp; Principles</button>
+          <button type="button" data-mode="Personal Application">Personal Application</button>
+          <button type="button" data-mode="Study Questions">Study Questions</button>
+        </div>
+
+        <p id="connectionStatus" class="connection-status">Checking ChatGPT connection...</p>
+
+        <article id="aiOutput" class="ai-output">
+          <p class="muted">Load a passage, then choose a study mode.</p>
+        </article>
+
+        <label class="notes-box">
+          <span>Personal Notes</span>
+          <textarea id="personalNotes" rows="7" placeholder="Write your impressions, questions, or ideas here..."></textarea>
+        </label>
+      </section>
+    </main>
+
+    <script src="scripture-data-full.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

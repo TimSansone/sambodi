@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scripture Study</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <aside class="library-panel" aria-label="Scripture library">
+        <header class="panel-header">
+          <div>
+            <p class="eyebrow">Study Set</p>
+            <h1>Scripture Deep Dive</h1>
+          </div>
+          <button id="clearSelection" class="icon-button" type="button" title="Clear selections" aria-label="Clear selections">
+            <span aria-hidden="true">x</span>
+          </button>
+        </header>
+
+        <div class="tabs" role="tablist" aria-label="Scripture sources">
+          <button class="tab is-active" type="button" data-source="Bible">Bible</button>
+          <button class="tab" type="button" data-source="Book of Mormon">Book of Mormon</button>
+          <button class="tab" type="button" data-source="Doctrine and Covenants">Doctrine and Covenants</button>
+        </div>
+
+        <section class="chapter-picker" aria-label="Book and chapter picker">
+          <label class="select-box">
+            <span>Book</span>
+            <select id="bookSelect"></select>
+          </label>
+          <div>
+            <div class="chapter-heading">
+              <span>Chapters</span>
+              <small id="chapterHint">Choose a book first</small>
+            </div>
+            <div id="chapterGrid" class="chapter-grid"></div>
+          </div>
+          <label class="import-box">
+            <span>Full text library</span>
+            <input id="libraryImport" type="file" accept=".json,application/json" />
+            <small id="importStatus">Optional: import a permitted scripture text JSON file.</small>
+          </label>
+        </section>
+
+        <label class="search-box">
+          <span>Search</span>
+          <input id="searchInput" type="search" placeholder="Reference, book, or phrase" autocomplete="off" />
+        </label>
+
+        <section id="scriptureList" class="scripture-list" aria-label="Available scriptures"></section>
+      </aside>
+
+      <section class="selection-panel" aria-label="Selected scriptures">
+        <header class="section-title">
+          <div>
+            <p class="eyebrow">Left Side</p>
+            <h2>Selected Scriptures</h2>
+          </div>
+          <span id="selectionCount" class="count-pill">0 selected</span>
+        </header>
+        <div id="selectedList" class="selected-list"></div>
+
+        <form id="customForm" class="custom-form">
+          <h3>Add a Passage</h3>
+          <input id="customReference" type="text" placeholder="Reference" required />
+          <textarea id="customText" placeholder="Paste scripture text here" rows="4" required></textarea>
+          <button class="secondary-button" type="submit">Add Passage</button>
+        </form>
+      </section>
+
+      <section class="deep-dive-panel" aria-label="AI deep dive">
+        <header class="section-title">
+          <div>
+            <p class="eyebrow">Right Side</p>
+            <h2>AI Deep Dive</h2>
+          </div>
+          <button id="deepDiveButton" class="primary-button" type="button">Deep Dive</button>
+        </header>
+
+        <div class="mode-row" aria-label="Deep dive options">
+          <label><input type="checkbox" id="themeMode" checked /> Themes</label>
+          <label><input type="checkbox" id="contextMode" checked /> Context</label>
+          <label><input type="checkbox" id="applicationMode" checked /> Application</label>
+          <label><input type="checkbox" id="questionsMode" checked /> Questions</label>
+        </div>
+
+        <article id="deepDiveOutput" class="deep-dive-output">
+          <p class="empty-state">Select one or more scriptures, then run a deep dive. Your chosen passages stay gathered on the left while the study notes appear here.</p>
+        </article>
+      </section>
+    </main>
+
+    <script src="scriptures.js"></script>
+    <script src="scripture_structure.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
