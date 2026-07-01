@@ -146,7 +146,13 @@ function bind(){
  document.querySelectorAll("[data-competition]").forEach(b=>b.onclick=()=>{state.competition=b.dataset.competition;render()});
  document.querySelectorAll(".fixture-card").forEach(c=>c.onclick=()=>{state.selected=fixtures.find(f=>f.id==c.dataset.id);render()});
  document.querySelectorAll("[data-close]").forEach(x=>x.onclick=e=>{if(e.target===x){state.selected=null;render()}});
- document.querySelector("#search")?.addEventListener("input",e=>{state.query=e.target.value;render();document.querySelector("#search")?.focus()});
+ document.querySelector("#search")?.addEventListener("input",e=>{
+   state.query=e.target.value;
+   render();
+   const search=document.querySelector("#search");
+   search?.focus();
+   search?.setSelectionRange(state.query.length,state.query.length);
+ });
  document.querySelector("#month")?.addEventListener("change",e=>{state.month=e.target.value;render()});
  document.querySelector("#focusSearch")?.addEventListener("click",()=>document.querySelector("#search")?.focus());
  document.querySelector("#downloadIcs")?.addEventListener("click",()=>{
