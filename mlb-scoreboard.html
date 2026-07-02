@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -1197,6 +1196,8 @@
     .trend-player-media { position:relative; width:46px; height:38px; display:inline-flex; align-items:center; justify-content:center }
     .trend-player-media .leader-headshot { width:38px; height:38px; border-radius:999px; object-fit:cover; background:#eef3f9 }
     .trend-player-media img:not(.leader-headshot) { position:absolute; right:0; bottom:-2px; width:20px; height:20px; padding:2px; border-radius:999px; background:#fff; border:1px solid var(--line) }
+    .trend-stat-pair { min-width:88px; text-align:right }
+    .trend-stat-pair strong, .trend-stat-pair small { display:block; white-space:nowrap }
     .trend-summary { grid-column:1 / -1 }
     .standings-dashboard { display:grid; gap:20px }
     .standings-section { display:grid; gap:14px }
@@ -2063,6 +2064,7 @@
                     <h2>Stats & Trends</h2>
                     <button class="btn secondary" id="trendsRefreshBtn" type="button">Refresh Trends</button>
                 </div>
+                <p class="subtitle" style="margin:0 0 14px">Daily game totals include every player who recorded a home run, triple, double, RBI, or pitching strikeout on the selected date.</p>
                 <div class="player-search-panel">
                     <h3 style="margin:0 0 4px">Player Stat Search</h3>
                     <p class="subtitle" style="margin:0 0 12px">Search an MLB player to view current-season batting and pitching statistics.</p>
@@ -2131,6 +2133,8 @@
         wildCardStandings: [],
         leagueLeaders: { AL: { hitting: [], pitching: [] }, NL: { hitting: [], pitching: [] } },
         todayImpact: { homeRuns: [], rbi: [], doubles: [], triples: [], pitcherStrikeouts: [] },
+        todayImpactDate: '',
+        todayImpactLoading: false,
         pitcherStats: new Map(),
         lastScores: new Map(),
         alerts: false,
@@ -2881,20 +2885,27 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
     function emptyImpactStats() {
         return { homeRuns: [], rbi: [], doubles: [], triples: [], pitcherStrikeouts: [] }
     }
-    function addImpact(map, key, info, amount) {
+    function addImpact(map, key, info, amount, seasonAmount) {
         const n = Number(amount) || 0;
         if (n <= 0) return;
+        const seasonValue = Number.isFinite(Number(seasonAmount)) ? Number(seasonAmount) : null;
         const existing = map.get(key);
         if (existing) {
             existing.value += n;
+            if (seasonValue !== null)
+                existing.seasonValue = Math.max(existing.seasonValue ?? 0, seasonValue);
         } else {
-            map.set(key, { ...info, value: n });
+            map.set(key, { ...info, value: n, seasonValue });
         }
     }
     function playerHeadshot(id) {
         return `https://img.mlbstatic.com/mlb-photos/image/upload/w_80,q_auto:best/v1/people/${id}/headshot/67/current`
     }
     async function loadTodayImpactStats() {
+        const requestedDate = els.gameDate.value || todayIso();
+        const requestedGamePks = state.games.map(g => g.gamePk).join(',');
+        state.todayImpactLoading = true;
+        renderStatsTrends();
         const impact = {
             homeRuns: new Map(),
             rbi: new Map(),
@@ -2905,6 +2916,8 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         const completedOrLive = state.games.filter(g => gameState(g) !== 'scheduled');
         if (!completedOrLive.length) {
             state.todayImpact = emptyImpactStats();
+            state.todayImpactDate = requestedDate;
+            state.todayImpactLoading = false;
             renderStatsTrends();
             return;
         }
@@ -2928,15 +2941,19 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
                         teamAbbr: team.abbreviation || team.teamCode || team.fileCode || ''
                     };
                     const batting = p.stats?.batting || {};
-                    addImpact(impact.homeRuns, id, info, batting.homeRuns);
-                    addImpact(impact.rbi, id, info, batting.rbi);
-                    addImpact(impact.doubles, id, info, batting.doubles);
-                    addImpact(impact.triples, id, info, batting.triples);
+                    const seasonBatting = p.seasonStats?.batting || {};
+                    addImpact(impact.homeRuns, id, info, batting.homeRuns, seasonBatting.homeRuns);
+                    addImpact(impact.rbi, id, info, batting.rbi, seasonBatting.rbi);
+                    addImpact(impact.doubles, id, info, batting.doubles, seasonBatting.doubles);
+                    addImpact(impact.triples, id, info, batting.triples, seasonBatting.triples);
                     const pitching = p.stats?.pitching || {};
-                    addImpact(impact.pitcherStrikeouts, id, info, pitching.strikeOuts);
+                    const seasonPitching = p.seasonStats?.pitching || {};
+                    addImpact(impact.pitcherStrikeouts, id, info, pitching.strikeOuts, seasonPitching.strikeOuts);
                 });
             });
         });
+        if ((els.gameDate.value || todayIso()) !== requestedDate || state.games.map(g => g.gamePk).join(',') !== requestedGamePks)
+            return;
         const sortRows = map => [...map.values()].sort((a, b) => b.value - a.value || a.name.localeCompare(b.name));
         state.todayImpact = {
             homeRuns: sortRows(impact.homeRuns),
@@ -2945,16 +2962,29 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             triples: sortRows(impact.triples),
             pitcherStrikeouts: sortRows(impact.pitcherStrikeouts)
         };
+        state.todayImpactDate = requestedDate;
+        state.todayImpactLoading = false;
         renderStatsTrends();
     }
     function todayImpactRow(row, suffix) {
         const head = row.id ? `<img class="leader-headshot" src="${playerHeadshot(row.id)}" alt="" loading="lazy" onerror="this.style.display='none'">` : '';
         const team = row.teamId ? `<img src="${logo(row.teamId)}" alt="" loading="lazy">` : '';
-        return `<div class="trend-row trend-player-row"><span class="trend-player-media">${head}${team}</span><span><strong>${esc(row.name)}</strong><small>${esc(row.teamAbbr || row.teamName || 'Team unavailable')}</small></span><strong>${esc(row.value)} ${esc(suffix)}</strong></div>`
+        const seasonTotal = row.seasonValue === null || row.seasonValue === undefined ? 'Season unavailable' : `${row.seasonValue} season`;
+        return `<div class="trend-row trend-player-row"><span class="trend-player-media">${head}${team}</span><span><strong>${esc(row.name)}</strong><small>${esc(row.teamAbbr || row.teamName || 'Team unavailable')}</small></span><span class="trend-stat-pair"><strong>${esc(row.value)} ${esc(suffix)} today</strong><small>${esc(seasonTotal)}</small></span></div>`
     }
     function todayImpactRows(key, suffix, emptyText) {
         const rows = state.todayImpact?.[key] || [];
-        return rows.length ? rows.slice(0, 10).map(r => todayImpactRow(r, suffix)).join('') : `<div class="empty">${esc(emptyText)}</div>`
+        if (state.todayImpactLoading)
+            return '<div class="empty">Loading complete daily totals...</div>';
+        return rows.length ? rows.map(r => todayImpactRow(r, suffix)).join('') : `<div class="empty">${esc(emptyText)}</div>`
+    }
+
+    function selectedDateLabel() {
+        const value = els.gameDate.value || todayIso();
+        if (value === todayIso())
+            return 'Today';
+        const date = new Date(`${value}T12:00:00`);
+        return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
     }
 
     function trendGameRow(g) {
@@ -3079,6 +3109,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
     }
     function renderStatsTrends() {
         if (!els.trends) return;
+        const dayLabel = selectedDateLabel();
         const live = state.games.filter(g => gameState(g) === 'live');
         const finals = state.games.filter(g => gameState(g) === 'final').slice(0, 5);
         const upcoming = state.games.filter(g => gameState(g) === 'scheduled').slice(0, 5);
@@ -3099,11 +3130,11 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         const eraHtml = trendCategoryRows(allLeagueCategory('pitching', 'ERA'), 'ERA leaders unavailable.');
         const strikeoutHtml = trendCategoryRows(allLeagueCategory('pitching', 'K'), 'Strikeout leaders unavailable.');
         const savesHtml = trendCategoryRows(allLeagueCategory('pitching', 'SV'), 'Saves leaders unavailable.');
-        const todayHrHtml = todayImpactRows('homeRuns', 'HR', 'No home runs recorded yet today.');
-        const todayRbiHtml = todayImpactRows('rbi', 'RBI', 'No RBI recorded yet today.');
-        const todayDoublesHtml = todayImpactRows('doubles', '2B', 'No doubles recorded yet today.');
-        const todayTriplesHtml = todayImpactRows('triples', '3B', 'No triples recorded yet today.');
-        const todayStrikeoutsHtml = todayImpactRows('pitcherStrikeouts', 'K', 'No pitcher strikeout totals available yet today.');
+        const todayHrHtml = todayImpactRows('homeRuns', 'HR', `No home runs recorded for ${dayLabel.toLowerCase()}.`);
+        const todayRbiHtml = todayImpactRows('rbi', 'RBI', `No RBI recorded for ${dayLabel.toLowerCase()}.`);
+        const todayDoublesHtml = todayImpactRows('doubles', '2B', `No doubles recorded for ${dayLabel.toLowerCase()}.`);
+        const todayTriplesHtml = todayImpactRows('triples', '3B', `No triples recorded for ${dayLabel.toLowerCase()}.`);
+        const todayStrikeoutsHtml = todayImpactRows('pitcherStrikeouts', 'K', `No pitcher strikeout totals available for ${dayLabel.toLowerCase()}.`);
         els.trends.innerHTML = `<div class="trend-card trend-summary"><h3>📊 Today Snapshot</h3><div class="mini-grid"><div class="mini"><span>Games</span><strong>${state.games.length}</strong></div><div class="mini"><span>Live</span><strong>${live.length}</strong></div><div class="mini"><span>Final</span><strong>${state.games.filter(g => gameState(g) === 'final').length}</strong></div><div class="mini"><span>Upcoming</span><strong>${state.games.filter(g => gameState(g) === 'scheduled').length}</strong></div></div></div><div class="trend-card"><h3>💥 Home Runs Today</h3><div class="trend-list">${todayHrHtml}</div></div><div class="trend-card"><h3>🏃 RBI Today</h3><div class="trend-list">${todayRbiHtml}</div></div><div class="trend-card"><h3>📏 Doubles Today</h3><div class="trend-list">${todayDoublesHtml}</div></div><div class="trend-card"><h3>⚡ Triples Today</h3><div class="trend-list">${todayTriplesHtml}</div></div><div class="trend-card"><h3>🔥 Pitcher Strikeouts Today</h3><div class="trend-list">${todayStrikeoutsHtml}</div></div><div class="trend-card"><h3>💣 MLB Power Watch</h3><div class="trend-list">${powerHtml}</div></div><div class="trend-card"><h3>💨 MLB Speed Watch</h3><div class="trend-list">${speedHtml}</div></div><div class="trend-card"><h3>🔥 Batting Average Leaders</h3><div class="trend-list">${averageHtml}</div></div><div class="trend-card"><h3>🧢 ERA Leaders</h3><div class="trend-list">${eraHtml}</div></div><div class="trend-card"><h3>⚡ Strikeout Leaders</h3><div class="trend-list">${strikeoutHtml}</div></div><div class="trend-card"><h3>🔒 Saves Leaders</h3><div class="trend-list">${savesHtml}</div></div><div class="trend-card"><h3>🎯 Probable Starters Today</h3><div class="trend-list">${startersHtml}</div></div><div class="trend-card"><h3>📈 Highest Scoring Games</h3><div class="trend-list">${highScoringHtml}</div></div><div class="trend-card"><h3>⚔️ Close Game Watch</h3><div class="trend-list">${closeHtml}</div></div><div class="trend-card"><h3>🔴 Live Games</h3><div class="trend-list">${liveHtml}</div></div><div class="trend-card"><h3>✅ Recent Finals</h3><div class="trend-list">${finalHtml}</div></div><div class="trend-card"><h3>⏰ Upcoming First Pitches</h3><div class="trend-list">${upcomingHtml}</div></div><div class="trend-card"><h3>⭐ Favorite Team Watch</h3><div class="trend-list">${favoriteHtml}</div></div>`
     }
     function activateTab(tabId) {
