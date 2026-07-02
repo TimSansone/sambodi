@@ -1276,7 +1276,7 @@
     ['66457078', '2026-06-25T16:00:00-04:00', 'Group E', 'Ecuador', 'ECU', 'Germany', 'GER'], ['66457080', '2026-06-25T16:00:00-04:00', 'Group E', 'Curacao', 'CUW', 'Ivory Coast', 'CIV'], ['66456976', '2026-06-25T19:00:00-04:00', 'Group F', 'Tunisia', 'TUN', 'Netherlands', 'NED'], ['66456978', '2026-06-25T19:00:00-04:00', 'Group F', 'Japan', 'JPN', 'Sweden', 'SWE'], ['66456948', '2026-06-25T22:00:00-04:00', 'Group D', 'Turkey', 'TUR', 'United States', 'USA'], ['66456950', '2026-06-25T22:00:00-04:00', 'Group D', 'Paraguay', 'PAR', 'Australia', 'AUS'],
     ['66457014', '2026-06-26T15:00:00-04:00', 'Group I', 'Norway', 'NOR', 'France', 'FRA'], ['66457016', '2026-06-26T15:00:00-04:00', 'Group I', 'Senegal', 'SEN', 'Iraq', 'IRQ'], ['66457002', '2026-06-26T20:00:00-04:00', 'Group H', 'Uruguay', 'URU', 'Spain', 'ESP'], ['66457004', '2026-06-26T20:00:00-04:00', 'Group H', 'Cape Verde', 'CPV', 'Saudi Arabia', 'KSA'], ['66456990', '2026-06-26T23:00:00-04:00', 'Group G', 'New Zealand', 'NZL', 'Belgium', 'BEL'], ['66456992', '2026-06-26T23:00:00-04:00', 'Group G', 'Egypt', 'EGY', 'Iran', 'IRI'],
     ['66457050', '2026-06-27T17:00:00-04:00', 'Group L', 'Panama', 'PAN', 'England', 'ENG'], ['66457052', '2026-06-27T17:00:00-04:00', 'Group L', 'Croatia', 'CRO', 'Ghana', 'GHA'], ['66457038', '2026-06-27T19:30:00-04:00', 'Group K', 'Colombia', 'COL', 'Portugal', 'POR'], ['66457040', '2026-06-27T19:30:00-04:00', 'Group K', 'DR Congo', 'COD', 'Uzbekistan', 'UZB'], ['66457026', '2026-06-27T22:00:00-04:00', 'Group J', 'Jordan', 'JOR', 'Argentina', 'ARG'], ['66457028', '2026-06-27T22:00:00-04:00', 'Group J', 'Algeria', 'DZA', 'Austria', 'AUT'],
-    ['53452545', '2026-06-28T15:00:00-04:00', 'Round Of 32', 'TBD (2nd Group A)', 'TBD', 'TBD (2nd Group B)', 'TBD'], ['53452557', '2026-06-29T13:00:00-04:00', 'Round Of 32', 'TBD (1st Group C)', 'TBD', 'TBD (2nd Group F)', 'TBD'], ['53452541', '2026-06-29T16:30:00-04:00', 'Round Of 32', 'Germany', 'GER', 'TBD (3rd Group A/B/C/D/F)', 'TBD'], ['53452547', '2026-06-29T21:00:00-04:00', 'Round Of 32', 'TBD (1st Group F)', 'TBD', 'TBD (2nd Group C)', 'TBD'], ['53452561', '2026-06-30T13:00:00-04:00', 'Round Of 32', 'TBD (2nd Group E)', 'TBD', 'TBD (2nd Group I)', 'TBD'], ['53452543', '2026-06-30T17:00:00-04:00', 'Round Of 32', 'TBD (1st Group I)', 'TBD', 'TBD (3rd Group C/D/F/G/H)', 'TBD'], ['53452563', '2026-06-30T21:00:00-04:00', 'Round Of 32', 'Mexico', 'MEX', 'TBD (3rd Group C/E/F/H/I)', 'TBD']
+    ['760486', '2026-06-28T15:00:00-04:00', 'Round Of 32', 'Canada', 'CAN', 'South Africa', 'RSA'], ['760487', '2026-06-29T13:00:00-04:00', 'Round Of 32', 'Japan', 'JPN', 'Brazil', 'BRA'], ['760489', '2026-06-29T16:30:00-04:00', 'Round Of 32', 'Paraguay', 'PAR', 'Germany', 'GER'], ['760488', '2026-06-29T21:00:00-04:00', 'Round Of 32', 'Morocco', 'MAR', 'Netherlands', 'NED'], ['760490', '2026-06-30T13:00:00-04:00', 'Round Of 32', 'Norway', 'NOR', 'Ivory Coast', 'CIV'], ['760492', '2026-06-30T17:00:00-04:00', 'Round Of 32', 'Sweden', 'SWE', 'France', 'FRA'], ['760491', '2026-06-30T22:00:00-04:00', 'Round Of 32', 'Ecuador', 'ECU', 'Mexico', 'MEX']
     ].map(([id, date, stage, awayName, awayAbbr, homeName, homeAbbr]) => ({
         id,
         date,
@@ -1470,12 +1470,19 @@
         return iso.replaceAll('-', '')
     }
     async function fetchJson(url) {
-        const r = await fetch(url, {
-            cache: 'no-store'
-        });
-        if (!r.ok)
-            throw new Error('Request failed ' + r.status);
-        return r.json()
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 12000);
+        try {
+            const r = await fetch(url, {
+                cache: 'no-store',
+                signal: controller.signal
+            });
+            if (!r.ok)
+                throw new Error('Request failed ' + r.status);
+            return r.json()
+        } finally {
+            clearTimeout(timeout)
+        }
     }
     function normalizeEvent(e) {
         const comp = e.competitions?.[0] || {};
@@ -2115,14 +2122,185 @@
     }
     function isKnockoutRound(match, round) {
         const stage = String(match?.stage || '').toLowerCase().replaceAll('-', ' ');
-        return round === 32 ? /round\s*(of\s*)?32/.test(stage) : /round\s*(of\s*)?16/.test(stage)
+        if (round === 32 && /round\s*(of\s*)?32/.test(stage))
+            return true;
+        if (round === 16 && /round\s*(of\s*)?16/.test(stage))
+            return true;
+        const date = localMatchDate(match);
+        return round === 32
+            ? date >= '2026-06-28' && date <= '2026-07-03'
+            : date >= '2026-07-04' && date <= '2026-07-07'
     }
     function bracketWinner(match) {
         if (!match || match.status !== 'final') return '';
+        if (match.away?.winner === true) return 'away';
+        if (match.home?.winner === true) return 'home';
         const away = Number(match.away.score);
         const home = Number(match.home.score);
         if (!Number.isFinite(away) || !Number.isFinite(home) || away === home) return '';
         return away > home ? 'away' : 'home'
+    }
+    function isBracketPlaceholder(team) {
+        const text = `${team?.abbr || ''} ${team?.name || ''}`.toLowerCase();
+        return !team || !team.name || /\btbd\b|\bwinner\b|\brd\s*32\b|round\s+of\s+32|round\s+32/.test(text)
+    }
+    function feederPossibilities(match) {
+        if (!match)
+            return 'TBD';
+        const winner = bracketWinner(match);
+        if (winner)
+            return canonicalAbbr(match[winner]?.abbr) || match[winner]?.short || match[winner]?.name || 'TBD';
+        const teams = [match.away, match.home]
+            .filter(team => !isBracketPlaceholder(team))
+            .map(team => canonicalAbbr(team.abbr) || team.short || team.name)
+            .filter(Boolean);
+        return [...new Set(teams)].join('/') || 'TBD'
+    }
+    function resolvedBracketTeam(team, fallback) {
+        if (!isBracketPlaceholder(team))
+            return team;
+        return {
+            name: fallback || 'TBD',
+            abbr: '',
+            score: ''
+        }
+    }
+    const ROUND32_SLOTS = [
+        { number: 73, date: '2026-06-28', seeds: [[2, 'A'], [2, 'B']] },
+        { number: 74, date: '2026-06-29', seeds: [[1, 'E'], [3, 'ABCDF']] },
+        { number: 75, date: '2026-06-29', seeds: [[1, 'F'], [2, 'C']] },
+        { number: 76, date: '2026-06-29', seeds: [[1, 'C'], [2, 'F']] },
+        { number: 77, date: '2026-06-30', seeds: [[1, 'I'], [3, 'CDFGH']] },
+        { number: 78, date: '2026-06-30', seeds: [[2, 'E'], [2, 'I']] },
+        { number: 79, date: '2026-06-30', seeds: [[1, 'A'], [3, 'CEFHI']] },
+        { number: 80, date: '2026-07-01', seeds: [[1, 'L'], [3, 'EHIJK']] },
+        { number: 81, date: '2026-07-01', seeds: [[1, 'D'], [3, 'BEFIJ']] },
+        { number: 82, date: '2026-07-01', seeds: [[1, 'G'], [3, 'AEHIJ']] },
+        { number: 83, date: '2026-07-02', seeds: [[2, 'K'], [2, 'L']] },
+        { number: 84, date: '2026-07-02', seeds: [[1, 'H'], [2, 'J']] },
+        { number: 85, date: '2026-07-02', seeds: [[1, 'B'], [3, 'EFGIJ']] },
+        { number: 86, date: '2026-07-03', seeds: [[1, 'J'], [2, 'H']] },
+        { number: 87, date: '2026-07-03', seeds: [[1, 'K'], [3, 'DEIJL']] },
+        { number: 88, date: '2026-07-03', seeds: [[2, 'D'], [2, 'G']] }
+    ];
+    const ROUND16_SLOTS = [
+        { number: 89, date: '2026-07-04', feeders: [74, 77] },
+        { number: 90, date: '2026-07-04', feeders: [73, 75] },
+        { number: 91, date: '2026-07-05', feeders: [76, 78] },
+        { number: 92, date: '2026-07-05', feeders: [79, 80] },
+        { number: 93, date: '2026-07-06', feeders: [83, 84] },
+        { number: 94, date: '2026-07-06', feeders: [81, 82] },
+        { number: 95, date: '2026-07-07', feeders: [86, 88] },
+        { number: 96, date: '2026-07-07', feeders: [85, 87] }
+    ];
+    function localMatchDate(match) {
+        if (!match?.date)
+            return '';
+        const parts = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/New_York',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).formatToParts(new Date(match.date));
+        const get = type => parts.find(part => part.type === type)?.value || '';
+        return `${get('year')}-${get('month')}-${get('day')}`
+    }
+    function teamGroup(abbr) {
+        const code = canonicalAbbr(abbr);
+        return Object.keys(GROUPS).find(group => GROUPS[group].some(team => canonicalAbbr(team[0]) === code)) || ''
+    }
+    function teamSeed(team, groups) {
+        const text = team?.name || '';
+        const placeholder = text.match(/(\d)(?:st|nd|rd|th)?\s+Group\s+([A-L](?:\/[A-L])*)/i);
+        if (placeholder)
+            return { rank: Number(placeholder[1]), groups: placeholder[2].replaceAll('/', '').toUpperCase() };
+        const group = teamGroup(team?.abbr);
+        const rows = Object.values(groups?.[group] || {}).sort(standingsSort);
+        const rank = rows.findIndex(row => canonicalAbbr(row.team.abbr) === canonicalAbbr(team?.abbr)) + 1;
+        return { rank: rank || 0, groups: group }
+    }
+    function seedScore(seed, requirement) {
+        const [rank, allowedGroups] = requirement;
+        let score = 0;
+        if (seed.groups)
+            score += [...seed.groups].some(group => allowedGroups.includes(group)) ? 12 : -30;
+        if (seed.rank)
+            score += seed.rank === rank ? 8 : -12;
+        return score
+    }
+    function round32SlotScore(match, slot, groups) {
+        const seeds = [teamSeed(match.away, groups), teamSeed(match.home, groups)];
+        const direct = seedScore(seeds[0], slot.seeds[0]) + seedScore(seeds[1], slot.seeds[1]);
+        const reversed = seedScore(seeds[0], slot.seeds[1]) + seedScore(seeds[1], slot.seeds[0]);
+        return Math.max(direct, reversed) + (localMatchDate(match) === slot.date ? 20 : -10)
+    }
+    function assignRound32(matches, groups) {
+        const assignments = {};
+        const candidates = [];
+        matches.forEach(match => ROUND32_SLOTS.forEach(slot => {
+            candidates.push({ match, slot, score: round32SlotScore(match, slot, groups) })
+        }));
+        const used = new Set();
+        candidates.sort((a, b) => b.score - a.score).forEach(candidate => {
+            if (candidate.score < 15 || assignments[candidate.slot.number] || used.has(candidate.match))
+                return;
+            assignments[candidate.slot.number] = candidate.match;
+            used.add(candidate.match)
+        });
+        return assignments
+    }
+    function possibleCodes(match) {
+        if (!match)
+            return [];
+        const winner = bracketWinner(match);
+        if (winner)
+            return [canonicalAbbr(match[winner]?.abbr)].filter(Boolean);
+        return [match.away, match.home]
+            .filter(team => !isBracketPlaceholder(team))
+            .map(team => canonicalAbbr(team.abbr))
+            .filter(Boolean)
+    }
+    function round16SlotScore(match, slot, round32ByNumber) {
+        const teams = [match.away, match.home].filter(team => !isBracketPlaceholder(team)).map(team => canonicalAbbr(team.abbr));
+        const feederCodes = slot.feeders.map(number => possibleCodes(round32ByNumber[number]));
+        const direct = (teams[0] && feederCodes[0].includes(teams[0]) ? 18 : 0) + (teams[1] && feederCodes[1].includes(teams[1]) ? 18 : 0);
+        const reversed = (teams[0] && feederCodes[1].includes(teams[0]) ? 18 : 0) + (teams[1] && feederCodes[0].includes(teams[1]) ? 18 : 0);
+        return Math.max(direct, reversed) + (localMatchDate(match) === slot.date ? 12 : -8)
+    }
+    function assignRound16(matches, round32ByNumber) {
+        const assignments = {};
+        const candidates = [];
+        matches.forEach(match => ROUND16_SLOTS.forEach(slot => {
+            candidates.push({ match, slot, score: round16SlotScore(match, slot, round32ByNumber) })
+        }));
+        const used = new Set();
+        candidates.sort((a, b) => b.score - a.score).forEach(candidate => {
+            if (candidate.score < 10 || assignments[candidate.slot.number] || used.has(candidate.match))
+                return;
+            assignments[candidate.slot.number] = candidate.match;
+            used.add(candidate.match)
+        });
+        return assignments
+    }
+    function round16PlaceholderTeams(match, slot, round32ByNumber) {
+        const labels = slot.feeders.map(number => feederPossibilities(round32ByNumber[number]));
+        if (!match)
+            return labels;
+        const options = slot.feeders.map(number => possibleCodes(round32ByNumber[number]));
+        const actual = [match.away, match.home].map(team => isBracketPlaceholder(team) ? '' : canonicalAbbr(team.abbr));
+        const claimed = new Set();
+        actual.forEach(code => {
+            const feederIndex = options.findIndex((codes, index) => !claimed.has(index) && codes.includes(code));
+            if (feederIndex >= 0)
+                claimed.add(feederIndex)
+        });
+        const remaining = [0, 1].filter(index => !claimed.has(index));
+        return actual.map((code, side) => {
+            if (code)
+                return labels[options.findIndex(codes => codes.includes(code))] || labels[side];
+            const feederIndex = remaining.shift();
+            return feederIndex == null ? labels[side] : labels[feederIndex]
+        })
     }
     function bracketTeam(team, side, winner) {
         const name = team?.name || 'TBD';
@@ -2130,24 +2308,27 @@
         const score = team?.score !== '' && team?.score != null ? team.score : '–';
         return `<div class="bracket-team ${winner === side ? 'winner' : ''}"><span class="bracket-team-name">${esc(abbr + name)}</span><span class="bracket-score">${esc(score)}</span></div>`
     }
-    function bracketGame(match, index, placeholderTeams) {
+    function bracketGame(match, index, placeholderTeams, officialNumber) {
         const date = match?.date ? new Date(match.date) : null;
         const dateText = date && !Number.isNaN(date.valueOf())
             ? date.toLocaleDateString([], { month: 'short', day: 'numeric' })
             : 'Date TBD';
-        const away = match?.away || { name: placeholderTeams?.[0] || 'TBD', score: '' };
-        const home = match?.home || { name: placeholderTeams?.[1] || 'TBD', score: '' };
+        const away = resolvedBracketTeam(match?.away, placeholderTeams?.[0]);
+        const home = resolvedBracketTeam(match?.home, placeholderTeams?.[1]);
         const winner = bracketWinner(match);
-        return `<div class="bracket-game"><div class="bracket-game-meta">Match ${index + 1} · ${esc(dateText)}</div>${bracketTeam(away, 'away', winner)}${bracketTeam(home, 'home', winner)}</div>`
+        return `<div class="bracket-game"><div class="bracket-game-meta">Match ${officialNumber || index + 1} · ${esc(dateText)}</div>${bracketTeam(away, 'away', winner)}${bracketTeam(home, 'home', winner)}</div>`
     }
     function renderAdvancement() {
         const matches = uniqueMatches([...(state.allStageMatches || []), ...(state.matches || [])]);
         const round32 = matches.filter(m => isKnockoutRound(m, 32)).sort((a, b) => new Date(a.date) - new Date(b.date));
         const round16 = matches.filter(m => isKnockoutRound(m, 16)).sort((a, b) => new Date(a.date) - new Date(b.date));
-        const r32Markup = Array.from({ length: 16 }, (_, i) => bracketGame(round32[i], i));
-        const r16Markup = Array.from({ length: 8 }, (_, i) => {
-            const feeders = [`Winner Match ${i * 2 + 1}`, `Winner Match ${i * 2 + 2}`];
-            return bracketGame(round16[i], i, feeders)
+        const groups = currentStandingsGroups();
+        const round32ByNumber = assignRound32(round32, groups);
+        const round16ByNumber = assignRound16(round16, round32ByNumber);
+        const r32Markup = ROUND32_SLOTS.map((slot, i) => bracketGame(round32ByNumber[slot.number], i, null, slot.number));
+        const r16Markup = ROUND16_SLOTS.map((slot, i) => {
+            const possibilities = round16PlaceholderTeams(round16ByNumber[slot.number], slot, round32ByNumber);
+            return bracketGame(round16ByNumber[slot.number], i, possibilities, slot.number)
         });
         els.advancementPanel.innerHTML = `<div class="knockout-bracket"><section class="bracket-round"><div class="bracket-round-title">Round of 32 <span>16 matches</span></div><div class="bracket-games">${r32Markup.join('')}</div></section><section class="bracket-round round-16"><div class="bracket-round-title">Round of 16 <span>8 matches</span></div><div class="bracket-games">${r16Markup.join('')}</div></section></div>`
     }
@@ -2261,8 +2442,11 @@
         }
     }
     async function fetchEspnRange() {
-        const data = await fetchJson(`${ESPN_SCOREBOARD}?dates=${apiDateParam(WC_START)}-${apiDateParam(WC_END)}&limit=300`);
-        return (data.events || []).map(normalizeEvent)
+        const dates = [];
+        for (let date = '2026-06-28'; date <= WC_END; date = addDays(date, 1))
+            dates.push(date);
+        const results = await Promise.allSettled(dates.map(fetchEspnDate));
+        return uniqueMatches(results.flatMap(result => result.status === 'fulfilled' ? result.value : []))
     }
     async function fetchEspnStandings() {
         const data = await fetchJson(ESPN_STANDINGS);
@@ -2327,19 +2511,14 @@
                 state.liveStandings = null;
                 state.allStageMatches = BUILT_IN_MATCHES;
             } else {
-                try {
-                    state.liveStandings = await fetchEspnStandings()
-                } catch (e) {
-                    state.liveStandings = null
-                }
-                let open = [];
-                try {
-                    open = await fetchOpenMatches()
-                } catch (e) {}
-                let espn = [];
-                try {
-                    espn = await fetchEspnRange()
-                } catch (e) {}
+                const [standingsResult, openResult, espnResult] = await Promise.allSettled([
+                    fetchEspnStandings(),
+                    fetchOpenMatches(),
+                    fetchEspnRange()
+                ]);
+                state.liveStandings = standingsResult.status === 'fulfilled' ? standingsResult.value : null;
+                const open = openResult.status === 'fulfilled' ? openResult.value : [];
+                const espn = espnResult.status === 'fulfilled' ? espnResult.value : [];
                 state.allStageMatches = uniqueMatches(mergeMatches(open.length ? open : BUILT_IN_MATCHES, espn));
             }
             renderStandings();
