@@ -682,54 +682,6 @@
         line-height:1.35
     }
 
-    .win-odds {
-        display: grid;
-        gap: 8px;
-        padding: 10px;
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        background:#fbfcfe
-    }
-
-    .win-odds-head {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-        color: var(--muted);
-        font-size: .74rem;
-        font-weight: 900;
-        text-transform: uppercase;
-        letter-spacing:.06em
-    }
-
-    .odds-team {
-        display: grid;
-        grid-template-columns: minmax(58px, auto) 1fr auto;
-        gap: 8px;
-        align-items:center
-    }
-
-    .odds-track {
-        height: 8px;
-        overflow: hidden;
-        border-radius: 999px;
-        background:#e8eef6
-    }
-
-    .odds-fill {
-        height: 100%;
-        border-radius: inherit;
-        background:var(--team)
-    }
-
-    .odds-team.home .odds-fill {
-        background:var(--team2, var(--team))
-    }
-
-    .odds-team strong {
-        font-size:.86rem
-    }
-
     .card-actions {
         display: flex;
         gap: 8px;
@@ -1505,7 +1457,6 @@
         }
 
         .live-card-details,
-        .win-odds,
         .inline-detail {
             border-radius: 12px;
         }
@@ -1835,13 +1786,11 @@
             line-height: 1.3;
         }
         .game-card .live-card-details,
-        .game-card .live-player,
-        .game-card .win-odds {
+        .game-card .live-player {
             font-size: .74rem;
         }
         .game-card .live-player span,
-        .game-card .live-player small,
-        .game-card .odds-team {
+        .game-card .live-player small {
             font-size: .68rem;
         }
         .game-card .line-score th,
@@ -2432,43 +2381,6 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             .map(([base, label]) => `${label}: ${livePlayerName(feed, offense[base], 'Runner')}`);
         return runners.length ? runners.join(' · ') : 'Bases empty'
     }
-    function clamp(n, min, max) {
-        return Math.min(max, Math.max(min, n))
-    }
-    function baseCount(g) {
-        const offense = liveLinescore(g).offense || {};
-        return ['first', 'second', 'third'].filter(base => offense[base]).length
-    }
-    function winOdds(g) {
-        const away = g.teams.away.team,
-            home = g.teams.home.team,
-            awayRuns = Number(score(g, 'away')) || 0,
-            homeRuns = Number(score(g, 'home')) || 0,
-            st = gameState(g);
-        if (st === 'final') {
-            const homePct = homeRuns > awayRuns ? 100 : homeRuns < awayRuns ? 0 : 50;
-            return { away, home, awayPct: 100 - homePct, homePct, note: 'Final' }
-        }
-        if (st !== 'live')
-            return { away, home, awayPct: 50, homePct: 50, note: 'Updates after first pitch' };
-        const l = liveLinescore(g),
-            inning = clamp(Number(l.currentInning || 1), 1, 12),
-            outs = clamp(Number(l.outs || 0), 0, 3),
-            bottom = String(l.inningHalf || l.inningState || '').toLowerCase().includes('bottom');
-        let edge = (homeRuns - awayRuns) * (0.85 + inning * 0.08) + 0.16;
-        const threat = baseCount(g) * 0.22 + (3 - outs) * 0.05;
-        edge += bottom ? threat : -threat;
-        if (inning >= 8)
-            edge *= 1.25;
-        const homePct = clamp(Math.round((1 / (1 + Math.exp(-edge))) * 100), 1, 99);
-        return { away, home, awayPct: 100 - homePct, homePct, note: 'Live estimate' }
-    }
-    function winOddsHtml(g) {
-        const odds = winOdds(g),
-            awayAbbr = odds.away.abbreviation || 'Away',
-            homeAbbr = odds.home.abbreviation || 'Home';
-        return `<div class="win-odds"><div class="win-odds-head"><span>Estimated win odds</span><span>${esc(odds.note)}</span></div><div class="odds-team away"><strong>${esc(awayAbbr)}</strong><div class="odds-track"><div class="odds-fill" style="width:${odds.awayPct}%"></div></div><strong>${odds.awayPct}%</strong></div><div class="odds-team home"><strong>${esc(homeAbbr)}</strong><div class="odds-track"><div class="odds-fill" style="width:${odds.homePct}%"></div></div><strong>${odds.homePct}%</strong></div></div>`
-    }
     function liveCardDetails(g) {
         if (gameState(g) !== 'live')
             return '';
@@ -2561,7 +2473,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
                 winnerAway = st === 'final' && Number(score(g, 'away')) > Number(score(g, 'home')),
                 winnerHome = st === 'final' && Number(score(g, 'home')) > Number(score(g, 'away')),
                 detail = state.selected === g.gamePk ? `<div class="inline-detail" style="--team:${c1};--team2:${c2}">${detailHtml(g)}</div>` : '';
-            return `<div class="game-slot ${state.selected === g.gamePk ? 'selected-slot' : ''}" style="order:${fav ? 0 : 1}" data-favorite="${fav}">${`<article class="game-card ${st} ${fav ? 'favorite-game' : ''} ${state.selected === g.gamePk ? 'active' : ''}" style="--team:${c1};--team2:${c2}" role="button" tabindex="0" data-game="${g.gamePk}" aria-expanded="${state.selected === g.gamePk}"><div class="game-top"><span class="badge ${st}">${st}</span><span class="badge">${esc(statusLabel(g))}</span><span><button class="fav-btn ${isFav(away.id) ? 'active' : ''}" data-fav="${away.id}" data-name="${esc(away.name)}" data-abbr="${esc(away.abbreviation || '')}">★ ${esc(away.abbreviation || 'Away')}</button> <button class="fav-btn ${isFav(home.id) ? 'active' : ''}" data-fav="${home.id}" data-name="${esc(home.name)}" data-abbr="${esc(home.abbreviation || '')}">★ ${esc(home.abbreviation || 'Home')}</button></span></div><div class="team-row ${winnerAway ? 'winner' : ''}"><img class="logo" src="${logo(away.id)}" alt=""><div class="team-name"><strong>${esc(away.name)}</strong><span>${esc(note(g, 'away'))}</span></div><div class="score">${score(g, 'away')}</div></div><div class="team-row ${winnerHome ? 'winner' : ''}"><img class="logo" src="${logo(home.id)}" alt=""><div class="team-name"><strong>${esc(home.name)}</strong><span>${esc(note(g, 'home'))}</span></div><div class="score">${score(g, 'home')}</div></div>${liveCardDetails(g)}${lineScore(g)}${pitchingDecisionsHtml(g)}<div class="game-info"><div><strong>Venue:</strong> ${esc(g.venue?.name || 'Venue TBD')}</div><div><strong>First pitch/status:</strong> ${esc(statusLabel(g))}</div><div class="card-actions"><a class="small-link" target="_blank" rel="noopener" href="https://www.mlb.com/gameday/${g.gamePk}">Open MLB box score</a></div></div>${winOddsHtml(g)}</article>`}${detail}</div>`
+            return `<div class="game-slot ${state.selected === g.gamePk ? 'selected-slot' : ''}" style="order:${fav ? 0 : 1}" data-favorite="${fav}">${`<article class="game-card ${st} ${fav ? 'favorite-game' : ''} ${state.selected === g.gamePk ? 'active' : ''}" style="--team:${c1};--team2:${c2}" role="button" tabindex="0" data-game="${g.gamePk}" aria-expanded="${state.selected === g.gamePk}"><div class="game-top"><span class="badge ${st}">${st}</span><span class="badge">${esc(statusLabel(g))}</span><span><button class="fav-btn ${isFav(away.id) ? 'active' : ''}" data-fav="${away.id}" data-name="${esc(away.name)}" data-abbr="${esc(away.abbreviation || '')}">★ ${esc(away.abbreviation || 'Away')}</button> <button class="fav-btn ${isFav(home.id) ? 'active' : ''}" data-fav="${home.id}" data-name="${esc(home.name)}" data-abbr="${esc(home.abbreviation || '')}">★ ${esc(home.abbreviation || 'Home')}</button></span></div><div class="team-row ${winnerAway ? 'winner' : ''}"><img class="logo" src="${logo(away.id)}" alt=""><div class="team-name"><strong>${esc(away.name)}</strong><span>${esc(note(g, 'away'))}</span></div><div class="score">${score(g, 'away')}</div></div><div class="team-row ${winnerHome ? 'winner' : ''}"><img class="logo" src="${logo(home.id)}" alt=""><div class="team-name"><strong>${esc(home.name)}</strong><span>${esc(note(g, 'home'))}</span></div><div class="score">${score(g, 'home')}</div></div>${liveCardDetails(g)}${lineScore(g)}${pitchingDecisionsHtml(g)}<div class="game-info"><div><strong>Venue:</strong> ${esc(g.venue?.name || 'Venue TBD')}</div><div><strong>First pitch/status:</strong> ${esc(statusLabel(g))}</div><div class="card-actions"><a class="small-link" target="_blank" rel="noopener" href="https://www.mlb.com/gameday/${g.gamePk}">Open MLB box score</a></div></div></article>`}${detail}</div>`
         }).join('');
         els.grid.querySelectorAll('.fav-btn').forEach(b => b.onclick = e => {
             e.stopPropagation();
@@ -2705,7 +2617,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             pitcherInfo = pitcherLine(g),
             batterInfo = batterLine(g),
             lineups = lineupsHtml(g, feed);
-        return `<h2>Game Details</h2><div class="matchup"><div class="match-team"><img src="${logo(a.id)}" alt=""><strong>${esc(a.name)}</strong><span>${esc(rec(g, 'away'))}</span></div><div class="match-score">${score(g, 'away')} - ${score(g, 'home')}</div><div class="match-team"><img src="${logo(h.id)}" alt=""><strong>${esc(h.name)}</strong><span>${esc(rec(g, 'home'))}</span></div></div><div style="margin-top:14px">${lineScore(g)}</div><div class="mini-grid" style="margin-top:14px"><div class="mini"><span>Status</span><strong>${esc(statusLabel(g))}</strong></div><div class="mini"><span>Count</span><strong>${esc(countText(feed))}</strong></div><div class="mini"><span>Away Starter</span><strong>${esc(pitcherRecord(g, 'away'))}</strong></div><div class="mini"><span>Home Starter</span><strong>${esc(pitcherRecord(g, 'home'))}</strong></div><div class="mini"><span>Pitching Now</span><strong>${esc(pitcherInfo.name)}</strong><small>${esc(pitcherInfo.detail)}</small></div><div class="mini"><span>Batting Now</span><strong>${esc(batterInfo.name)}</strong><small>${esc(batterInfo.detail)}</small></div><div class="mini"><span>On Deck</span><strong>${esc(onDeckName(g))}</strong></div><div class="mini"><span>Runners on Base</span><strong>${esc(baseRunnerNames(g))}</strong></div></div>${lineups}<div style="margin-top:14px">${winOddsHtml(g)}</div><div style="margin-top:14px"><h2>Recent Plays</h2><div class="plays">${playsHtml(simplePlays(feed), 'Play-by-play will appear when available.', g)}</div></div><div style="margin-top:14px"><h2>Scoring Plays</h2><div class="plays">${playsHtml(scoringPlays(feed), 'No scoring plays yet.', g, true)}</div></div>`
+        return `<h2>Game Details</h2><div class="matchup"><div class="match-team"><img src="${logo(a.id)}" alt=""><strong>${esc(a.name)}</strong><span>${esc(rec(g, 'away'))}</span></div><div class="match-score">${score(g, 'away')} - ${score(g, 'home')}</div><div class="match-team"><img src="${logo(h.id)}" alt=""><strong>${esc(h.name)}</strong><span>${esc(rec(g, 'home'))}</span></div></div><div style="margin-top:14px">${lineScore(g)}</div><div class="mini-grid" style="margin-top:14px"><div class="mini"><span>Status</span><strong>${esc(statusLabel(g))}</strong></div><div class="mini"><span>Count</span><strong>${esc(countText(feed))}</strong></div><div class="mini"><span>Away Starter</span><strong>${esc(pitcherRecord(g, 'away'))}</strong></div><div class="mini"><span>Home Starter</span><strong>${esc(pitcherRecord(g, 'home'))}</strong></div><div class="mini"><span>Pitching Now</span><strong>${esc(pitcherInfo.name)}</strong><small>${esc(pitcherInfo.detail)}</small></div><div class="mini"><span>Batting Now</span><strong>${esc(batterInfo.name)}</strong><small>${esc(batterInfo.detail)}</small></div><div class="mini"><span>On Deck</span><strong>${esc(onDeckName(g))}</strong></div><div class="mini"><span>Runners on Base</span><strong>${esc(baseRunnerNames(g))}</strong></div></div>${lineups}<div style="margin-top:14px"><h2>Recent Plays</h2><div class="plays">${playsHtml(simplePlays(feed), 'Play-by-play will appear when available.', g)}</div></div><div style="margin-top:14px"><h2>Scoring Plays</h2><div class="plays">${playsHtml(scoringPlays(feed), 'No scoring plays yet.', g, true)}</div></div>`
     }
     function renderDetail() {
         const g = state.games.find(x => x.gamePk === state.selected);
