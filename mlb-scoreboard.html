@@ -1199,6 +1199,25 @@
     .trend-stat-pair { min-width:88px; text-align:right }
     .trend-stat-pair strong, .trend-stat-pair small { display:block; white-space:nowrap }
     .trend-summary { grid-column:1 / -1 }
+    .lineups-grid { display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:14px; margin-top:10px }
+    .lineup-card { min-width:0; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:#fff }
+    .lineup-card h3 { display:flex; align-items:center; gap:8px; margin:0; padding:10px 12px; background:#f5f8fc; border-bottom:1px solid var(--line); font-size:.92rem }
+    .lineup-card h3 img { width:26px; height:26px; object-fit:contain }
+    .lineup-scroll { overflow-x:auto }
+    .lineup-table { width:100%; min-width:500px; border-collapse:collapse; font-size:.78rem }
+    .lineup-table th, .lineup-table td { padding:8px 7px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap }
+    .lineup-table th { color:var(--muted); background:#fbfcfe; font-size:.68rem; text-transform:uppercase }
+    .lineup-table th:nth-child(2), .lineup-table td:nth-child(2) { text-align:left }
+    .lineup-table tbody tr:last-child td { border-bottom:0 }
+    .lineup-player { display:flex; align-items:center; gap:7px; min-width:150px }
+    .lineup-player img { width:28px; height:28px; border-radius:999px; object-fit:cover; background:#eef3f9 }
+    .lineup-player span { min-width:0 }
+    .lineup-player strong, .lineup-player small { display:block; overflow:hidden; text-overflow:ellipsis }
+    .lineup-player small { color:var(--muted) }
+    .lineup-empty { padding:18px; color:var(--muted); text-align:center }
+    @media (max-width: 900px) {
+        .lineups-grid { grid-template-columns:1fr }
+    }
     .standings-dashboard { display:grid; gap:20px }
     .standings-section { display:grid; gap:14px }
     .standings-section-title { margin:0; padding:12px 14px; border-radius:12px; background:var(--navy); color:#fff; font-size:1.05rem }
@@ -2650,13 +2669,43 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
     function current(feed, role) {
         return feed?.liveData?.plays?.currentPlay?.matchup?.[role]?.fullName || 'Unavailable'
     }
+    function lineupPlayers(feed, side) {
+        const teamBox = feed?.liveData?.boxscore?.teams?.[side] || {};
+        const players = teamBox.players || {};
+        const orderedIds = teamBox.battingOrder || [];
+        if (orderedIds.length)
+            return orderedIds.map(id => players[`ID${id}`]).filter(Boolean);
+        return Object.values(players)
+            .filter(player => player.battingOrder)
+            .sort((a, b) => Number(a.battingOrder) - Number(b.battingOrder))
+            .slice(0, 9)
+    }
+    function lineupRowHtml(player, index) {
+        const person = player.person || {};
+        const game = player.stats?.batting || {};
+        const season = player.seasonStats?.batting || {};
+        const position = player.position?.abbreviation || player.position?.name || '';
+        return `<tr><td>${index + 1}</td><td><span class="lineup-player"><img src="${playerHeadshot(person.id)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><span><strong>${esc(person.fullName || 'Player unavailable')}</strong><small>${esc(position)}</small></span></span></td><td>${esc(statValue(game.hits, 0))}-${esc(statValue(game.atBats, 0))}</td><td>${esc(statValue(game.rbi, 0))}</td><td>${esc(statValue(season.avg))}</td><td>${esc(statValue(season.homeRuns, 0))}</td><td>${esc(statValue(season.rbi, 0))}</td></tr>`
+    }
+    function lineupCardHtml(g, feed, side) {
+        const team = g.teams?.[side]?.team || {};
+        const rows = lineupPlayers(feed, side);
+        const body = rows.length
+            ? `<div class="lineup-scroll"><table class="lineup-table"><thead><tr><th>#</th><th>Player</th><th>Game H-AB</th><th>Game RBI</th><th>Season AVG</th><th>Season HR</th><th>Season RBI</th></tr></thead><tbody>${rows.map(lineupRowHtml).join('')}</tbody></table></div>`
+            : '<div class="lineup-empty">Lineup has not been announced yet.</div>';
+        return `<section class="lineup-card"><h3><img src="${logo(team.id)}" alt="">${esc(team.name || side)} lineup</h3>${body}</section>`
+    }
+    function lineupsHtml(g, feed) {
+        return `<section style="margin-top:14px"><h2>Current Lineups</h2><div class="lineups-grid">${lineupCardHtml(g, feed, 'away')}${lineupCardHtml(g, feed, 'home')}</div></section>`
+    }
     function detailHtml(g) {
         const feed = state.selected === g.gamePk ? state.selectedFeed || state.feeds[g.gamePk] : state.feeds[g.gamePk];
         const a = g.teams.away.team,
             h = g.teams.home.team,
             pitcherInfo = pitcherLine(g),
-            batterInfo = batterLine(g);
-        return `<h2>Game Details</h2><div class="matchup"><div class="match-team"><img src="${logo(a.id)}" alt=""><strong>${esc(a.name)}</strong><span>${esc(rec(g, 'away'))}</span></div><div class="match-score">${score(g, 'away')} - ${score(g, 'home')}</div><div class="match-team"><img src="${logo(h.id)}" alt=""><strong>${esc(h.name)}</strong><span>${esc(rec(g, 'home'))}</span></div></div><div style="margin-top:14px">${lineScore(g)}</div><div class="mini-grid" style="margin-top:14px"><div class="mini"><span>Status</span><strong>${esc(statusLabel(g))}</strong></div><div class="mini"><span>Count</span><strong>${esc(countText(feed))}</strong></div><div class="mini"><span>Away Starter</span><strong>${esc(pitcherRecord(g, 'away'))}</strong></div><div class="mini"><span>Home Starter</span><strong>${esc(pitcherRecord(g, 'home'))}</strong></div><div class="mini"><span>Pitching Now</span><strong>${esc(pitcherInfo.name)}</strong><small>${esc(pitcherInfo.detail)}</small></div><div class="mini"><span>Batting Now</span><strong>${esc(batterInfo.name)}</strong><small>${esc(batterInfo.detail)}</small></div><div class="mini"><span>On Deck</span><strong>${esc(onDeckName(g))}</strong></div><div class="mini"><span>Runners on Base</span><strong>${esc(baseRunnerNames(g))}</strong></div></div><div style="margin-top:14px">${winOddsHtml(g)}</div><div style="margin-top:14px"><h2>Recent Plays</h2><div class="plays">${playsHtml(simplePlays(feed), 'Play-by-play will appear when available.', g)}</div></div><div style="margin-top:14px"><h2>Scoring Plays</h2><div class="plays">${playsHtml(scoringPlays(feed), 'No scoring plays yet.', g, true)}</div></div>`
+            batterInfo = batterLine(g),
+            lineups = lineupsHtml(g, feed);
+        return `<h2>Game Details</h2><div class="matchup"><div class="match-team"><img src="${logo(a.id)}" alt=""><strong>${esc(a.name)}</strong><span>${esc(rec(g, 'away'))}</span></div><div class="match-score">${score(g, 'away')} - ${score(g, 'home')}</div><div class="match-team"><img src="${logo(h.id)}" alt=""><strong>${esc(h.name)}</strong><span>${esc(rec(g, 'home'))}</span></div></div><div style="margin-top:14px">${lineScore(g)}</div><div class="mini-grid" style="margin-top:14px"><div class="mini"><span>Status</span><strong>${esc(statusLabel(g))}</strong></div><div class="mini"><span>Count</span><strong>${esc(countText(feed))}</strong></div><div class="mini"><span>Away Starter</span><strong>${esc(pitcherRecord(g, 'away'))}</strong></div><div class="mini"><span>Home Starter</span><strong>${esc(pitcherRecord(g, 'home'))}</strong></div><div class="mini"><span>Pitching Now</span><strong>${esc(pitcherInfo.name)}</strong><small>${esc(pitcherInfo.detail)}</small></div><div class="mini"><span>Batting Now</span><strong>${esc(batterInfo.name)}</strong><small>${esc(batterInfo.detail)}</small></div><div class="mini"><span>On Deck</span><strong>${esc(onDeckName(g))}</strong></div><div class="mini"><span>Runners on Base</span><strong>${esc(baseRunnerNames(g))}</strong></div></div>${lineups}<div style="margin-top:14px">${winOddsHtml(g)}</div><div style="margin-top:14px"><h2>Recent Plays</h2><div class="plays">${playsHtml(simplePlays(feed), 'Play-by-play will appear when available.', g)}</div></div><div style="margin-top:14px"><h2>Scoring Plays</h2><div class="plays">${playsHtml(scoringPlays(feed), 'No scoring plays yet.', g, true)}</div></div>`
     }
     function renderDetail() {
         const g = state.games.find(x => x.gamePk === state.selected);
