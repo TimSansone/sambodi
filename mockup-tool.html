@@ -221,6 +221,24 @@
       line-height: 1.4;
     }
 
+    .upload-reminder {
+      margin: 10px 0 0;
+      padding: 10px 12px;
+      border: 1px solid #f0cf8a;
+      border-radius: 8px;
+      background: #fff8e8;
+      color: #704d08;
+      font-size: 0.82rem;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    .email-design-btn {
+      display: flex;
+      margin-top: 10px;
+      text-decoration: none;
+    }
+
     .product-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -252,6 +270,16 @@
       font-size: 0.78rem;
       font-weight: 700;
       line-height: 1.3;
+    }
+
+    .product-category {
+      grid-column: 1 / -1;
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
 
     .swatches {
@@ -627,7 +655,7 @@
     <header>
       <div>
         <h1>Product Mockup Tool</h1>
-        <p class="subtitle">Upload artwork and preview it on T-shirts, polos, baseball caps, tumblers, and embroidery-style patches.</p>
+        <p class="subtitle">Upload artwork for apparel mockups, custom stickers, banners, and more.</p>
       </div>
       <div class="badge">
         <strong id="productBadge">T-Shirt</strong>
@@ -644,6 +672,11 @@
             <button class="btn" id="chooseBtn" type="button">Choose Image</button>
             <span class="upload-text">PNG artwork with a transparent background works best, but JPG and WebP are supported.</span>
           </label>
+          <p class="upload-reminder">For the best print quality, please upload artwork that is at least 300 DPI at the intended print size.</p>
+          <a
+            class="btn secondary email-design-btn"
+            href="mailto:info@sambodicreations.com?subject=Custom%20Design%20Submission&amp;body=Hello%20Sambodi%20Creations%2C%0A%0AI%20would%20like%20to%20submit%20my%20design.%20I%20have%20attached%20the%20artwork%20to%20this%20email.%0A%0AProject%20type%3A%20%0ADesired%20size%3A%20%0AQuantity%3A%20%0AAdditional%20notes%3A%20"
+          >Email Your Design</a>
         </section>
 
         <section class="panel pad">
@@ -656,7 +689,7 @@
           <div class="view-grid" id="viewGrid"></div>
         </section>
 
-        <section class="panel pad">
+        <section class="panel pad" id="colorPanel">
           <h2>Item Color</h2>
           <div class="swatches" id="swatches"></div>
           <div class="custom-color-row">
@@ -702,6 +735,7 @@
       <aside class="stack right-panel">
         <section class="panel pad tools">
           <h2>Artwork Controls</h2>
+          <div id="placementControls">
           <div class="field-grid">
             <div>
               <label for="sizeInput">Size</label>
@@ -715,6 +749,7 @@
           <div class="tool-row">
             <button class="btn secondary" id="flipBtn" type="button">Flip</button>
             <button class="btn warning" id="resetBtn" type="button">Reset Art</button>
+          </div>
           </div>
           <button class="btn danger" id="deleteArtBtn" type="button" disabled>Delete Artwork</button>
           <button class="btn" id="downloadBtn" type="button" disabled>Download Mockup PNG</button>
@@ -791,6 +826,24 @@
         defaultColor: "#f5f1e8",
         defaultArt: { x: 50, y: 50, size: 28 },
         colors: ["#f5f1e8", "#ffffff", "#111827", "#b91c1c", "#1d4ed8", "#047857", "#7c3aed", "#f59e0b"]
+      },
+      stickers: {
+        name: "Custom Stickers",
+        note: "Upload print-ready sticker artwork",
+        category: "Other Projects",
+        artworkOnly: true,
+        defaultColor: "#ffffff",
+        defaultArt: { x: 50, y: 50, size: 62 },
+        colors: ["#ffffff"]
+      },
+      banners: {
+        name: "Custom Banners",
+        note: "Upload artwork for a custom banner",
+        category: "Other Projects",
+        artworkOnly: true,
+        defaultColor: "#ffffff",
+        defaultArt: { x: 50, y: 50, size: 70 },
+        colors: ["#ffffff"]
       }
     };
 
@@ -813,6 +866,7 @@
     const productGrid = document.getElementById("productGrid");
     const viewPanel = document.getElementById("viewPanel");
     const viewGrid = document.getElementById("viewGrid");
+    const colorPanel = document.getElementById("colorPanel");
     const swatches = document.getElementById("swatches");
     const customColorInput = document.getElementById("customColorInput");
     const customColorValue = document.getElementById("customColorValue");
@@ -834,6 +888,7 @@
     const resetBtn = document.getElementById("resetBtn");
     const deleteArtBtn = document.getElementById("deleteArtBtn");
     const centerBtn = document.getElementById("centerBtn");
+    const placementControls = document.getElementById("placementControls");
     const downloadBtn = document.getElementById("downloadBtn");
     const artStatus = document.getElementById("artStatus");
     const colorStatus = document.getElementById("colorStatus");
@@ -842,7 +897,16 @@
 
     function renderProductButtons() {
       productGrid.innerHTML = "";
+      let currentCategory = "";
       Object.entries(products).forEach(([key, product]) => {
+        const category = product.category || "Product Mockups";
+        if (category !== currentCategory) {
+          const heading = document.createElement("div");
+          heading.className = "product-category";
+          heading.textContent = category;
+          productGrid.appendChild(heading);
+          currentCategory = category;
+        }
         const button = document.createElement("button");
         button.className = `product-card ${key === state.product ? "active" : ""}`;
         button.type = "button";
@@ -1040,6 +1104,9 @@
       const color = state.color;
       const dark = shade(color, -24);
       const light = shade(color, 28);
+      if (activeProduct().artworkOnly) {
+        return "";
+      }
       if (activeView().image) {
         return "";
       }
@@ -1168,7 +1235,8 @@
     function render() {
       const product = activeProduct();
       const view = activeView();
-      const usesPhoto = Boolean(view.file);
+      const artworkOnly = Boolean(product.artworkOnly);
+      const usesPhoto = Boolean(view.file) && !artworkOnly;
       productSvg.innerHTML = usesPhoto ? "" : productSvgMarkup();
       productPhoto.classList.toggle("visible", usesPhoto);
       productTint.classList.toggle("visible", usesPhoto);
@@ -1180,8 +1248,12 @@
         clearPhotoTint();
       }
       productBadge.textContent = product.name;
-      stageTitle.textContent = `${product.name} ${view.label || "Front"} Mockup`;
-      colorStatus.textContent = state.color.toUpperCase();
+      stageTitle.textContent = artworkOnly ? `${product.name} Artwork` : `${product.name} ${view.label || "Front"} Mockup`;
+      colorStatus.textContent = artworkOnly ? "Original image" : state.color.toUpperCase();
+      colorPanel.classList.toggle("is-hidden", artworkOnly);
+      centerBtn.classList.toggle("is-hidden", artworkOnly);
+      placementControls.classList.toggle("is-hidden", artworkOnly);
+      downloadBtn.textContent = artworkOnly ? "Download Uploaded Artwork" : "Download Mockup PNG";
       renderProductButtons();
       renderViewButtons();
       renderSwatches();
@@ -1337,24 +1409,39 @@
       state.artSelected = false;
       renderDesign();
       downloadBtn.disabled = true;
-      status.textContent = "Preparing mockup PNG...";
+      const artworkOnly = Boolean(activeProduct().artworkOnly);
+      status.textContent = artworkOnly ? "Preparing uploaded artwork..." : "Preparing mockup PNG...";
       try {
         const canvas = document.createElement("canvas");
-        canvas.width = 1200;
-        canvas.height = 1200;
+        let originalImage = null;
+        if (artworkOnly) {
+          originalImage = await loadImage(state.imageSrc);
+          canvas.width = originalImage.naturalWidth || originalImage.width;
+          canvas.height = originalImage.naturalHeight || originalImage.height;
+        } else {
+          canvas.width = 1200;
+          canvas.height = 1200;
+        }
         const context = canvas.getContext("2d");
-        await drawProductToCanvas(context);
-        await drawDesignToCanvas(context);
+        if (artworkOnly) {
+          context.drawImage(originalImage, 0, 0);
+        } else {
+          await drawProductToCanvas(context);
+          await drawDesignToCanvas(context);
+        }
         const blob = await canvasToBlob(canvas);
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.download = `${activeProduct().name.toLowerCase().replace(/\s+/g, "-")}-${state.view}-mockup-${Date.now()}.png`;
+        const productName = activeProduct().name.toLowerCase().replace(/\s+/g, "-");
+        link.download = artworkOnly
+          ? `${productName}-artwork-${Date.now()}.png`
+          : `${productName}-${state.view}-mockup-${Date.now()}.png`;
         link.href = url;
         document.body.appendChild(link);
         link.click();
         link.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1200);
-        status.textContent = "Mockup PNG downloaded.";
+        status.textContent = artworkOnly ? "Uploaded artwork downloaded and ready to submit." : "Mockup PNG downloaded.";
       } catch (error) {
         status.textContent = "Download could not be created. Try refreshing the page and uploading the artwork again.";
         console.error(error);
