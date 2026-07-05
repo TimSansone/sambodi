@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#071318">
+  <title>Runway — US Flight Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <a class="brand" href="#" aria-label="Runway home">
+        <span class="brand-mark">R</span>
+        <span>RUNWAY</span>
+      </a>
+      <div class="clock" id="clock"></div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <p class="eyebrow">United States flight tracker</p>
+          <h1>Know what’s<br><em>taking off.</em></h1>
+          <p class="intro">Live-style arrivals and departures for major airports across the country.</p>
+        </div>
+        <div class="airport-picker">
+          <label for="airportSearch">Choose an airport</label>
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-4-4"></path></svg>
+            <input id="airportSearch" autocomplete="off" placeholder="City or airport code" aria-expanded="false">
+            <button id="clearSearch" aria-label="Clear search">×</button>
+          </div>
+          <div id="airportResults" class="airport-results" role="listbox"></div>
+        </div>
+      </section>
+
+      <section class="board">
+        <div class="board-head">
+          <div>
+            <div class="airport-title">
+              <span class="iata" id="iata">JFK</span>
+              <span><strong id="airportName">John F. Kennedy International</strong><small id="airportPlace">New York, NY</small></span>
+            </div>
+          </div>
+          <div class="source">
+            <span class="pulse"></span>
+            <span id="sourceLabel">Demo data</span>
+            <button id="refresh" aria-label="Refresh flights" title="Refresh">↻</button>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="tabs" role="tablist">
+            <button class="tab active" data-direction="departures">Departures <span id="departureCount"></span></button>
+            <button class="tab" data-direction="arrivals">Arrivals <span id="arrivalCount"></span></button>
+          </div>
+          <div class="filters">
+            <button class="filter active" data-filter="all">All</button>
+            <button class="filter" data-filter="on-time">On time</button>
+            <button class="filter" data-filter="delayed">Delayed</button>
+            <button class="filter" data-filter="airborne">In air</button>
+          </div>
+        </div>
+
+        <div id="loading" class="loading" hidden><span></span><span></span><span></span></div>
+        <div id="flightList" class="flight-list"></div>
+        <div id="empty" class="empty" hidden>No flights match this filter.</div>
+      </section>
+    </main>
+    <footer><span>Flight information may change without notice.</span><span id="updated"></span></footer>
+  </div>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
