@@ -1,3 +1,6 @@
+
+
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -174,6 +177,47 @@
         border-color: var(--blue);
         color: var(--blue);
         background: #f8fbff
+    }
+
+    .floating-refresh {
+        position: fixed;
+        right: clamp(14px, 2vw, 28px);
+        bottom: clamp(14px, 2vw, 28px);
+        z-index: 30;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        min-height: 46px;
+        max-width: calc(100vw - 28px);
+        padding: 11px 14px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--blue);
+        color: #fff;
+        box-shadow: 0 14px 34px rgba(23, 32, 51, .24);
+        cursor: pointer;
+        font-weight: 900
+    }
+
+    .floating-refresh:hover {
+        background:#285ba4
+    }
+
+    .floating-refresh:focus {
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(47, 111, 202, .22), 0 14px 34px rgba(23, 32, 51, .24)
+    }
+
+    .floating-refresh span {
+        display: grid;
+        gap: 1px;
+        text-align:left
+    }
+
+    .floating-refresh small {
+        color: rgba(255, 255, 255, .82);
+        font-size: .68rem;
+        font-weight: 800
     }
 
     .panel {
@@ -680,6 +724,42 @@
     .live-player small {
         color: var(--muted);
         line-height:1.35
+    }
+
+    .pitch-results {
+        display: grid;
+        gap: 6px;
+        padding-top: 2px;
+        min-width:0
+    }
+
+    .pitch-results-label {
+        color: var(--muted);
+        font-size: .72rem;
+        font-weight: 900;
+        text-transform: uppercase;
+        letter-spacing:.06em
+    }
+
+    .pitch-result-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px
+    }
+
+    .pitch-result {
+        display: inline-flex;
+        align-items: center;
+        max-width: 100%;
+        padding: 5px 8px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #fff;
+        color: var(--ink);
+        font-size: .74rem;
+        font-weight: 800;
+        line-height: 1.2;
+        overflow-wrap:anywhere
     }
 
     .card-actions {
@@ -1790,8 +1870,13 @@
             font-size: .74rem;
         }
         .game-card .live-player span,
-        .game-card .live-player small {
+        .game-card .live-player small,
+        .game-card .pitch-results-label {
             font-size: .68rem;
+        }
+        .game-card .pitch-result {
+            font-size: .68rem;
+            padding: 4px 7px;
         }
         .game-card .line-score th,
         .game-card .line-score td {
@@ -2051,6 +2136,10 @@
             </section>
         </section>
     </div>
+    <button class="floating-refresh" id="floatingRefreshBtn" type="button" aria-label="Refresh scoreboard now">
+        &#8635;
+        <span>Refresh<small>Update now</small></span>
+    </button>
     <div class="toast" id="toast"></div>
     <script>
     const API_BASE = 'https://statsapi.mlb.com/api/v1';
@@ -2119,6 +2208,7 @@
         next: $('nextDayBtn'),
         today: $('todayBtn'),
         refresh: $('refreshBtn'),
+        floatingRefresh: $('floatingRefreshBtn'),
         autoRefresh: $('autoRefreshBtn'),
         topLive: $('topLiveBtn'),
         alerts: $('alertsBtn'),
@@ -2355,6 +2445,32 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             detail: `${statValue(gameStats.hits, 0)}/${statValue(gameStats.atBats, 0)} · RBI: ${statValue(gameStats.rbi, 0)} · AVG: ${statValue(seasonStats.avg || gameStats.avg)}`
         }
     }
+    function pitchResultText(event) {
+        const result = event?.details?.description
+            || event?.details?.call?.description
+            || event?.details?.call?.code
+            || 'Pitch';
+        const pitchType = event?.details?.type?.code
+            || event?.details?.type?.description
+            || event?.pitchData?.type?.code
+            || event?.pitchData?.type?.description
+            || '';
+        const speed = event?.pitchData?.startSpeed;
+        const extras = [
+            pitchType,
+            Number.isFinite(Number(speed)) ? `${Math.round(Number(speed))} mph` : ''
+        ].filter(Boolean);
+        return extras.length ? `${result} (${extras.join(', ')})` : result
+    }
+    function pitchResultsHtml(g) {
+        const events = feedFor(g)?.liveData?.plays?.currentPlay?.playEvents || [];
+        const pitches = events
+            .filter(e => e?.isPitch || e?.type === 'pitch')
+            .slice(-3);
+        if (!pitches.length)
+            return '';
+        return `<div class="pitch-results"><span class="pitch-results-label">Current batter pitches</span><div class="pitch-result-list">${pitches.map(e => `<span class="pitch-result">${esc(pitchResultText(e))}</span>`).join('')}</div></div>`
+    }
     function livePlayerName(feed, person, fallback = 'Unavailable') {
         return person?.fullName
             || person?.person?.fullName
@@ -2386,7 +2502,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             return '';
         const pitcherInfo = pitcherLine(g),
             batterInfo = batterLine(g);
-        return `<div class="live-card-details"><div class="live-diamond-row">${baseGraphic(g)}<div class="live-count">${liveCountSummary(g)}</div></div><div class="live-matchup"><div class="live-player"><span>Pitcher</span><strong>${esc(pitcherInfo.name)}</strong><small>${esc(pitcherInfo.detail)}</small></div><div class="live-player"><span>Batter</span><strong>${esc(batterInfo.name)}</strong><small>${esc(batterInfo.detail)}</small></div></div></div>`
+        return `<div class="live-card-details"><div class="live-diamond-row">${baseGraphic(g)}<div class="live-count">${liveCountSummary(g)}</div></div><div class="live-matchup"><div class="live-player"><span>Pitcher</span><strong>${esc(pitcherInfo.name)}</strong><small>${esc(pitcherInfo.detail)}</small></div><div class="live-player"><span>Batter</span><strong>${esc(batterInfo.name)}</strong><small>${esc(batterInfo.detail)}</small></div></div>${pitchResultsHtml(g)}</div>`
     }
     function visibleGames() {
         let games = [...state.games];
@@ -3223,6 +3339,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         loadGames()
     };
     els.refresh.onclick = loadGames;
+    els.floatingRefresh.onclick = loadGames;
     els.autoRefresh.onclick = () => setAutoRefresh(!state.autoRefresh);
     els.topLive.onclick = () => setStatusFilter('live');
     els.gameDate.onchange = loadGames;
