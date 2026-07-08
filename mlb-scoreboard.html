@@ -765,6 +765,23 @@
         white-space:nowrap
     }
 
+    .latest-play-card {
+        padding: 8px 9px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #fff;
+        color: var(--muted);
+        font-size: .78rem;
+        line-height:1.35
+    }
+
+    .latest-play-card strong {
+        display: block;
+        margin-bottom: 2px;
+        color: var(--ink);
+        font-size:.8rem
+    }
+
     .card-actions {
         display: flex;
         gap: 8px;
@@ -1881,6 +1898,9 @@
             font-size: .68rem;
             padding: 4px 7px;
         }
+        .game-card .latest-play-card {
+            font-size: .68rem;
+        }
         .game-card .line-score th,
         .game-card .line-score td {
             font-size: .78rem;
@@ -2473,6 +2493,16 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             return '';
         return `<div class="pitch-results"><span class="pitch-results-label">Current batter pitches</span><div class="pitch-result-list">${pitches.map((e, i) => `<span class="pitch-result"><strong>Pitch ${i + 1}:</strong> ${esc(pitchResultText(e))}</span>`).join('')}</div></div>`
     }
+    function latestPlayHtml(g) {
+        const plays = feedFor(g)?.liveData?.plays?.allPlays || [];
+        const play = plays.slice().reverse().find(p =>
+            (p?.about?.isComplete || p?.about?.endTime)
+            && (p?.result?.description || p?.result?.event)
+        );
+        const text = play ? playText(play) : '';
+        const label = play ? playLabel(play) : '';
+        return text ? `<div class="latest-play-card"><strong>Most recent completed play${label ? ` · ${esc(label)}` : ''}</strong>${esc(text)}</div>` : ''
+    }
     function livePlayerName(feed, person, fallback = 'Unavailable') {
         return person?.fullName
             || person?.person?.fullName
@@ -2504,7 +2534,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             return '';
         const pitcherInfo = pitcherLine(g),
             batterInfo = batterLine(g);
-        return `<div class="live-card-details"><div class="live-diamond-row">${baseGraphic(g)}<div class="live-count">${liveCountSummary(g)}</div></div><div class="live-matchup"><div class="live-player"><span>Pitcher</span><strong>${esc(pitcherInfo.name)}</strong><small>${esc(pitcherInfo.detail)}</small></div><div class="live-player"><span>Batter</span><strong>${esc(batterInfo.name)}</strong><small>${esc(batterInfo.detail)}</small></div></div>${pitchResultsHtml(g)}</div>`
+        return `<div class="live-card-details"><div class="live-diamond-row">${baseGraphic(g)}<div class="live-count">${liveCountSummary(g)}</div></div><div class="live-matchup"><div class="live-player"><span>Pitcher</span><strong>${esc(pitcherInfo.name)}</strong><small>${esc(pitcherInfo.detail)}</small></div><div class="live-player"><span>Batter</span><strong>${esc(batterInfo.name)}</strong><small>${esc(batterInfo.detail)}</small></div></div>${pitchResultsHtml(g)}${latestPlayHtml(g)}</div>`
     }
     function visibleGames() {
         let games = [...state.games];
@@ -2533,13 +2563,18 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             length: 6
         }, () => '<div class="skeleton"></div>').join('')
     }
+    function activeTabId() {
+        return document.querySelector('.tab-panel.active')?.id || 'scoresTab'
+    }
     function captureViewport() {
-        const cards = [...els.grid.querySelectorAll('.game-card')];
+        const activeTab = activeTabId();
+        const cards = activeTab === 'scoresTab' ? [...els.grid.querySelectorAll('.game-card')] : [];
         const card = cards.find(item => {
             const rect = item.getBoundingClientRect();
             return rect.bottom > 0 && rect.top < window.innerHeight
         });
         return {
+            activeTab,
             gamePk: card?.dataset.game || null,
             cardTop: card?.getBoundingClientRect().top || 0,
             scrollX: window.scrollX,
@@ -2550,7 +2585,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         if (!viewport)
             return;
         const restore = () => {
-            const card = viewport.gamePk
+            const card = viewport.activeTab === 'scoresTab' && activeTabId() === 'scoresTab' && viewport.gamePk
                 ? els.grid.querySelector(`.game-card[data-game="${viewport.gamePk}"]`)
                 : null;
             if (card) {
@@ -2559,6 +2594,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
                 window.scrollTo(viewport.scrollX, viewport.scrollY)
             }
         };
+        restore();
         requestAnimationFrame(() => {
             restore();
             requestAnimationFrame(restore)
@@ -2820,8 +2856,10 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         if (els.standingsFull) els.standingsFull.innerHTML = fullHtml;
     }
     async function loadStandings() {
+        const viewport = captureViewport();
         if (els.standings) els.standings.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
         if (els.standingsFull) els.standingsFull.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div>';
+        restoreViewport(viewport);
         try {
             const season = els.gameDate.value.slice(0, 4) || new Date().getFullYear();
             const [regular, wildCard] = await Promise.all([
@@ -2834,7 +2872,8 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             state.standings = [];
             state.wildCardStandings = []
         }
-        renderStandings()
+        renderStandings();
+        restoreViewport(viewport)
     }
 
     const LEADER_CATEGORIES = {
@@ -2931,7 +2970,9 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
     async function loadLeagueLeaders() {
         if (!els.leaders)
             return;
+        const viewport = captureViewport();
         els.leaders.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>';
+        restoreViewport(viewport);
         try {
             const season = (els.gameDate.value || todayIso()).slice(0, 4) || new Date().getFullYear();
             const entries = await Promise.all(LEAGUES.map(league => fetchLeagueLeaders(league, season)));
@@ -2939,7 +2980,8 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         } catch {
             state.leagueLeaders = { AL: { hitting: [], pitching: [] }, NL: { hitting: [], pitching: [] } }
         }
-        renderLeagueLeaders()
+        renderLeagueLeaders();
+        restoreViewport(viewport)
     }
 
     function toast(msg) {
@@ -2981,10 +3023,12 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         return `https://img.mlbstatic.com/mlb-photos/image/upload/w_80,q_auto:best/v1/people/${id}/headshot/67/current`
     }
     async function loadTodayImpactStats() {
+        const viewport = captureViewport();
         const requestedDate = els.gameDate.value || todayIso();
         const requestedGamePks = state.games.map(g => g.gamePk).join(',');
         state.todayImpactLoading = true;
         renderStatsTrends();
+        restoreViewport(viewport);
         const impact = {
             homeRuns: new Map(),
             rbi: new Map(),
@@ -2998,6 +3042,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             state.todayImpactDate = requestedDate;
             state.todayImpactLoading = false;
             renderStatsTrends();
+            restoreViewport(viewport);
             return;
         }
         const results = await Promise.allSettled(completedOrLive.map(g => fetchJson(`${API_BASE}/game/${g.gamePk}/boxscore`)));
@@ -3031,8 +3076,10 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
                 });
             });
         });
-        if ((els.gameDate.value || todayIso()) !== requestedDate || state.games.map(g => g.gamePk).join(',') !== requestedGamePks)
+        if ((els.gameDate.value || todayIso()) !== requestedDate || state.games.map(g => g.gamePk).join(',') !== requestedGamePks) {
+            restoreViewport(viewport);
             return;
+        }
         const sortRows = map => [...map.values()].sort((a, b) => b.value - a.value || a.name.localeCompare(b.name));
         state.todayImpact = {
             homeRuns: sortRows(impact.homeRuns),
@@ -3044,6 +3091,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         state.todayImpactDate = requestedDate;
         state.todayImpactLoading = false;
         renderStatsTrends();
+        restoreViewport(viewport)
     }
     function todayImpactRow(row, suffix) {
         const head = row.id ? `<img class="leader-headshot" src="${playerHeadshot(row.id)}" alt="" loading="lazy" onerror="this.style.display='none'">` : '';
