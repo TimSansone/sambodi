@@ -1,0 +1,1488 @@
+
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Embroidery Mockup Tool</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17212f;
+      --muted: #667287;
+      --line: #dce3ee;
+      --panel: #ffffff;
+      --soft: #f4f7fb;
+      --teal: #0f766e;
+      --teal-dark: #0b5d57;
+      --coral: #d95d4f;
+      --amber: #e3a12a;
+      --blue: #2f6fca;
+      --shadow: 0 18px 48px rgba(23, 33, 47, 0.14);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.14), transparent 34%),
+        linear-gradient(45deg, rgba(227, 161, 42, 0.15), transparent 30%),
+        #eef3f7;
+      color: var(--ink);
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      touch-action: manipulation;
+    }
+
+    .app {
+      width: min(1500px, 100%);
+      margin: 0 auto;
+      padding: clamp(12px, 3vw, 24px);
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(260px, 1fr) auto;
+      gap: 18px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.1rem, 4vw, 4.4rem);
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .badge {
+      min-width: 200px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .badge strong {
+      display: block;
+      font-size: 1.75rem;
+      line-height: 1;
+    }
+
+    .badge span {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(300px, 390px) minmax(0, 1fr) minmax(290px, 360px);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .pad {
+      padding: 16px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 1.16rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    input,
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--ink);
+      padding: 10px 11px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
+    }
+
+    .btn {
+      min-height: 44px;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 13px;
+      cursor: pointer;
+      color: white;
+      background: var(--teal);
+      font-weight: 900;
+      transition: transform 0.12s ease, background 0.12s ease, opacity 0.12s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      background: var(--teal-dark);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn.secondary {
+      background: var(--blue);
+    }
+
+    .btn.secondary:hover {
+      background: #285ba4;
+    }
+
+    .btn.warning {
+      background: var(--amber);
+      color: #241800;
+    }
+
+    .btn.warning:hover {
+      background: #c98b1a;
+    }
+
+    .btn.danger {
+      background: #b91c1c;
+    }
+
+    .btn.danger:hover {
+      background: #991b1b;
+    }
+
+    .upload-box {
+      display: grid;
+      gap: 10px;
+      place-items: center;
+      min-height: 148px;
+      padding: 18px;
+      border: 2px dashed #b9c5d5;
+      border-radius: 8px;
+      background: #f8fbfd;
+      text-align: center;
+    }
+
+    .upload-box input {
+      display: none;
+    }
+
+    .upload-text {
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .upload-reminder {
+      margin: 10px 0 0;
+      padding: 10px 12px;
+      border: 1px solid #f0cf8a;
+      border-radius: 8px;
+      background: #fff8e8;
+      color: #704d08;
+      font-size: 0.82rem;
+      font-weight: 800;
+      line-height: 1.4;
+    }
+
+    .email-design-btn {
+      display: flex;
+      margin-top: 10px;
+      text-decoration: none;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .product-card {
+      min-height: 72px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      cursor: pointer;
+      padding: 10px;
+      text-align: left;
+      font-weight: 900;
+      color: var(--ink);
+    }
+
+    .product-card.active {
+      border-color: var(--teal);
+      background: #eaf8f6;
+      box-shadow: inset 0 0 0 2px rgba(15, 118, 110, 0.15);
+    }
+
+    .product-card span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      line-height: 1.3;
+    }
+
+    .product-category {
+      grid-column: 1 / -1;
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .swatches {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+    }
+
+    .swatch {
+      aspect-ratio: 1;
+      border: 2px solid white;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 0 0 1px var(--line);
+    }
+
+    .swatch.active {
+      box-shadow: 0 0 0 3px var(--teal);
+    }
+
+    .custom-color-row {
+      display: grid;
+      grid-template-columns: 56px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+
+    .custom-color-row input[type="color"] {
+      width: 56px;
+      height: 48px;
+      padding: 4px;
+      cursor: pointer;
+    }
+
+    .custom-color-text {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.35;
+    }
+
+    .custom-color-text strong {
+      display: block;
+      color: var(--ink);
+      font-size: 0.95rem;
+    }
+
+    .shape-panel.is-hidden {
+      display: none;
+    }
+
+    .view-panel.is-hidden {
+      display: none;
+    }
+
+    .shape-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .view-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .shape-btn {
+      min-height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .shape-btn.active {
+      border-color: var(--teal);
+      background: #eaf8f6;
+      box-shadow: inset 0 0 0 2px rgba(15, 118, 110, 0.15);
+    }
+
+    .view-btn {
+      min-height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .view-btn.active {
+      border-color: var(--teal);
+      background: #eaf8f6;
+      box-shadow: inset 0 0 0 2px rgba(15, 118, 110, 0.15);
+    }
+
+    .mockup-panel {
+      min-width: 0;
+      padding: 16px;
+    }
+
+    .stage-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .stat {
+      padding: 7px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fbfcfe;
+    }
+
+    .preview-wrap {
+      width: min(100%, 720px);
+      margin: 0 auto;
+    }
+
+    .preview {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1;
+      overflow: hidden;
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(242, 246, 250, 0.94)),
+        radial-gradient(circle at 50% 70%, rgba(23, 33, 47, 0.12), transparent 42%);
+      border: 1px solid var(--line);
+      touch-action: none;
+    }
+
+    .product-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .product-photo,
+    .product-tint {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+      display: none;
+    }
+
+    .product-photo.visible,
+    .product-tint.visible {
+      display: block;
+    }
+
+    .product-photo {
+      filter: drop-shadow(0 18px 24px rgba(23, 33, 47, 0.2));
+      z-index: 1;
+    }
+
+    .product-tint {
+      z-index: 2;
+      opacity: 0.82;
+      mix-blend-mode: multiply;
+    }
+
+    .design-layer {
+      position: absolute;
+      left: 50%;
+      top: 48%;
+      width: 22%;
+      transform: translate(-50%, -50%) rotate(0deg);
+      transform-origin: center;
+      touch-action: none;
+      cursor: move;
+      display: none;
+      z-index: 4;
+    }
+
+    .design-layer.visible {
+      display: block;
+    }
+
+    .design-layer.selected {
+      outline: 2px dashed var(--teal);
+      outline-offset: 6px;
+    }
+
+    .design-layer img {
+      width: 100%;
+      display: block;
+      pointer-events: none;
+      filter: drop-shadow(0 8px 12px rgba(23, 33, 47, 0.18));
+    }
+
+    .handle {
+      position: absolute;
+      right: -14px;
+      bottom: -14px;
+      width: 28px;
+      height: 28px;
+      border: 3px solid white;
+      border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 2px 8px rgba(23, 33, 47, 0.25);
+    }
+
+    .design-layer:not(.selected) .handle {
+      display: none;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .tool-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .tools {
+      display: grid;
+      gap: 10px;
+    }
+
+    .status {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      border: 1px solid #b7ded8;
+      border-radius: 8px;
+      background: #eef9f7;
+      color: #0b5d57;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .tips {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .tips div {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+    }
+
+    @media (max-width: 1120px) {
+      main {
+        grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
+      }
+
+      .right-panel {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 820px) {
+      header,
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .mockup-panel {
+        order: -1;
+        padding: 10px;
+      }
+
+      .badge {
+        min-width: 0;
+      }
+
+      .preview-wrap {
+        width: min(100%, 460px);
+      }
+    }
+
+    @media (max-width: 560px) {
+      body {
+        background:
+          linear-gradient(180deg, rgba(15, 118, 110, 0.16), transparent 230px),
+          #f2f6fa;
+      }
+
+      .app {
+        padding: 10px;
+      }
+
+      header {
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      h1 {
+        font-size: 2.05rem;
+      }
+
+      .subtitle {
+        font-size: 0.94rem;
+      }
+
+      .panel {
+        box-shadow: 0 10px 26px rgba(23, 33, 47, 0.1);
+      }
+
+      .pad {
+        padding: 12px;
+      }
+
+      .stage-top {
+        display: grid;
+      }
+
+      .product-grid,
+      .view-grid,
+      .shape-grid,
+      .field-grid,
+      .tool-row {
+        grid-template-columns: 1fr;
+      }
+
+      .swatches {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      input,
+      select,
+      .btn {
+        min-height: 46px;
+        font-size: 16px;
+      }
+
+      .preview-wrap {
+        width: min(100%, 350px);
+      }
+
+      .handle {
+        right: -16px;
+        bottom: -16px;
+        width: 32px;
+        height: 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>Embroidery Mockup Tool</h1>
+        <p class="subtitle">Upload embroidery artwork and preview it on polo shirts or baseball caps.</p>
+      </div>
+      <div class="badge">
+        <strong id="productBadge">Polo Shirt</strong>
+        <span>embroidery mockup preview</span>
+      </div>
+    </header>
+
+    <main>
+      <aside class="stack">
+        <section class="panel pad">
+          <h2>Upload Embroidery Artwork</h2>
+          <label class="upload-box">
+            <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp">
+            <button class="btn" id="chooseBtn" type="button">Choose Image</button>
+            <span class="upload-text">PNG artwork with a transparent background works best, but JPG and WebP are supported.</span>
+          </label>
+          <p class="upload-reminder">For the best print quality, please upload artwork that is at least 300 DPI at the intended print size.</p>
+          <a
+            class="btn secondary email-design-btn"
+            href="mailto:info@sambodicreations.com?subject=Custom%20Design%20Submission&amp;body=Hello%20Sambodi%20Creations%2C%0A%0AI%20would%20like%20to%20submit%20my%20design.%20I%20have%20attached%20the%20artwork%20to%20this%20email.%0A%0AProject%20type%3A%20%0ADesired%20size%3A%20%0AQuantity%3A%20%0AAdditional%20notes%3A%20"
+          >Email Your Design</a>
+        </section>
+
+        <section class="panel pad">
+          <h2>Choose Item</h2>
+          <div class="product-grid" id="productGrid"></div>
+        </section>
+
+        <section class="panel pad view-panel is-hidden" id="viewPanel">
+          <h2>Mockup View</h2>
+          <div class="view-grid" id="viewGrid"></div>
+        </section>
+
+        <section class="panel pad" id="colorPanel">
+          <h2>Item Color</h2>
+          <div class="swatches" id="swatches"></div>
+          <div class="custom-color-row">
+            <input id="customColorInput" type="color" value="#ffffff" aria-label="Choose a custom product color">
+            <div class="custom-color-text">
+              <strong>Custom color</strong>
+              <span id="customColorValue">#FFFFFF</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel pad shape-panel is-hidden" id="shapePanel">
+          <h2>Embroidery Shape</h2>
+          <div class="shape-grid" id="shapeGrid"></div>
+        </section>
+      </aside>
+
+      <section class="panel mockup-panel">
+        <div class="stage-top">
+          <div>
+            <h2 id="stageTitle">T-Shirt Mockup</h2>
+            <div class="stats">
+              <span class="stat" id="artStatus">No artwork uploaded</span>
+              <span class="stat" id="colorStatus">Color selected</span>
+            </div>
+          </div>
+          <button class="btn secondary" id="centerBtn" type="button">Center Artwork</button>
+        </div>
+
+        <div class="preview-wrap">
+          <div class="preview" id="preview">
+            <svg class="product-svg" id="productSvg" viewBox="0 0 1000 1000" aria-label="Product preview"></svg>
+            <img class="product-photo" id="productPhoto" alt="" aria-hidden="true">
+            <canvas class="product-tint" id="productTint" width="1200" height="1200" aria-hidden="true"></canvas>
+            <div class="design-layer" id="designLayer">
+              <img id="designImage" alt="Uploaded artwork preview">
+              <span class="handle" aria-hidden="true"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="stack right-panel">
+        <section class="panel pad tools">
+          <h2>Artwork Controls</h2>
+          <div id="placementControls">
+          <div class="field-grid">
+            <div>
+              <label for="sizeInput">Size</label>
+              <input id="sizeInput" type="range" min="8" max="70" value="22">
+            </div>
+            <div>
+              <label for="rotateInput">Rotate</label>
+              <input id="rotateInput" type="range" min="-45" max="45" value="0">
+            </div>
+          </div>
+          <div class="tool-row">
+            <button class="btn secondary" id="flipBtn" type="button">Flip</button>
+            <button class="btn warning" id="resetBtn" type="button">Reset Art</button>
+          </div>
+          </div>
+          <button class="btn danger" id="deleteArtBtn" type="button" disabled>Delete Artwork</button>
+          <button class="btn" id="downloadBtn" type="button" disabled>Download Embroidery Mockup PNG</button>
+          <div class="status" id="status">Upload embroidery artwork to start building a polo or cap mockup.</div>
+        </section>
+
+        <section class="panel pad">
+          <h2>Mockup Notes</h2>
+          <div class="tips">
+            <div>Drag the artwork directly on the product to place it.</div>
+            <div>Use the corner handle or Size slider to scale the artwork.</div>
+            <div>Embroidery mode adds a stitched patch look for quick previews.</div>
+          </div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script src="product-mockup-assets/photo-assets.js"></script>
+  <script>
+    const photoAssets = window.photoMockupAssets || {};
+
+    const embroideryShapes = {
+      circle: "Circle",
+      square: "Square",
+      oval: "Oval",
+      rectangle: "Rectangle"
+    };
+
+    const products = {
+      polo: {
+        name: "Polo Shirt",
+        note: "Left chest and back embroidery placement",
+        defaultColor: "#f8fafc",
+        defaultArt: { x: 50, y: 51, size: 18 },
+        colors: ["#f8fafc", "#111827", "#d1d5db", "#991b1b", "#1d4ed8", "#047857", "#78350f", "#f59e0b"],
+        views: {
+          front: { label: "Front", assetKey: "poloFront", legacyAssetKey: "polo", file: "polo-base.png", defaultArt: { x: 50, y: 51, size: 18 } },
+          back: { label: "Back", assetKey: "poloBack", file: "polo-back-base.png", defaultArt: { x: 50, y: 48, size: 28 } }
+        }
+      },
+      hat: {
+        name: "Baseball Cap",
+        note: "Front and back cap embroidery placement",
+        defaultColor: "#111827",
+        defaultArt: { x: 50, y: 42, size: 17 },
+        colors: ["#111827", "#ffffff", "#9ca3af", "#b91c1c", "#1d4ed8", "#047857", "#92400e", "#f97316"],
+        views: {
+          front: { label: "Front", assetKey: "capFront", legacyAssetKey: "cap", file: "cap-base.png", defaultArt: { x: 50, y: 42, size: 17 } },
+          back: { label: "Back", assetKey: "capBack", file: "cap-back-base.png", defaultArt: { x: 50, y: 55, size: 14 } }
+        }
+      }
+    };
+
+    const state = {
+      product: "polo",
+      view: "front",
+      color: products.polo.defaultColor,
+      embroideryShape: "circle",
+      artworks: {},
+      imageSrc: "",
+      artX: products.polo.defaultArt.x,
+      artY: products.polo.defaultArt.y,
+      artSize: products.polo.defaultArt.size,
+      artSelected: false,
+      rotation: 0,
+      flipped: false,
+      imageRatio: 1
+    };
+
+    const productGrid = document.getElementById("productGrid");
+    const viewPanel = document.getElementById("viewPanel");
+    const viewGrid = document.getElementById("viewGrid");
+    const colorPanel = document.getElementById("colorPanel");
+    const swatches = document.getElementById("swatches");
+    const customColorInput = document.getElementById("customColorInput");
+    const customColorValue = document.getElementById("customColorValue");
+    const shapePanel = document.getElementById("shapePanel");
+    const shapeGrid = document.getElementById("shapeGrid");
+    const productSvg = document.getElementById("productSvg");
+    const productPhoto = document.getElementById("productPhoto");
+    const productTint = document.getElementById("productTint");
+    const productBadge = document.getElementById("productBadge");
+    const stageTitle = document.getElementById("stageTitle");
+    const preview = document.getElementById("preview");
+    const designLayer = document.getElementById("designLayer");
+    const designImage = document.getElementById("designImage");
+    const fileInput = document.getElementById("fileInput");
+    const chooseBtn = document.getElementById("chooseBtn");
+    const sizeInput = document.getElementById("sizeInput");
+    const rotateInput = document.getElementById("rotateInput");
+    const flipBtn = document.getElementById("flipBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const deleteArtBtn = document.getElementById("deleteArtBtn");
+    const centerBtn = document.getElementById("centerBtn");
+    const placementControls = document.getElementById("placementControls");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const artStatus = document.getElementById("artStatus");
+    const colorStatus = document.getElementById("colorStatus");
+    const status = document.getElementById("status");
+    let tintRenderId = 0;
+
+    function renderProductButtons() {
+      productGrid.innerHTML = "";
+      let currentCategory = "";
+      Object.entries(products).forEach(([key, product]) => {
+        const category = product.category || "Product Mockups";
+        if (category !== currentCategory) {
+          const heading = document.createElement("div");
+          heading.className = "product-category";
+          heading.textContent = category;
+          productGrid.appendChild(heading);
+          currentCategory = category;
+        }
+        const button = document.createElement("button");
+        button.className = `product-card ${key === state.product ? "active" : ""}`;
+        button.type = "button";
+        button.innerHTML = `${product.name}<span>${product.note}</span>`;
+        button.addEventListener("click", () => selectProduct(key));
+        productGrid.appendChild(button);
+      });
+    }
+
+    function activeProduct() {
+      return products[state.product];
+    }
+
+    function activeView() {
+      const product = activeProduct();
+      return product.views?.[state.view] || { label: "Front", defaultArt: product.defaultArt };
+    }
+
+    function productImageSources(view) {
+      if (!view.file) return [];
+      const embedded = photoAssets[view.assetKey] || photoAssets[view.legacyAssetKey];
+      const localPath = `product-mockup-assets/${view.file}`;
+      const candidates = [
+        view.file,
+        `./${view.file}`,
+        localPath,
+        `./${localPath}`,
+        `outputs/${localPath}`,
+        `./outputs/${localPath}`,
+        `../outputs/${localPath}`,
+        embedded
+      ].filter(Boolean);
+      return [...new Set(candidates)];
+    }
+
+    function setProductPhoto(view) {
+      const sources = productImageSources(view);
+      let index = 0;
+      productPhoto.onerror = () => {
+        index += 1;
+        if (index < sources.length) {
+          productPhoto.src = sources[index];
+        } else {
+          status.textContent = "Product mockup image could not be loaded. Check that the product-mockup-assets folder is uploaded with this page.";
+        }
+      };
+      productPhoto.onload = () => {
+        productPhoto.onerror = null;
+      };
+      productPhoto.src = sources[0] || "";
+    }
+
+    async function loadProductImage(view) {
+      const sources = productImageSources(view);
+      let lastError = null;
+      for (const source of sources) {
+        try {
+          return await loadImage(source);
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      throw lastError || new Error("Product image could not be loaded");
+    }
+
+    function artworkKey(product = state.product, view = state.view) {
+      return `${product}:${view}`;
+    }
+
+    function saveCurrentArtwork() {
+      state.artworks[artworkKey()] = {
+        imageSrc: state.imageSrc,
+        imageRatio: state.imageRatio,
+        artX: state.artX,
+        artY: state.artY,
+        artSize: state.artSize,
+        rotation: state.rotation,
+        flipped: state.flipped,
+        artSelected: state.artSelected
+      };
+    }
+
+    function loadCurrentArtwork() {
+      const saved = state.artworks[artworkKey()];
+      const art = activeView().defaultArt || activeProduct().defaultArt;
+      state.imageSrc = saved?.imageSrc || "";
+      state.imageRatio = saved?.imageRatio || 1;
+      state.artX = saved?.artX ?? art.x;
+      state.artY = saved?.artY ?? art.y;
+      state.artSize = saved?.artSize ?? art.size;
+      state.rotation = saved?.rotation || 0;
+      state.flipped = saved?.flipped || false;
+      state.artSelected = saved?.artSelected || false;
+      fileInput.value = "";
+    }
+
+    function renderViewButtons() {
+      const product = activeProduct();
+      const views = product.views || { front: { label: "Front" } };
+      const entries = Object.entries(views);
+      viewPanel.classList.toggle("is-hidden", entries.length < 2);
+      viewGrid.innerHTML = "";
+      entries.forEach(([key, view]) => {
+        const button = document.createElement("button");
+        button.className = `view-btn ${key === state.view ? "active" : ""}`;
+        button.type = "button";
+        button.textContent = view.label;
+        button.addEventListener("click", () => selectView(key));
+        viewGrid.appendChild(button);
+      });
+    }
+
+    function renderSwatches() {
+      const product = products[state.product];
+      swatches.innerHTML = "";
+      const normalizedColor = normalizeHex(state.color);
+      product.colors.forEach((color) => {
+        const button = document.createElement("button");
+        button.className = `swatch ${normalizeHex(color) === normalizedColor ? "active" : ""}`;
+        button.type = "button";
+        button.style.background = color;
+        button.setAttribute("aria-label", `Choose ${color}`);
+        button.addEventListener("click", () => {
+          setProductColor(color);
+          render();
+        });
+        swatches.appendChild(button);
+      });
+      customColorInput.value = normalizedColor;
+      customColorValue.textContent = normalizedColor.toUpperCase();
+    }
+
+    function setProductColor(color) {
+      state.color = normalizeHex(color);
+    }
+
+    function normalizeHex(color) {
+      const value = String(color || "#ffffff").trim();
+      if (/^#[0-9a-f]{6}$/i.test(value)) return value.toLowerCase();
+      if (/^#[0-9a-f]{3}$/i.test(value)) {
+        return `#${value.slice(1).split("").map((char) => char + char).join("")}`.toLowerCase();
+      }
+      return "#ffffff";
+    }
+
+    function renderEmbroideryShapes() {
+      shapePanel.classList.toggle("is-hidden", state.product !== "embroidery");
+      shapeGrid.innerHTML = "";
+      Object.entries(embroideryShapes).forEach(([key, label]) => {
+        const button = document.createElement("button");
+        button.className = `shape-btn ${key === state.embroideryShape ? "active" : ""}`;
+        button.type = "button";
+        button.textContent = label;
+        button.addEventListener("click", () => {
+          state.embroideryShape = key;
+          status.textContent = `${label} embroidery patch selected.`;
+          render();
+        });
+        shapeGrid.appendChild(button);
+      });
+    }
+
+    function selectProduct(key) {
+      saveCurrentArtwork();
+      state.product = key;
+      state.view = products[key].views?.front ? "front" : "front";
+      setProductColor(products[key].defaultColor);
+      loadCurrentArtwork();
+      status.textContent = `${products[key].name} mockup selected.`;
+      render();
+    }
+
+    function selectView(key) {
+      if (key === state.view) return;
+      saveCurrentArtwork();
+      state.view = key;
+      loadCurrentArtwork();
+      status.textContent = `${activeProduct().name} ${activeView().label.toLowerCase()} view selected.`;
+      render();
+    }
+
+    function resetArtPlacement(shouldRender = true) {
+      const art = activeView().defaultArt || activeProduct().defaultArt;
+      state.artX = art.x;
+      state.artY = art.y;
+      state.artSize = art.size;
+      state.rotation = 0;
+      state.flipped = false;
+      sizeInput.value = state.artSize;
+      rotateInput.value = state.rotation;
+      if (shouldRender) render();
+    }
+
+    function productSvgMarkup() {
+      const color = state.color;
+      const dark = shade(color, -24);
+      const light = shade(color, 28);
+      if (activeProduct().artworkOnly) {
+        return "";
+      }
+      if (activeView().image) {
+        return "";
+      }
+      if (state.product === "tshirt") {
+        return `
+          <defs>
+            <filter id="soft"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#17212f" flood-opacity=".2"/></filter>
+            <linearGradient id="shirtShade" x1="0" x2="1"><stop offset="0" stop-color="${dark}" stop-opacity=".18"/><stop offset=".5" stop-color="${color}"/><stop offset="1" stop-color="${light}" stop-opacity=".35"/></linearGradient>
+          </defs>
+          <path d="M318 184 L404 126 Q448 164 500 164 Q552 164 596 126 L682 184 L828 276 L736 408 L680 374 L680 830 Q588 858 500 858 Q412 858 320 830 L320 374 L264 408 L172 276 Z" fill="url(#shirtShade)" stroke="${dark}" stroke-width="8" filter="url(#soft)"/>
+          <path d="M404 126 Q500 230 596 126 Q570 272 500 296 Q430 272 404 126" fill="#ffffff" opacity=".28"/>
+          <path d="M428 162 Q500 226 572 162" fill="none" stroke="${dark}" stroke-width="13" opacity=".34"/>
+          <path d="M336 390 Q500 448 664 390" fill="none" stroke="${dark}" stroke-width="5" opacity=".12"/>
+          <path d="M365 270 L350 806" stroke="#ffffff" stroke-width="16" opacity=".12"/>
+          <path d="M635 270 L650 806" stroke="${dark}" stroke-width="10" opacity=".08"/>
+        `;
+      }
+      if (state.product === "polo") {
+        return `
+          <defs>
+            <filter id="soft"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#17212f" flood-opacity=".2"/></filter>
+            <linearGradient id="poloShade" x1="0" x2="1"><stop offset="0" stop-color="${dark}" stop-opacity=".2"/><stop offset=".48" stop-color="${color}"/><stop offset="1" stop-color="${light}" stop-opacity=".36"/></linearGradient>
+          </defs>
+          <path d="M304 202 L410 132 L500 168 L590 132 L696 202 L814 302 L734 420 L678 386 L678 832 Q590 858 500 858 Q410 858 322 832 L322 386 L266 420 L186 302 Z" fill="url(#poloShade)" stroke="${dark}" stroke-width="8" filter="url(#soft)"/>
+          <path d="M410 132 L500 232 L590 132 L614 228 L540 300 L500 252 L460 300 L386 228 Z" fill="${light}" stroke="${dark}" stroke-width="6" opacity=".9"/>
+          <path d="M500 232 L500 386" stroke="${dark}" stroke-width="7" opacity=".38"/>
+          <circle cx="500" cy="278" r="7" fill="${dark}" opacity=".5"/>
+          <circle cx="500" cy="326" r="7" fill="${dark}" opacity=".5"/>
+          <path d="M348 402 Q500 460 652 402" fill="none" stroke="${dark}" stroke-width="5" opacity=".12"/>
+          <path d="M364 278 L348 806" stroke="#ffffff" stroke-width="16" opacity=".12"/>
+        `;
+      }
+      if (state.product === "hat") {
+        return `
+          <defs>
+            <filter id="soft"><feDropShadow dx="0" dy="20" stdDeviation="18" flood-color="#17212f" flood-opacity=".24"/></filter>
+            <linearGradient id="capFront" x1="0" x2="1"><stop offset="0" stop-color="${dark}" stop-opacity=".26"/><stop offset=".5" stop-color="${color}"/><stop offset="1" stop-color="${light}" stop-opacity=".32"/></linearGradient>
+            <linearGradient id="brim" x1="0" x2="1"><stop offset="0" stop-color="${dark}"/><stop offset=".5" stop-color="${color}"/><stop offset="1" stop-color="${dark}"/></linearGradient>
+          </defs>
+          <path d="M212 560 Q238 340 410 284 Q500 250 590 284 Q762 340 788 560 Q642 520 500 520 Q358 520 212 560 Z" fill="url(#capFront)" stroke="${dark}" stroke-width="8" filter="url(#soft)"/>
+          <path d="M410 284 Q468 344 500 520 Q532 344 590 284" fill="none" stroke="${dark}" stroke-width="6" opacity=".24"/>
+          <path d="M296 414 Q394 358 500 520 Q606 358 704 414" fill="none" stroke="#ffffff" stroke-width="8" opacity=".18"/>
+          <path d="M500 254 C490 236 510 236 500 254" stroke="${dark}" stroke-width="18" stroke-linecap="round"/>
+          <path d="M124 574 Q500 484 876 574 Q784 680 500 690 Q216 680 124 574 Z" fill="url(#brim)" stroke="${dark}" stroke-width="8"/>
+          <path d="M214 584 Q500 532 786 584" fill="none" stroke="#ffffff" stroke-width="10" opacity=".18"/>
+          <path d="M326 530 Q500 492 674 530" fill="none" stroke="${light}" stroke-width="13" opacity=".25"/>
+        `;
+      }
+      if (state.product === "tumbler") {
+        return `
+          <defs><linearGradient id="cup" x1="0" x2="1"><stop offset="0" stop-color="${dark}"/><stop offset=".22" stop-color="${color}"/><stop offset=".72" stop-color="${light}"/><stop offset="1" stop-color="${dark}"/></linearGradient><filter id="soft"><feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#17212f" flood-opacity=".2"/></filter></defs>
+          <path d="M340 158 Q500 126 660 158 L606 842 Q500 880 394 842 Z" fill="url(#cup)" stroke="${dark}" stroke-width="8" filter="url(#soft)"/>
+          <ellipse cx="500" cy="158" rx="160" ry="34" fill="${light}" stroke="${dark}" stroke-width="7"/>
+          <path d="M612 230 L570 790" stroke="#fff" stroke-width="20" opacity=".22"/>
+        `;
+      }
+      const outer = patchPath(state.embroideryShape, false);
+      const inner = patchPath(state.embroideryShape, true);
+      return `
+        <defs><filter id="soft"><feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#17212f" flood-opacity=".18"/></filter></defs>
+        ${outer}
+        ${inner}
+        <path d="M330 454 Q500 342 670 454" fill="none" stroke="${light}" stroke-width="18" opacity=".3"/>
+      `;
+    }
+
+    function patchPath(shape, inset) {
+      const color = inset ? "none" : state.color;
+      const dark = shade(state.color, -24);
+      const filter = inset ? "" : ' filter="url(#soft)"';
+      const strokeWidth = inset ? 10 : 9;
+      const dash = inset ? ' stroke-dasharray="13 14" opacity=".58"' : "";
+      const stroke = inset ? dark : dark;
+      const fill = inset ? "none" : color;
+      if (shape === "square") {
+        const x = inset ? 268 : 220;
+        const y = inset ? 248 : 200;
+        const size = inset ? 464 : 560;
+        return `<rect x="${x}" y="${y}" width="${size}" height="${size}" rx="${inset ? 34 : 46}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"${dash}${filter}/>`;
+      }
+      if (shape === "oval") {
+        return `<ellipse cx="500" cy="500" rx="${inset ? 254 : 314}" ry="${inset ? 168 : 220}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"${dash}${filter}/>`;
+      }
+      if (shape === "rectangle") {
+        const x = inset ? 214 : 154;
+        const y = inset ? 334 : 284;
+        const w = inset ? 572 : 692;
+        const h = inset ? 332 : 432;
+        return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${inset ? 38 : 54}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"${dash}${filter}/>`;
+      }
+      return `<circle cx="500" cy="500" r="${inset ? 230 : 290}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"${dash}${filter}/>`;
+    }
+
+    function shade(hex, amount) {
+      const raw = hex.replace("#", "");
+      const number = parseInt(raw.length === 3 ? raw.split("").map((x) => x + x).join("") : raw, 16);
+      const r = Math.max(0, Math.min(255, (number >> 16) + amount));
+      const g = Math.max(0, Math.min(255, ((number >> 8) & 255) + amount));
+      const b = Math.max(0, Math.min(255, (number & 255) + amount));
+      return `#${[r, g, b].map((x) => x.toString(16).padStart(2, "0")).join("")}`;
+    }
+
+    function renderDesign() {
+      designLayer.classList.toggle("visible", Boolean(state.imageSrc));
+      designLayer.classList.toggle("selected", Boolean(state.imageSrc && state.artSelected));
+      downloadBtn.disabled = !state.imageSrc;
+      deleteArtBtn.disabled = !state.imageSrc;
+      if (!state.imageSrc) {
+        state.artSelected = false;
+        artStatus.textContent = "No artwork uploaded";
+        designImage.removeAttribute("src");
+        return;
+      }
+      const width = state.artSize;
+      const height = width / state.imageRatio;
+      designLayer.style.left = `${state.artX}%`;
+      designLayer.style.top = `${state.artY}%`;
+      designLayer.style.width = `${width}%`;
+      designLayer.style.transform = `translate(-50%, -50%) rotate(${state.rotation}deg) scaleX(${state.flipped ? -1 : 1})`;
+      designImage.src = state.imageSrc;
+      artStatus.textContent = `${width.toFixed(0)}% wide x ${height.toFixed(0)}% tall`;
+      sizeInput.value = state.artSize;
+      rotateInput.value = state.rotation;
+    }
+
+    function render() {
+      const product = activeProduct();
+      const view = activeView();
+      const artworkOnly = Boolean(product.artworkOnly);
+      const usesPhoto = Boolean(view.file) && !artworkOnly;
+      productSvg.innerHTML = usesPhoto ? "" : productSvgMarkup();
+      productPhoto.classList.toggle("visible", usesPhoto);
+      productTint.classList.toggle("visible", usesPhoto);
+      if (usesPhoto) {
+        setProductPhoto(view);
+        updatePhotoTint(view, state.color);
+      } else {
+        productPhoto.removeAttribute("src");
+        clearPhotoTint();
+      }
+      productBadge.textContent = product.name;
+      stageTitle.textContent = artworkOnly ? `${product.name} Artwork` : `${product.name} ${view.label || "Front"} Mockup`;
+      colorStatus.textContent = artworkOnly ? "Original image" : state.color.toUpperCase();
+      colorPanel.classList.toggle("is-hidden", artworkOnly);
+      centerBtn.classList.toggle("is-hidden", artworkOnly);
+      placementControls.classList.toggle("is-hidden", artworkOnly);
+      downloadBtn.textContent = artworkOnly ? "Download Uploaded Artwork" : "Download Embroidery Mockup PNG";
+      renderProductButtons();
+      renderViewButtons();
+      renderSwatches();
+      renderEmbroideryShapes();
+      renderDesign();
+    }
+
+    async function updatePhotoTint(view, color) {
+      const renderId = ++tintRenderId;
+      const context = productTint.getContext("2d");
+      context.clearRect(0, 0, productTint.width, productTint.height);
+      try {
+        const image = await loadProductImage(view);
+        if (renderId !== tintRenderId || activeView() !== view || state.color !== color) return;
+        context.clearRect(0, 0, productTint.width, productTint.height);
+        context.drawImage(image, 0, 0, productTint.width, productTint.height);
+        context.globalCompositeOperation = "source-in";
+        context.fillStyle = color;
+        context.fillRect(0, 0, productTint.width, productTint.height);
+        context.globalCompositeOperation = "source-over";
+      } catch {
+        context.clearRect(0, 0, productTint.width, productTint.height);
+      }
+    }
+
+    function clearPhotoTint() {
+      tintRenderId += 1;
+      productTint.getContext("2d").clearRect(0, 0, productTint.width, productTint.height);
+    }
+
+    chooseBtn.addEventListener("click", () => fileInput.click());
+    customColorInput.addEventListener("input", () => {
+      setProductColor(customColorInput.value);
+      render();
+    });
+
+    customColorInput.addEventListener("change", () => {
+      status.textContent = `Custom color ${state.color.toUpperCase()} selected.`;
+    });
+
+    fileInput.addEventListener("change", () => {
+      const file = fileInput.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const image = new Image();
+        image.onload = () => {
+          state.imageSrc = reader.result;
+          state.imageRatio = image.naturalWidth / image.naturalHeight || 1;
+          state.artSelected = true;
+          resetArtPlacement(false);
+          saveCurrentArtwork();
+          status.textContent = `${file.name} uploaded for ${activeView().label.toLowerCase()} view.`;
+          render();
+        };
+        image.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    let dragMode = null;
+    let start = null;
+
+    designLayer.addEventListener("pointerdown", (event) => {
+      if (!state.imageSrc) return;
+      event.stopPropagation();
+      state.artSelected = true;
+      dragMode = event.target.classList.contains("handle") ? "resize" : "move";
+      const rect = preview.getBoundingClientRect();
+      start = {
+        x: ((event.clientX - rect.left) / rect.width) * 100,
+        y: ((event.clientY - rect.top) / rect.height) * 100,
+        artX: state.artX,
+        artY: state.artY,
+        size: state.artSize
+      };
+      designLayer.setPointerCapture(event.pointerId);
+      renderDesign();
+    });
+
+    preview.addEventListener("pointerdown", (event) => {
+      if (!state.imageSrc || event.target === designLayer || designLayer.contains(event.target)) return;
+      state.artSelected = false;
+      renderDesign();
+    });
+
+    designLayer.addEventListener("pointermove", (event) => {
+      if (!dragMode || !start) return;
+      const rect = preview.getBoundingClientRect();
+      const x = ((event.clientX - rect.left) / rect.width) * 100;
+      const y = ((event.clientY - rect.top) / rect.height) * 100;
+      if (dragMode === "move") {
+        state.artX = Math.max(8, Math.min(92, start.artX + x - start.x));
+        state.artY = Math.max(8, Math.min(92, start.artY + y - start.y));
+      } else {
+        state.artSize = Math.max(8, Math.min(70, start.size + (x - start.x)));
+      }
+      renderDesign();
+    });
+
+    function endDrag() {
+      dragMode = null;
+      start = null;
+    }
+
+    designLayer.addEventListener("pointerup", endDrag);
+    designLayer.addEventListener("pointercancel", endDrag);
+
+    sizeInput.addEventListener("input", () => {
+      state.artSize = Number(sizeInput.value);
+      renderDesign();
+    });
+
+    rotateInput.addEventListener("input", () => {
+      state.rotation = Number(rotateInput.value);
+      renderDesign();
+    });
+
+    flipBtn.addEventListener("click", () => {
+      state.flipped = !state.flipped;
+      renderDesign();
+    });
+
+    resetBtn.addEventListener("click", () => {
+      state.artSelected = true;
+      resetArtPlacement();
+      saveCurrentArtwork();
+      status.textContent = "Artwork placement reset.";
+    });
+
+    deleteArtBtn.addEventListener("click", () => {
+      state.imageSrc = "";
+      state.imageRatio = 1;
+      state.artSelected = false;
+      fileInput.value = "";
+      designImage.removeAttribute("src");
+      renderDesign();
+      saveCurrentArtwork();
+      status.textContent = "Artwork deleted. Upload a new image when ready.";
+    });
+
+    centerBtn.addEventListener("click", () => {
+      state.artSelected = true;
+      const art = activeView().defaultArt || activeProduct().defaultArt;
+      state.artX = art.x;
+      state.artY = art.y;
+      renderDesign();
+      saveCurrentArtwork();
+    });
+
+    downloadBtn.addEventListener("click", async () => {
+      if (!state.imageSrc) return;
+      state.artSelected = false;
+      renderDesign();
+      downloadBtn.disabled = true;
+      const artworkOnly = Boolean(activeProduct().artworkOnly);
+      status.textContent = artworkOnly ? "Preparing uploaded artwork..." : "Preparing mockup PNG...";
+      try {
+        const canvas = document.createElement("canvas");
+        let originalImage = null;
+        if (artworkOnly) {
+          originalImage = await loadImage(state.imageSrc);
+          canvas.width = originalImage.naturalWidth || originalImage.width;
+          canvas.height = originalImage.naturalHeight || originalImage.height;
+        } else {
+          canvas.width = 1200;
+          canvas.height = 1200;
+        }
+        const context = canvas.getContext("2d");
+        if (artworkOnly) {
+          context.drawImage(originalImage, 0, 0);
+        } else {
+          await drawProductToCanvas(context);
+          await drawDesignToCanvas(context);
+        }
+        const blob = await canvasToBlob(canvas);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        const productName = activeProduct().name.toLowerCase().replace(/\s+/g, "-");
+        link.download = artworkOnly
+          ? `${productName}-artwork-${Date.now()}.png`
+          : `${productName}-${state.view}-mockup-${Date.now()}.png`;
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1200);
+        status.textContent = artworkOnly ? "Uploaded artwork downloaded and ready to submit." : "Mockup PNG downloaded.";
+      } catch (error) {
+        status.textContent = "Download could not be created. Try refreshing the page and uploading the artwork again.";
+        console.error(error);
+      } finally {
+        downloadBtn.disabled = false;
+      }
+    });
+
+    function canvasToBlob(canvas) {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error("Canvas export failed"));
+          }
+        }, "image/png");
+      });
+    }
+
+    async function drawProductToCanvas(context) {
+      const view = activeView();
+      if (view.file) {
+        const image = await loadProductImage(view);
+        context.save();
+        context.shadowColor = "rgba(23,33,47,0.2)";
+        context.shadowBlur = 28;
+        context.shadowOffsetY = 18;
+        context.drawImage(image, 0, 0, 1200, 1200);
+        context.restore();
+        const tint = document.createElement("canvas");
+        tint.width = 1200;
+        tint.height = 1200;
+        const tintContext = tint.getContext("2d");
+        tintContext.drawImage(image, 0, 0, 1200, 1200);
+        tintContext.globalCompositeOperation = "source-in";
+        tintContext.fillStyle = state.color;
+        tintContext.fillRect(0, 0, 1200, 1200);
+        tintContext.globalCompositeOperation = "source-over";
+        context.save();
+        context.globalAlpha = 0.82;
+        context.globalCompositeOperation = "multiply";
+        context.drawImage(tint, 0, 0);
+        context.restore();
+        return;
+      }
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">${productSvgMarkup()}</svg>`;
+      const image = await loadImage(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
+      context.drawImage(image, 0, 0, 1200, 1200);
+    }
+
+    async function drawDesignToCanvas(context) {
+      const image = await loadImage(state.imageSrc);
+      const baseWidth = (state.artSize / 100) * 1200;
+      const baseHeight = baseWidth / state.imageRatio;
+      const x = (state.artX / 100) * 1200;
+      const y = (state.artY / 100) * 1200;
+      context.save();
+      context.translate(x, y);
+      context.rotate((state.rotation * Math.PI) / 180);
+      context.scale(state.flipped ? -1 : 1, 1);
+      if (state.product === "polo" || state.product === "hat") {
+        context.shadowColor = "rgba(23,33,47,0.22)";
+        context.shadowBlur = 8;
+        context.lineWidth = 8;
+        context.strokeStyle = "rgba(255,255,255,0.85)";
+        context.strokeRect(-baseWidth / 2 - 12, -baseHeight / 2 - 12, baseWidth + 24, baseHeight + 24);
+      }
+      context.drawImage(image, -baseWidth / 2, -baseHeight / 2, baseWidth, baseHeight);
+      context.restore();
+    }
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = src;
+      });
+    }
+
+    render();
+  </script>
+</body>
+</html>
