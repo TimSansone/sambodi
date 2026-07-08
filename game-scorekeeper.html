@@ -302,6 +302,45 @@
       gap: 8px;
     }
 
+    .dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: none;
+      place-items: center;
+      padding: 18px;
+      background: rgba(24, 32, 45, 0.42);
+    }
+
+    .dialog-backdrop.open {
+      display: grid;
+    }
+
+    .dialog {
+      width: min(420px, 100%);
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      box-shadow: var(--shadow);
+    }
+
+    .dialog h2 {
+      margin-bottom: 8px;
+    }
+
+    .dialog p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .dialog-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
     .workspace {
       display: grid;
       gap: 18px;
@@ -824,11 +863,22 @@
             <button class="btn secondary" id="undoRoundBtn" type="button" disabled>Undo Round</button>
             <button class="btn secondary" id="exportBtn" type="button" disabled>Export CSV</button>
             <button class="btn warning" id="zeroBtn" type="button">Fill Zeros</button>
-            <button class="btn danger" id="resetBtn" type="button">Reset Game</button>
+            <button class="btn danger" id="resetBtn" type="button">Start New Game</button>
           </div>
         </section>
       </aside>
     </main>
+  </div>
+
+  <div class="dialog-backdrop" id="samePlayersDialog" role="dialog" aria-modal="true" aria-labelledby="samePlayersTitle">
+    <div class="dialog">
+      <h2 id="samePlayersTitle">Same players?</h2>
+      <p>Are the same players playing the new game?</p>
+      <div class="dialog-actions">
+        <button class="btn" id="samePlayersYesBtn" type="button">Yes</button>
+        <button class="btn secondary" id="samePlayersNoBtn" type="button">No</button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -860,6 +910,10 @@
     const resetBtn = document.getElementById("resetBtn");
     const status = document.getElementById("status");
     const roundCount = document.getElementById("roundCount");
+    const samePlayersDialog = document.getElementById("samePlayersDialog");
+    const samePlayersYesBtn = document.getElementById("samePlayersYesBtn");
+    const samePlayersNoBtn = document.getElementById("samePlayersNoBtn");
+    let samePlayersResolver = null;
 
     function save() {
       localStorage.setItem(storageKey, JSON.stringify(state));
@@ -1018,18 +1072,76 @@
       render();
     }
 
-    function resetGame() {
-      const confirmed = confirm("Reset the whole scorecard? This clears players, scores, and history.");
-      if (!confirmed) return;
+    function resetScoresForNewGame(message) {
+      state.rounds = [];
+      state.currentScores = Object.fromEntries(state.players.map((player) => [player.id, ""]));
+      roundNote.value = "";
+      status.textContent = message;
+      render();
+    }
+
+    function promptForPlayerCount() {
+      while (true) {
+        const answer = prompt("How many players are playing?", state.players.length || 2);
+        if (answer === null) return null;
+        const playerCount = Number.parseInt(answer, 10);
+        if (Number.isInteger(playerCount) && playerCount > 0 && playerCount <= 20) {
+          return playerCount;
+        }
+        alert("Please enter a whole number from 1 to 20.");
+      }
+    }
+
+    function promptForPlayers() {
+      const playerCount = promptForPlayerCount();
+      if (playerCount === null) return null;
+
+      const players = [];
+      for (let index = 0; index < playerCount; index += 1) {
+        const fallback = state.players[index]?.name || `Player ${index + 1}`;
+        const answer = prompt(`Name for player ${index + 1}:`, fallback);
+        if (answer === null) return null;
+        players.push(answer.trim() || `Player ${index + 1}`);
+      }
+      return players;
+    }
+
+    function askSamePlayers() {
+      samePlayersDialog.classList.add("open");
+      samePlayersYesBtn.focus();
+      return new Promise((resolve) => {
+        samePlayersResolver = resolve;
+      });
+    }
+
+    function answerSamePlayers(answer) {
+      if (!samePlayersResolver) return;
+      samePlayersDialog.classList.remove("open");
+      samePlayersResolver(answer);
+      samePlayersResolver = null;
+    }
+
+    async function startNewGame() {
+      if (state.players.length > 0) {
+        const samePlayers = await askSamePlayers();
+        if (samePlayers) {
+          resetScoresForNewGame("New game started with the same players.");
+          return;
+        }
+      }
+
+      const playerNames = promptForPlayers();
+      if (!playerNames) return;
+
       state.gameName = "Tonight's Game";
       state.mode = "high";
       state.players = [];
       state.rounds = [];
       state.currentScores = {};
       state.nextId = 1;
-      addPlayer("Player 1", false);
-      addPlayer("Player 2", false);
-      status.textContent = "Scorecard reset.";
+      playerNames.forEach((name) => addPlayer(name, false));
+      roundNote.value = "";
+      status.textContent = "New game started with new players.";
       render();
     }
 
@@ -1224,8 +1336,13 @@
     clearScoresBtn.addEventListener("click", clearScores);
     undoRoundBtn.addEventListener("click", undoRound);
     zeroBtn.addEventListener("click", fillZeros);
-    resetBtn.addEventListener("click", resetGame);
+    resetBtn.addEventListener("click", startNewGame);
     exportBtn.addEventListener("click", exportCsv);
+    samePlayersYesBtn.addEventListener("click", () => answerSamePlayers(true));
+    samePlayersNoBtn.addEventListener("click", () => answerSamePlayers(false));
+    samePlayersDialog.addEventListener("click", (event) => {
+      if (event.target === samePlayersDialog) answerSamePlayers(false);
+    });
 
     load();
     render();
