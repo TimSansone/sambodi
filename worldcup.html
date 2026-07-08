@@ -800,7 +800,7 @@
 
     .knockout-bracket {
         display: grid;
-        grid-template-columns: minmax(250px, 1fr) minmax(250px, 1fr);
+        grid-template-columns: repeat(5, minmax(235px, 1fr));
         gap: 18px;
         align-items: start;
         overflow-x: auto
@@ -835,6 +835,20 @@
     .bracket-round.round-16 .bracket-games {
         gap: 30px;
         padding-top: 22px
+    }
+
+    .bracket-round.round-quarterfinal .bracket-games {
+        gap: 54px;
+        padding-top: 55px
+    }
+
+    .bracket-round.round-semifinal .bracket-games {
+        gap: 122px;
+        padding-top: 122px
+    }
+
+    .bracket-round.round-final .bracket-games {
+        padding-top: 240px
     }
 
     .bracket-game {
@@ -884,7 +898,7 @@
 
     @media (max-width: 680px) {
         .knockout-bracket {
-            grid-template-columns: minmax(230px, 1fr) minmax(230px, 1fr)
+            grid-template-columns: repeat(5, minmax(230px, 1fr))
         }
     }
 
@@ -1268,7 +1282,7 @@
     const OPEN_WC_GAMES = 'https://worldcup26.ir/get/games';
     const OPEN_WC_GROUPS = 'https://worldcup26.ir/get/groups';
     const WC_START = '2026-06-11',
-        WC_END = '2026-07-07';
+        WC_END = '2026-07-19';
     const BUILT_IN_MATCHES = [
     ['66457022', '2026-06-22T13:00:00-04:00', 'Group J', 'Argentina', 'ARG', 'Austria', 'AUT'], ['66457010', '2026-06-22T17:00:00-04:00', 'Group I', 'France', 'FRA', 'Iraq', 'IRQ'], ['66457012', '2026-06-22T20:00:00-04:00', 'Group I', 'Norway', 'NOR', 'Senegal', 'SEN'], ['66457024', '2026-06-22T23:00:00-04:00', 'Group J', 'Jordan', 'JOR', 'Algeria', 'DZA'],
     ['66457034', '2026-06-23T13:00:00-04:00', 'Group K', 'Portugal', 'POR', 'Uzbekistan', 'UZB'], ['66457046', '2026-06-23T16:00:00-04:00', 'Group L', 'England', 'ENG', 'Ghana', 'GHA'], ['66457048', '2026-06-23T19:00:00-04:00', 'Group L', 'Panama', 'PAN', 'Croatia', 'CRO'], ['66457036', '2026-06-23T22:00:00-04:00', 'Group K', 'Colombia', 'COL', 'DR Congo', 'COD'],
@@ -1276,7 +1290,10 @@
     ['66457078', '2026-06-25T16:00:00-04:00', 'Group E', 'Ecuador', 'ECU', 'Germany', 'GER'], ['66457080', '2026-06-25T16:00:00-04:00', 'Group E', 'Curacao', 'CUW', 'Ivory Coast', 'CIV'], ['66456976', '2026-06-25T19:00:00-04:00', 'Group F', 'Tunisia', 'TUN', 'Netherlands', 'NED'], ['66456978', '2026-06-25T19:00:00-04:00', 'Group F', 'Japan', 'JPN', 'Sweden', 'SWE'], ['66456948', '2026-06-25T22:00:00-04:00', 'Group D', 'Turkey', 'TUR', 'United States', 'USA'], ['66456950', '2026-06-25T22:00:00-04:00', 'Group D', 'Paraguay', 'PAR', 'Australia', 'AUS'],
     ['66457014', '2026-06-26T15:00:00-04:00', 'Group I', 'Norway', 'NOR', 'France', 'FRA'], ['66457016', '2026-06-26T15:00:00-04:00', 'Group I', 'Senegal', 'SEN', 'Iraq', 'IRQ'], ['66457002', '2026-06-26T20:00:00-04:00', 'Group H', 'Uruguay', 'URU', 'Spain', 'ESP'], ['66457004', '2026-06-26T20:00:00-04:00', 'Group H', 'Cape Verde', 'CPV', 'Saudi Arabia', 'KSA'], ['66456990', '2026-06-26T23:00:00-04:00', 'Group G', 'New Zealand', 'NZL', 'Belgium', 'BEL'], ['66456992', '2026-06-26T23:00:00-04:00', 'Group G', 'Egypt', 'EGY', 'Iran', 'IRI'],
     ['66457050', '2026-06-27T17:00:00-04:00', 'Group L', 'Panama', 'PAN', 'England', 'ENG'], ['66457052', '2026-06-27T17:00:00-04:00', 'Group L', 'Croatia', 'CRO', 'Ghana', 'GHA'], ['66457038', '2026-06-27T19:30:00-04:00', 'Group K', 'Colombia', 'COL', 'Portugal', 'POR'], ['66457040', '2026-06-27T19:30:00-04:00', 'Group K', 'DR Congo', 'COD', 'Uzbekistan', 'UZB'], ['66457026', '2026-06-27T22:00:00-04:00', 'Group J', 'Jordan', 'JOR', 'Argentina', 'ARG'], ['66457028', '2026-06-27T22:00:00-04:00', 'Group J', 'Algeria', 'DZA', 'Austria', 'AUT'],
-    ['760486', '2026-06-28T15:00:00-04:00', 'Round Of 32', 'Canada', 'CAN', 'South Africa', 'RSA'], ['760487', '2026-06-29T13:00:00-04:00', 'Round Of 32', 'Japan', 'JPN', 'Brazil', 'BRA'], ['760489', '2026-06-29T16:30:00-04:00', 'Round Of 32', 'Paraguay', 'PAR', 'Germany', 'GER'], ['760488', '2026-06-29T21:00:00-04:00', 'Round Of 32', 'Morocco', 'MAR', 'Netherlands', 'NED'], ['760490', '2026-06-30T13:00:00-04:00', 'Round Of 32', 'Norway', 'NOR', 'Ivory Coast', 'CIV'], ['760492', '2026-06-30T17:00:00-04:00', 'Round Of 32', 'Sweden', 'SWE', 'France', 'FRA'], ['760491', '2026-06-30T22:00:00-04:00', 'Round Of 32', 'Ecuador', 'ECU', 'Mexico', 'MEX']
+    ['760486', '2026-06-28T15:00:00-04:00', 'Round Of 32', 'Canada', 'CAN', 'South Africa', 'RSA'], ['760487', '2026-06-29T13:00:00-04:00', 'Round Of 32', 'Japan', 'JPN', 'Brazil', 'BRA'], ['760489', '2026-06-29T16:30:00-04:00', 'Round Of 32', 'Paraguay', 'PAR', 'Germany', 'GER'], ['760488', '2026-06-29T21:00:00-04:00', 'Round Of 32', 'Morocco', 'MAR', 'Netherlands', 'NED'], ['760490', '2026-06-30T13:00:00-04:00', 'Round Of 32', 'Norway', 'NOR', 'Ivory Coast', 'CIV'], ['760492', '2026-06-30T17:00:00-04:00', 'Round Of 32', 'Sweden', 'SWE', 'France', 'FRA'], ['760491', '2026-06-30T22:00:00-04:00', 'Round Of 32', 'Ecuador', 'ECU', 'Mexico', 'MEX'],
+    ['760511', '2026-07-09T16:00:00-04:00', 'Quarterfinals', 'France', 'FRA', 'Morocco', 'MAR'], ['760512', '2026-07-10T12:00:00-07:00', 'Quarterfinals', 'Spain', 'ESP', 'Belgium', 'BEL'], ['760513', '2026-07-11T17:00:00-04:00', 'Quarterfinals', 'Norway', 'NOR', 'England', 'ENG'], ['760514', '2026-07-11T20:00:00-05:00', 'Quarterfinals', 'Argentina', 'ARG', 'Switzerland', 'SUI'],
+    ['760515', '2026-07-14T14:00:00-05:00', 'Semifinals', 'Winner Match 97', 'TBD', 'Winner Match 98', 'TBD'], ['760516', '2026-07-15T15:00:00-04:00', 'Semifinals', 'Winner Match 99', 'TBD', 'Winner Match 100', 'TBD'],
+    ['760518', '2026-07-19T15:00:00-04:00', 'Final', 'Winner Match 101', 'TBD', 'Winner Match 102', 'TBD']
     ].map(([id, date, stage, awayName, awayAbbr, homeName, homeAbbr]) => ({
         id,
         date,
@@ -2126,10 +2143,24 @@
             return true;
         if (round === 16 && /round\s*(of\s*)?16/.test(stage))
             return true;
+        if (round === 8 && /quarter/.test(stage))
+            return true;
+        if (round === 4 && /semi/.test(stage))
+            return true;
+        if (round === 2 && /\bfinal\b/.test(stage) && !/third|3rd|semi/.test(stage))
+            return true;
         const date = localMatchDate(match);
-        return round === 32
-            ? date >= '2026-06-28' && date <= '2026-07-03'
-            : date >= '2026-07-04' && date <= '2026-07-07'
+        if (round === 32)
+            return date >= '2026-06-28' && date <= '2026-07-03';
+        if (round === 16)
+            return date >= '2026-07-04' && date <= '2026-07-07';
+        if (round === 8)
+            return date >= '2026-07-09' && date <= '2026-07-11';
+        if (round === 4)
+            return date >= '2026-07-14' && date <= '2026-07-15';
+        if (round === 2)
+            return date === '2026-07-19';
+        return false
     }
     function bracketWinner(match) {
         if (!match || match.status !== 'final') return '';
@@ -2192,6 +2223,19 @@
         { number: 94, date: '2026-07-06', feeders: [81, 82] },
         { number: 95, date: '2026-07-07', feeders: [86, 88] },
         { number: 96, date: '2026-07-07', feeders: [85, 87] }
+    ];
+    const QUARTERFINAL_SLOTS = [
+        { number: 97, date: '2026-07-09T16:00:00-04:00', feeders: [89, 90] },
+        { number: 98, date: '2026-07-10T12:00:00-07:00', feeders: [93, 94] },
+        { number: 99, date: '2026-07-11T17:00:00-04:00', feeders: [91, 92] },
+        { number: 100, date: '2026-07-11T20:00:00-05:00', feeders: [95, 96] }
+    ];
+    const SEMIFINAL_SLOTS = [
+        { number: 101, date: '2026-07-14T14:00:00-05:00', feeders: [97, 98] },
+        { number: 102, date: '2026-07-15T15:00:00-04:00', feeders: [99, 100] }
+    ];
+    const FINAL_SLOTS = [
+        { number: 104, date: '2026-07-19T15:00:00-04:00', feeders: [101, 102] }
     ];
     function localMatchDate(match) {
         if (!match?.date)
@@ -2302,35 +2346,105 @@
             return feederIndex == null ? labels[side] : labels[feederIndex]
         })
     }
+    function slotLocalDate(slot) {
+        return localMatchDate({ date: slot.date })
+    }
+    function feederRoundSlotScore(match, slot, feederMatches) {
+        const teams = [match.away, match.home].filter(team => !isBracketPlaceholder(team)).map(team => canonicalAbbr(team.abbr));
+        const feederCodes = slot.feeders.map(number => possibleCodes(feederMatches[number]));
+        const direct = (teams[0] && feederCodes[0].includes(teams[0]) ? 18 : 0) + (teams[1] && feederCodes[1].includes(teams[1]) ? 18 : 0);
+        const reversed = (teams[0] && feederCodes[1].includes(teams[0]) ? 18 : 0) + (teams[1] && feederCodes[0].includes(teams[1]) ? 18 : 0);
+        return Math.max(direct, reversed) + (localMatchDate(match) === slotLocalDate(slot) ? 12 : -8)
+    }
+    function assignFeederRound(matches, slots, feederMatches) {
+        const assignments = {};
+        const candidates = [];
+        matches.forEach(match => slots.forEach(slot => {
+            candidates.push({ match, slot, score: feederRoundSlotScore(match, slot, feederMatches) })
+        }));
+        const used = new Set();
+        candidates.sort((a, b) => b.score - a.score).forEach(candidate => {
+            if (candidate.score < 4 || assignments[candidate.slot.number] || used.has(candidate.match))
+                return;
+            assignments[candidate.slot.number] = candidate.match;
+            used.add(candidate.match)
+        });
+        return assignments
+    }
+    function feederPlaceholderTeams(match, slot, feederMatches) {
+        const labels = slot.feeders.map(number => feederPossibilities(feederMatches[number]));
+        if (!match)
+            return labels;
+        const options = slot.feeders.map(number => possibleCodes(feederMatches[number]));
+        const actual = [match.away, match.home].map(team => isBracketPlaceholder(team) ? '' : canonicalAbbr(team.abbr));
+        const claimed = new Set();
+        actual.forEach(code => {
+            const feederIndex = options.findIndex((codes, index) => !claimed.has(index) && codes.includes(code));
+            if (feederIndex >= 0)
+                claimed.add(feederIndex)
+        });
+        const remaining = [0, 1].filter(index => !claimed.has(index));
+        return actual.map((code, side) => {
+            if (code)
+                return labels[options.findIndex(codes => codes.includes(code))] || labels[side];
+            const feederIndex = remaining.shift();
+            return feederIndex == null ? labels[side] : labels[feederIndex]
+        })
+    }
     function bracketTeam(team, side, winner) {
         const name = team?.name || 'TBD';
         const abbr = team?.abbr && team.abbr !== 'TBD' ? `${team.abbr} ` : '';
-        const score = team?.score !== '' && team?.score != null ? team.score : '–';
+        const score = team?.score !== '' && team?.score != null ? team.score : '-';
         return `<div class="bracket-team ${winner === side ? 'winner' : ''}"><span class="bracket-team-name">${esc(abbr + name)}</span><span class="bracket-score">${esc(score)}</span></div>`
     }
-    function bracketGame(match, index, placeholderTeams, officialNumber) {
-        const date = match?.date ? new Date(match.date) : null;
+    function bracketGame(match, index, placeholderTeams, officialNumber, slot) {
+        const date = match?.date || slot?.date ? new Date(match?.date || slot.date) : null;
         const dateText = date && !Number.isNaN(date.valueOf())
-            ? date.toLocaleDateString([], { month: 'short', day: 'numeric' })
+            ? date.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
             : 'Date TBD';
         const away = resolvedBracketTeam(match?.away, placeholderTeams?.[0]);
         const home = resolvedBracketTeam(match?.home, placeholderTeams?.[1]);
         const winner = bracketWinner(match);
-        return `<div class="bracket-game"><div class="bracket-game-meta">Match ${officialNumber || index + 1} · ${esc(dateText)}</div>${bracketTeam(away, 'away', winner)}${bracketTeam(home, 'home', winner)}</div>`
+        return `<div class="bracket-game"><div class="bracket-game-meta">Match ${officialNumber || index + 1} - ${esc(dateText)}</div>${bracketTeam(away, 'away', winner)}${bracketTeam(home, 'home', winner)}</div>`
     }
     function renderAdvancement() {
         const matches = uniqueMatches([...(state.allStageMatches || []), ...(state.matches || [])]);
         const round32 = matches.filter(m => isKnockoutRound(m, 32)).sort((a, b) => new Date(a.date) - new Date(b.date));
         const round16 = matches.filter(m => isKnockoutRound(m, 16)).sort((a, b) => new Date(a.date) - new Date(b.date));
+        const quarterfinals = matches.filter(m => isKnockoutRound(m, 8)).sort((a, b) => new Date(a.date) - new Date(b.date));
+        const semifinals = matches.filter(m => isKnockoutRound(m, 4)).sort((a, b) => new Date(a.date) - new Date(b.date));
+        const finals = matches.filter(m => isKnockoutRound(m, 2)).sort((a, b) => new Date(a.date) - new Date(b.date));
         const groups = currentStandingsGroups();
         const round32ByNumber = assignRound32(round32, groups);
         const round16ByNumber = assignRound16(round16, round32ByNumber);
-        const r32Markup = ROUND32_SLOTS.map((slot, i) => bracketGame(round32ByNumber[slot.number], i, null, slot.number));
+        const quarterfinalByNumber = assignFeederRound(quarterfinals, QUARTERFINAL_SLOTS, round16ByNumber);
+        const semifinalByNumber = assignFeederRound(semifinals, SEMIFINAL_SLOTS, quarterfinalByNumber);
+        const finalByNumber = assignFeederRound(finals, FINAL_SLOTS, semifinalByNumber);
+        const r32Markup = ROUND32_SLOTS.map((slot, i) => bracketGame(round32ByNumber[slot.number], i, null, slot.number, slot));
         const r16Markup = ROUND16_SLOTS.map((slot, i) => {
             const possibilities = round16PlaceholderTeams(round16ByNumber[slot.number], slot, round32ByNumber);
-            return bracketGame(round16ByNumber[slot.number], i, possibilities, slot.number)
+            return bracketGame(round16ByNumber[slot.number], i, possibilities, slot.number, slot)
         });
-        els.advancementPanel.innerHTML = `<div class="knockout-bracket"><section class="bracket-round"><div class="bracket-round-title">Round of 32 <span>16 matches</span></div><div class="bracket-games">${r32Markup.join('')}</div></section><section class="bracket-round round-16"><div class="bracket-round-title">Round of 16 <span>8 matches</span></div><div class="bracket-games">${r16Markup.join('')}</div></section></div>`
+        const qfMarkup = QUARTERFINAL_SLOTS.map((slot, i) => {
+            const possibilities = feederPlaceholderTeams(quarterfinalByNumber[slot.number], slot, round16ByNumber);
+            return bracketGame(quarterfinalByNumber[slot.number], i, possibilities, slot.number, slot)
+        });
+        const sfMarkup = SEMIFINAL_SLOTS.map((slot, i) => {
+            const possibilities = feederPlaceholderTeams(semifinalByNumber[slot.number], slot, quarterfinalByNumber);
+            return bracketGame(semifinalByNumber[slot.number], i, possibilities, slot.number, slot)
+        });
+        const semifinalPathLabels = {};
+        SEMIFINAL_SLOTS.forEach(slot => {
+            semifinalPathLabels[slot.number] = slot.feeders.map(number => feederPossibilities(quarterfinalByNumber[number])).join('/')
+        });
+        const finalMarkup = FINAL_SLOTS.map((slot, i) => {
+            const possibilities = slot.feeders.map(number => {
+                const winner = bracketWinner(semifinalByNumber[number]);
+                return winner ? feederPossibilities(semifinalByNumber[number]) : semifinalPathLabels[number]
+            });
+            return bracketGame(finalByNumber[slot.number], i, possibilities, slot.number, slot)
+        });
+        els.advancementPanel.innerHTML = `<div class="knockout-bracket"><section class="bracket-round"><div class="bracket-round-title">Round of 32 <span>16 matches</span></div><div class="bracket-games">${r32Markup.join('')}</div></section><section class="bracket-round round-16"><div class="bracket-round-title">Round of 16 <span>8 matches</span></div><div class="bracket-games">${r16Markup.join('')}</div></section><section class="bracket-round round-quarterfinal"><div class="bracket-round-title">Quarterfinals <span>4 matches</span></div><div class="bracket-games">${qfMarkup.join('')}</div></section><section class="bracket-round round-semifinal"><div class="bracket-round-title">Semifinals <span>2 matches</span></div><div class="bracket-games">${sfMarkup.join('')}</div></section><section class="bracket-round round-final"><div class="bracket-round-title">Final <span>1 match</span></div><div class="bracket-games">${finalMarkup.join('')}</div></section></div>`
     }
     function renderAll() {
         renderStats();
