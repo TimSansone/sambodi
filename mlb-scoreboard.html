@@ -747,6 +747,7 @@
     .pitch-result {
         display: inline-flex;
         align-items: center;
+        gap: 5px;
         max-width: 100%;
         padding: 5px 8px;
         border: 1px solid var(--line);
@@ -757,6 +758,11 @@
         font-weight: 800;
         line-height: 1.2;
         overflow-wrap:anywhere
+    }
+
+    .pitch-result strong {
+        color: var(--blue);
+        white-space:nowrap
     }
 
     .card-actions {
@@ -2462,11 +2468,10 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
     function pitchResultsHtml(g) {
         const events = feedFor(g)?.liveData?.plays?.currentPlay?.playEvents || [];
         const pitches = events
-            .filter(e => e?.isPitch || e?.type === 'pitch')
-            .slice(-3);
+            .filter(e => e?.isPitch || e?.type === 'pitch');
         if (!pitches.length)
             return '';
-        return `<div class="pitch-results"><span class="pitch-results-label">Current batter pitches</span><div class="pitch-result-list">${pitches.map(e => `<span class="pitch-result">${esc(pitchResultText(e))}</span>`).join('')}</div></div>`
+        return `<div class="pitch-results"><span class="pitch-results-label">Current batter pitches</span><div class="pitch-result-list">${pitches.map((e, i) => `<span class="pitch-result"><strong>Pitch ${i + 1}:</strong> ${esc(pitchResultText(e))}</span>`).join('')}</div></div>`
     }
     function livePlayerName(feed, person, fallback = 'Unavailable') {
         return person?.fullName
