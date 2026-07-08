@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>T-Shirt Mockup Tool</title>
+  <title>Sambodi Creations Gang Sheet Builder</title>
   <style>
     :root {
       color-scheme: light;
@@ -17,6 +17,7 @@
       --coral: #d95d4f;
       --amber: #e3a12a;
       --blue: #2f6fca;
+      --violet: #7b5bb7;
       --shadow: 0 18px 48px rgba(23, 33, 47, 0.14);
       font-family: Arial, Helvetica, sans-serif;
     }
@@ -28,17 +29,18 @@
     body {
       margin: 0;
       min-height: 100vh;
-      overflow-x: hidden;
+      overflow-x: auto;
       background:
-        linear-gradient(135deg, rgba(15, 118, 110, 0.14), transparent 34%),
-        linear-gradient(45deg, rgba(227, 161, 42, 0.15), transparent 30%),
+        linear-gradient(135deg, rgba(15, 118, 110, 0.13), transparent 35%),
+        linear-gradient(45deg, rgba(227, 161, 42, 0.14), transparent 32%),
         #eef3f7;
       color: var(--ink);
     }
 
     button,
     input,
-    select {
+    select,
+    textarea {
       font: inherit;
     }
 
@@ -47,14 +49,15 @@
     }
 
     .app {
-      width: min(1500px, 100%);
+      width: min(1600px, 100%);
       margin: 0 auto;
       padding: clamp(12px, 3vw, 24px);
+      padding-bottom: clamp(12px, 3vw, 24px);
     }
 
     header {
       display: grid;
-      grid-template-columns: minmax(260px, 1fr) auto;
+      grid-template-columns: minmax(280px, 1fr) auto;
       gap: 18px;
       align-items: end;
       margin-bottom: 18px;
@@ -62,7 +65,7 @@
 
     h1 {
       margin: 0;
-      font-size: clamp(2.1rem, 4vw, 4.4rem);
+      font-size: clamp(2rem, 4vw, 4.25rem);
       line-height: 0.98;
       letter-spacing: 0;
     }
@@ -73,8 +76,8 @@
       line-height: 1.45;
     }
 
-    .badge {
-      min-width: 200px;
+    .sheet-badge {
+      min-width: 190px;
       padding: 14px 16px;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -83,13 +86,13 @@
       text-align: center;
     }
 
-    .badge strong {
+    .sheet-badge strong {
       display: block;
-      font-size: 1.75rem;
+      font-size: 2rem;
       line-height: 1;
     }
 
-    .badge span {
+    .sheet-badge span {
       color: var(--muted);
       font-size: 0.78rem;
       font-weight: 900;
@@ -99,12 +102,14 @@
 
     main {
       display: grid;
-      grid-template-columns: minmax(300px, 390px) minmax(0, 1fr) minmax(290px, 360px);
+      grid-template-columns: minmax(0, 390px) minmax(0, 1fr) minmax(0, 360px);
       gap: 18px;
       align-items: start;
+      min-width: 0;
     }
 
     .panel {
+      min-width: 0;
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -118,6 +123,7 @@
     .stack {
       display: grid;
       gap: 14px;
+      min-width: 0;
     }
 
     h2 {
@@ -125,31 +131,66 @@
       font-size: 1.16rem;
     }
 
-    label {
-      display: block;
-      margin-bottom: 7px;
-      color: var(--muted);
-      font-size: 0.78rem;
-      font-weight: 900;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
+    .notice {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
     }
 
-    input,
-    select {
-      width: 100%;
+    .notice li {
+      display: grid;
+      grid-template-columns: 26px 1fr;
+      gap: 9px;
+      align-items: start;
+      padding: 10px;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: white;
-      color: var(--ink);
-      padding: 10px 11px;
-      outline: none;
+      background: #fbfcfe;
+      color: var(--muted);
+      line-height: 1.35;
     }
 
-    input:focus,
-    select:focus {
+    .notice strong {
+      color: var(--ink);
+    }
+
+    .mark {
+      width: 26px;
+      height: 26px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #e8f5f3;
+      color: var(--teal);
+      font-weight: 900;
+    }
+
+    .upload-box {
+      display: grid;
+      gap: 10px;
+      place-items: center;
+      min-height: 150px;
+      padding: 18px;
+      border: 2px dashed #b9c5d5;
+      border-radius: 8px;
+      background: #f8fbfd;
+      text-align: center;
+    }
+
+    .upload-box.dragging {
       border-color: var(--teal);
-      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
+      background: #eef9f7;
+    }
+
+    .upload-box input {
+      display: none;
+    }
+
+    .upload-text {
+      color: var(--muted);
+      line-height: 1.4;
     }
 
     .btn {
@@ -193,205 +234,29 @@
     }
 
     .btn.danger {
-      background: #b91c1c;
+      background: var(--coral);
     }
 
     .btn.danger:hover {
-      background: #991b1b;
+      background: #b9473d;
     }
 
-    .upload-box {
-      display: grid;
-      gap: 10px;
-      place-items: center;
-      min-height: 148px;
-      padding: 18px;
-      border: 2px dashed #b9c5d5;
-      border-radius: 8px;
-      background: #f8fbfd;
-      text-align: center;
+    .btn.full {
+      width: 100%;
     }
 
-    .upload-box input {
-      display: none;
-    }
-
-    .upload-text {
-      color: var(--muted);
-      line-height: 1.4;
-    }
-
-    .upload-reminder {
-      margin: 10px 0 0;
-      padding: 10px 12px;
-      border: 1px solid #f0cf8a;
-      border-radius: 8px;
-      background: #fff8e8;
-      color: #704d08;
-      font-size: 0.82rem;
-      font-weight: 800;
-      line-height: 1.4;
-    }
-
-    .email-design-btn {
-      display: flex;
-      margin-top: 10px;
-      text-decoration: none;
-    }
-
-    .product-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .product-card {
-      min-height: 72px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fbfcfe;
-      cursor: pointer;
-      padding: 10px;
-      text-align: left;
-      font-weight: 900;
-      color: var(--ink);
-    }
-
-    .product-card.active {
-      border-color: var(--teal);
-      background: #eaf8f6;
-      box-shadow: inset 0 0 0 2px rgba(15, 118, 110, 0.15);
-    }
-
-    .product-card span {
-      display: block;
-      margin-top: 4px;
-      color: var(--muted);
-      font-size: 0.78rem;
-      font-weight: 700;
-      line-height: 1.3;
-    }
-
-    .product-category {
-      grid-column: 1 / -1;
-      margin: 8px 0 0;
-      color: var(--muted);
-      font-size: 0.76rem;
-      font-weight: 900;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .swatches {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 8px;
-    }
-
-    .swatch {
-      aspect-ratio: 1;
-      border: 2px solid white;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 0 0 1px var(--line);
-    }
-
-    .swatch.active {
-      box-shadow: 0 0 0 3px var(--teal);
-    }
-
-    .custom-color-row {
-      display: grid;
-      grid-template-columns: 56px minmax(0, 1fr);
-      gap: 10px;
-      align-items: center;
-      margin-top: 12px;
-      padding-top: 12px;
-      border-top: 1px solid var(--line);
-    }
-
-    .custom-color-row input[type="color"] {
-      width: 56px;
-      height: 48px;
-      padding: 4px;
-      cursor: pointer;
-    }
-
-    .custom-color-text {
-      color: var(--muted);
-      font-size: 0.9rem;
-      line-height: 1.35;
-    }
-
-    .custom-color-text strong {
-      display: block;
-      color: var(--ink);
-      font-size: 0.95rem;
-    }
-
-    .shape-panel.is-hidden {
-      display: none;
-    }
-
-    .view-panel.is-hidden {
-      display: none;
-    }
-
-    .shape-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .view-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .shape-btn {
-      min-height: 46px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fbfcfe;
-      color: var(--ink);
-      cursor: pointer;
-      font-weight: 900;
-    }
-
-    .shape-btn.active {
-      border-color: var(--teal);
-      background: #eaf8f6;
-      box-shadow: inset 0 0 0 2px rgba(15, 118, 110, 0.15);
-    }
-
-    .view-btn {
-      min-height: 46px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fbfcfe;
-      color: var(--ink);
-      cursor: pointer;
-      font-weight: 900;
-    }
-
-    .view-btn.active {
-      border-color: var(--teal);
-      background: #eaf8f6;
-      box-shadow: inset 0 0 0 2px rgba(15, 118, 110, 0.15);
-    }
-
-    .mockup-panel {
-      min-width: 0;
+    .canvas-shell {
       padding: 16px;
+      min-width: 0;
     }
 
-    .stage-top {
+    .canvas-top {
       display: flex;
-      align-items: center;
       justify-content: space-between;
       gap: 12px;
+      align-items: center;
       margin-bottom: 12px;
+      min-width: 0;
     }
 
     .stats {
@@ -410,102 +275,109 @@
       background: #fbfcfe;
     }
 
-    .preview-wrap {
-      width: min(100%, 720px);
+    .sheet-wrap {
+      width: min(100%, 620px);
       margin: 0 auto;
     }
 
-    .preview {
+    .sheet {
       position: relative;
       width: 100%;
-      aspect-ratio: 1;
+      aspect-ratio: var(--sheet-ratio, 13 / 19);
       overflow: hidden;
-      border-radius: 8px;
       background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(242, 246, 250, 0.94)),
-        radial-gradient(circle at 50% 70%, rgba(23, 33, 47, 0.12), transparent 42%);
-      border: 1px solid var(--line);
+        linear-gradient(rgba(47, 111, 202, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(47, 111, 202, 0.08) 1px, transparent 1px),
+        #ffffff;
+      background-size: calc(100% / var(--sheet-width, 13)) calc(100% / var(--sheet-height, 19));
+      border: 1px solid #aeb9c8;
+      border-radius: 4px;
+      box-shadow: 0 22px 60px rgba(23, 33, 47, 0.18);
       touch-action: none;
     }
 
-    .product-svg {
+    .empty-sheet {
       position: absolute;
       inset: 0;
-      width: 100%;
-      height: 100%;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: #8a95a5;
+      text-align: center;
       pointer-events: none;
+      line-height: 1.45;
     }
 
-    .product-photo,
-    .product-tint {
+    .art-item {
       position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      pointer-events: none;
-      display: none;
-    }
-
-    .product-photo.visible,
-    .product-tint.visible {
-      display: block;
-    }
-
-    .product-photo {
-      filter: drop-shadow(0 18px 24px rgba(23, 33, 47, 0.2));
-      z-index: 1;
-    }
-
-    .product-tint {
-      z-index: 2;
-      opacity: 0.82;
-      mix-blend-mode: multiply;
-    }
-
-    .design-layer {
-      position: absolute;
-      left: 50%;
-      top: 48%;
-      width: 22%;
-      transform: translate(-50%, -50%) rotate(0deg);
-      transform-origin: center;
+      border: 2px solid transparent;
       touch-action: none;
       cursor: move;
-      display: none;
-      z-index: 4;
+      user-select: none;
     }
 
-    .design-layer.visible {
-      display: block;
+    .art-item.selected {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.22);
     }
 
-    .design-layer.selected {
-      outline: 2px dashed var(--teal);
-      outline-offset: 6px;
-    }
-
-    .design-layer img {
+    .art-item img {
+      position: absolute;
+      left: 50%;
+      top: 50%;
       width: 100%;
+      height: 100%;
       display: block;
+      object-fit: contain;
       pointer-events: none;
-      filter: drop-shadow(0 8px 12px rgba(23, 33, 47, 0.18));
+      transform: translate(-50%, -50%) rotate(var(--rotation, 0deg));
     }
 
     .handle {
       position: absolute;
-      right: -14px;
-      bottom: -14px;
-      width: 28px;
-      height: 28px;
-      border: 3px solid white;
+      right: -8px;
+      bottom: -8px;
+      width: 20px;
+      height: 20px;
+      display: none;
+      border: 2px solid white;
       border-radius: 50%;
       background: var(--teal);
       box-shadow: 0 2px 8px rgba(23, 33, 47, 0.25);
+      cursor: nwse-resize;
     }
 
-    .design-layer:not(.selected) .handle {
-      display: none;
+    .selected .handle {
+      display: block;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--ink);
+      padding: 10px 11px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
     }
 
     .field-grid {
@@ -514,15 +386,87 @@
       gap: 8px;
     }
 
+    .size-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      align-items: end;
+    }
+
+    .size-grid .wide {
+      grid-column: 1 / -1;
+    }
+
+    .tools {
+      display: grid;
+      gap: 10px;
+    }
+
     .tool-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
     }
 
-    .tools {
+    .art-list {
       display: grid;
+      gap: 8px;
+      max-height: 260px;
+      overflow: auto;
+    }
+
+    .art-card {
+      display: grid;
+      grid-template-columns: 52px 1fr;
       gap: 10px;
+      align-items: center;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      cursor: pointer;
+    }
+
+    .art-card.selected {
+      border-color: var(--teal);
+      background: #eef9f7;
+    }
+
+    .art-card img {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      border-radius: 6px;
+      background: white;
+      border: 1px solid var(--line);
+    }
+
+    .art-card strong {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .art-card span {
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    .check {
+      display: grid;
+      grid-template-columns: 20px 1fr;
+      gap: 9px;
+      align-items: start;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .check input {
+      width: 18px;
+      height: 18px;
+      margin: 1px 0 0;
+      accent-color: var(--teal);
     }
 
     .status {
@@ -538,23 +482,19 @@
       line-height: 1.35;
     }
 
-    .tips {
-      display: grid;
-      gap: 8px;
-      color: var(--muted);
-      line-height: 1.4;
+    .status.warn {
+      border-color: #f0d08c;
+      background: #fff7e5;
+      color: #6f4300;
     }
 
-    .tips div {
-      padding: 10px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fbfcfe;
+    .mobile-actions {
+      display: none;
     }
 
-    @media (max-width: 1120px) {
+    @media (max-width: 1180px) {
       main {
-        grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
+        grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
       }
 
       .right-panel {
@@ -562,22 +502,27 @@
       }
     }
 
-    @media (max-width: 820px) {
+    @media (max-width: 1050px) {
       header,
       main {
         grid-template-columns: 1fr;
       }
 
-      .mockup-panel {
+      .canvas-shell {
         order: -1;
-        padding: 10px;
       }
+    }
 
-      .badge {
+    @media (max-width: 820px) {
+      .sheet-badge {
         min-width: 0;
       }
 
-      .preview-wrap {
+      .canvas-shell {
+        padding: 10px;
+      }
+
+      .sheet-wrap {
         width: min(100%, 460px);
       }
     }
@@ -591,6 +536,7 @@
 
       .app {
         padding: 10px;
+        padding-bottom: 86px;
       }
 
       header {
@@ -600,6 +546,7 @@
 
       h1 {
         font-size: 2.05rem;
+        max-width: 11ch;
       }
 
       .subtitle {
@@ -614,38 +561,142 @@
         padding: 12px;
       }
 
-      .stage-top {
+      .canvas-top {
         display: grid;
+        gap: 10px;
       }
 
-      .product-grid,
-      .view-grid,
-      .shape-grid,
+      .stats {
+        font-size: 0.82rem;
+      }
+
+      .stat {
+        padding: 6px 8px;
+      }
+
+      .sheet-badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 12px;
+        box-shadow: 0 10px 26px rgba(23, 33, 47, 0.1);
+      }
+
+      .sheet-badge strong {
+        font-size: 1.45rem;
+      }
+
+      .sheet-badge span {
+        font-size: 0.72rem;
+      }
+
+      .upload-box {
+        min-height: 118px;
+        padding: 14px;
+      }
+
+      .notice li {
+        padding: 9px;
+      }
+
       .field-grid,
       .tool-row {
         grid-template-columns: 1fr;
       }
 
-      .swatches {
-        grid-template-columns: repeat(4, 1fr);
+      .canvas-shell {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        border-radius: 0 0 8px 8px;
+      }
+
+      .sheet-wrap {
+        width: min(100%, 330px);
+      }
+
+      .sheet {
+        box-shadow: 0 14px 34px rgba(23, 33, 47, 0.18);
+      }
+
+      .empty-sheet {
+        font-size: 0.92rem;
+      }
+
+      .art-item.selected {
+        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.22);
+      }
+
+      .handle {
+        right: -12px;
+        bottom: -12px;
+        width: 30px;
+        height: 30px;
+        border-width: 3px;
+      }
+
+      .art-list {
+        max-height: none;
+      }
+
+      .art-card {
+        grid-template-columns: 58px 1fr;
+        padding: 10px;
+      }
+
+      .art-card img {
+        width: 58px;
+        height: 58px;
       }
 
       input,
       select,
+      textarea,
       .btn {
         min-height: 46px;
         font-size: 16px;
       }
 
-      .preview-wrap {
-        width: min(100%, 350px);
+      .mobile-actions {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 10px;
+        border-top: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 -12px 28px rgba(23, 33, 47, 0.16);
+        backdrop-filter: blur(10px);
       }
 
-      .handle {
-        right: -16px;
-        bottom: -16px;
-        width: 32px;
-        height: 32px;
+      .mobile-actions .btn {
+        min-height: 48px;
+        padding: 9px 8px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .app {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+
+      h1 {
+        font-size: 1.88rem;
+      }
+
+      .sheet-wrap {
+        width: min(100%, 300px);
+      }
+
+      .canvas-shell,
+      .pad {
+        padding: 10px;
       }
     }
   </style>
@@ -654,12 +705,12 @@
   <div class="app">
     <header>
       <div>
-        <h1>T-Shirt Mockup Tool</h1>
-        <p class="subtitle">Upload artwork, preview it on the front or back of a t-shirt, then download or email the mockup.</p>
+        <h1>Gang Sheet Builder</h1>
+        <p class="subtitle">Upload artwork, choose a gang sheet size, arrange designs, then export a print-size PNG.</p>
       </div>
-      <div class="badge">
-        <strong id="productBadge">T-Shirt</strong>
-        <span>T-shirt mockup preview</span>
+      <div class="sheet-badge">
+        <strong id="sheetBadge">13 x 19</strong>
+        <span>inches at 300 DPI</span>
       </div>
     </header>
 
@@ -667,796 +718,520 @@
       <aside class="stack">
         <section class="panel pad">
           <h2>Upload Artwork</h2>
-          <label class="upload-box">
-            <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp">
-            <button class="btn" id="chooseBtn" type="button">Choose Image</button>
-            <span class="upload-text">PNG artwork with a transparent background works best, but JPG and WebP are supported.</span>
+          <label class="upload-box" id="uploadBox">
+            <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp" multiple>
+            <button class="btn" type="button" id="chooseFilesBtn">Choose Images</button>
+            <span class="upload-text">PNG, JPG, or WebP files. Multiple images are welcome if they fit on the sheet.</span>
           </label>
-          <p class="upload-reminder">For the best print quality, please upload artwork that is at least 300 DPI at the intended print size.</p>
-          <a
-            class="btn secondary email-design-btn"
-            href="mailto:info@sambodicreations.com?subject=Custom%20Design%20Submission&amp;body=Hello%20Sambodi%20Creations%2C%0A%0AI%20would%20like%20to%20submit%20my%20design.%20I%20have%20attached%20the%20artwork%20to%20this%20email.%0A%0AProject%20type%3A%20%0ADesired%20size%3A%20%0AQuantity%3A%20%0AAdditional%20notes%3A%20"
-          >Email Your Design</a>
         </section>
 
         <section class="panel pad">
-          <h2>T-Shirt Style</h2>
-          <div class="product-grid" id="productGrid"></div>
-        </section>
-
-        <section class="panel pad view-panel is-hidden" id="viewPanel">
-          <h2>Product View</h2>
-          <div class="view-grid" id="viewGrid"></div>
-        </section>
-
-        <section class="panel pad" id="colorPanel">
-          <h2>Item Color</h2>
-          <div class="swatches" id="swatches"></div>
-          <div class="custom-color-row">
-            <input id="customColorInput" type="color" value="#ffffff" aria-label="Choose a custom product color">
-            <div class="custom-color-text">
-              <strong>Custom color</strong>
-              <span id="customColorValue">#FFFFFF</span>
-            </div>
-          </div>
-        </section>
-
-        <section class="panel pad shape-panel is-hidden" id="shapePanel">
-          <h2>Embroidery Shape</h2>
-          <div class="shape-grid" id="shapeGrid"></div>
+          <h2>Required Reminders</h2>
+          <ul class="notice">
+            <li><span class="mark">1</span><span><strong>Artwork should be at least 300 DPI.</strong> Low quality files may print blurry.</span></li>
+            <li><span class="mark">2</span><span><strong>No copyrighted or trademarked artwork.</strong> Upload only designs you own or have permission to use.</span></li>
+            <li><span class="mark">3</span><span><strong>Keep every image inside the sheet.</strong> The builder will not export artwork outside the selected gang sheet area.</span></li>
+          </ul>
         </section>
       </aside>
 
-      <section class="panel mockup-panel">
-        <div class="stage-top">
+      <section class="panel canvas-shell">
+        <div class="canvas-top">
           <div>
-            <h2 id="stageTitle">T-Shirt Mockup</h2>
+            <h2 id="sheetTitle">13 x 19 Sheet</h2>
             <div class="stats">
-              <span class="stat" id="artStatus">No artwork uploaded</span>
-              <span class="stat" id="colorStatus">Color selected</span>
+              <span class="stat" id="artCount">0 artwork files</span>
+              <span class="stat" id="selectedSize">No selection</span>
+              <span class="stat" id="exportSize">3900 x 5700 px export</span>
             </div>
           </div>
-          <button class="btn secondary" id="centerBtn" type="button">Center Artwork</button>
+          <button class="btn secondary" id="fitViewBtn" type="button">Center View</button>
         </div>
-
-        <div class="preview-wrap">
-          <div class="preview" id="preview">
-            <svg class="product-svg" id="productSvg" viewBox="0 0 1000 1000" aria-label="Product preview"></svg>
-            <img class="product-photo" id="productPhoto" alt="" aria-hidden="true">
-            <canvas class="product-tint" id="productTint" width="1200" height="1200" aria-hidden="true"></canvas>
-            <div class="design-layer" id="designLayer">
-              <img id="designImage" alt="Uploaded artwork preview">
-              <span class="handle" aria-hidden="true"></span>
-            </div>
+        <div class="sheet-wrap">
+          <div class="sheet" id="sheet" aria-label="13 by 19 inch gang sheet canvas">
+            <div class="empty-sheet" id="emptySheet">Upload artwork to start building the gang sheet.</div>
           </div>
         </div>
       </section>
 
       <aside class="stack right-panel">
         <section class="panel pad tools">
-          <h2>Artwork Controls</h2>
-          <div id="placementControls">
+          <h2>Sheet Size</h2>
+          <ul class="notice">
+            <li><span class="mark">13</span><span><strong>Only 13 x 19 inch gang sheets are available.</strong> Arrange your artwork inside the fixed sheet area.</span></li>
+          </ul>
+
+          <h2>Selected Artwork</h2>
           <div class="field-grid">
             <div>
-              <label for="sizeInput">Size</label>
-              <input id="sizeInput" type="range" min="8" max="70" value="22">
+              <label for="widthInput">Width (in)</label>
+              <input id="widthInput" type="number" min="0.1" max="13" step="0.1" disabled>
             </div>
             <div>
-              <label for="rotateInput">Rotate</label>
-              <input id="rotateInput" type="range" min="-45" max="45" value="0">
+              <label for="heightInput">Height (in)</label>
+              <input id="heightInput" type="number" min="0.1" max="19" step="0.1" disabled>
             </div>
           </div>
           <div class="tool-row">
-            <button class="btn secondary" id="flipBtn" type="button">Flip</button>
-            <button class="btn warning" id="resetBtn" type="button">Reset Art</button>
+            <button class="btn secondary" id="duplicateBtn" type="button" disabled>Duplicate</button>
+            <button class="btn secondary" id="rotateBtn" type="button" disabled>Rotate 90</button>
           </div>
+          <div class="tool-row">
+            <button class="btn warning" id="centerBtn" type="button" disabled>Center</button>
+            <button class="btn danger" id="deleteBtn" type="button" disabled>Delete</button>
           </div>
-          <button class="btn danger" id="deleteArtBtn" type="button" disabled>Delete Artwork</button>
-          <button class="btn" id="downloadBtn" type="button" disabled>Download T-Shirt Mockup PNG</button>
-          <div class="status" id="status">Upload artwork to start building a t-shirt mockup.</div>
+          <div class="status" id="status">Upload images to begin.</div>
         </section>
 
         <section class="panel pad">
-          <h2>Mockup Notes</h2>
-          <div class="tips">
-            <div>Drag the artwork directly on the product to place it.</div>
-            <div>Use the corner handle or Size slider to scale the artwork.</div>
-            <div>Embroidery mode adds a stitched patch look for quick previews.</div>
+          <h2>Artwork List</h2>
+          <div class="art-list" id="artList">
+            <div class="upload-text">No artwork uploaded yet.</div>
           </div>
+        </section>
+
+        <section class="panel pad tools">
+          <h2>Export and Email</h2>
+          <label class="check">
+            <input id="qualityCheck" type="checkbox">
+            <span>I understand uploaded artwork should be at least 300 DPI.</span>
+          </label>
+          <label class="check">
+            <input id="rightsCheck" type="checkbox">
+            <span>I confirm this artwork is not copyrighted or trademarked unless I have permission to use it.</span>
+          </label>
+          <button class="btn full" id="exportBtn" type="button" disabled>Download PNG</button>
+          <button class="btn secondary full" id="emailBtn" type="button" disabled>Email to Sambodi Creations</button>
         </section>
       </aside>
     </main>
   </div>
 
-  <script src="product-mockup-assets/photo-assets.js"></script>
+  <div class="mobile-actions" aria-label="Gang sheet mobile actions">
+    <button class="btn" id="mobileExportBtn" type="button" disabled>Download PNG</button>
+    <button class="btn secondary" id="mobileEmailBtn" type="button" disabled>Email Sheet</button>
+  </div>
+
   <script>
-    const photoAssets = window.photoMockupAssets || {};
-
-    const embroideryShapes = {
-      circle: "Circle",
-      square: "Square",
-      oval: "Oval",
-      rectangle: "Rectangle"
-    };
-
-    const products = {
-      tshirt: {
-        name: "T-Shirt",
-        note: "Front and back tee mockups",
-        defaultColor: "#ffffff",
-        defaultArt: { x: 50, y: 46, size: 22 },
-        colors: ["#ffffff", "#111827", "#e5e7eb", "#dc2626", "#2563eb", "#16a34a", "#facc15", "#ec4899"],
-        views: {
-          front: { label: "Front", assetKey: "tshirtFront", legacyAssetKey: "tshirt", file: "tshirt-base.png", defaultArt: { x: 50, y: 46, size: 22 } },
-          back: { label: "Back", assetKey: "tshirtBack", file: "tshirt-back-base.png", defaultArt: { x: 50, y: 47, size: 30 } }
-        }
-      }
+    const exportDpi = 300;
+    const presets = {
+      "13x19": { width: 13, height: 19 }
     };
 
     const state = {
-      product: "tshirt",
-      view: "front",
-      color: products.tshirt.defaultColor,
-      embroideryShape: "circle",
-      artworks: {},
-      imageSrc: "",
-      artX: products.tshirt.defaultArt.x,
-      artY: products.tshirt.defaultArt.y,
-      artSize: products.tshirt.defaultArt.size,
-      artSelected: false,
-      rotation: 0,
-      flipped: false,
-      imageRatio: 1
+      items: [],
+      selectedId: null,
+      nextId: 1,
+      sheetWidth: 13,
+      sheetHeight: 19,
+      downloaded: false
     };
 
-    const productGrid = document.getElementById("productGrid");
-    const viewPanel = document.getElementById("viewPanel");
-    const viewGrid = document.getElementById("viewGrid");
-    const colorPanel = document.getElementById("colorPanel");
-    const swatches = document.getElementById("swatches");
-    const customColorInput = document.getElementById("customColorInput");
-    const customColorValue = document.getElementById("customColorValue");
-    const shapePanel = document.getElementById("shapePanel");
-    const shapeGrid = document.getElementById("shapeGrid");
-    const productSvg = document.getElementById("productSvg");
-    const productPhoto = document.getElementById("productPhoto");
-    const productTint = document.getElementById("productTint");
-    const productBadge = document.getElementById("productBadge");
-    const stageTitle = document.getElementById("stageTitle");
-    const preview = document.getElementById("preview");
-    const designLayer = document.getElementById("designLayer");
-    const designImage = document.getElementById("designImage");
+    const sheet = document.getElementById("sheet");
+    const sheetBadge = document.getElementById("sheetBadge");
+    const sheetTitle = document.getElementById("sheetTitle");
+    const sheetPreset = { value: "13x19" };
+    const sheetWidthInput = { value: "13" };
+    const sheetHeightInput = { value: "19" };
+    const exportSize = document.getElementById("exportSize");
+    const emptySheet = document.getElementById("emptySheet");
     const fileInput = document.getElementById("fileInput");
-    const chooseBtn = document.getElementById("chooseBtn");
-    const sizeInput = document.getElementById("sizeInput");
-    const rotateInput = document.getElementById("rotateInput");
-    const flipBtn = document.getElementById("flipBtn");
-    const resetBtn = document.getElementById("resetBtn");
-    const deleteArtBtn = document.getElementById("deleteArtBtn");
+    const uploadBox = document.getElementById("uploadBox");
+    const chooseFilesBtn = document.getElementById("chooseFilesBtn");
+    const artList = document.getElementById("artList");
+    const artCount = document.getElementById("artCount");
+    const selectedSize = document.getElementById("selectedSize");
+    const widthInput = document.getElementById("widthInput");
+    const heightInput = document.getElementById("heightInput");
+    const duplicateBtn = document.getElementById("duplicateBtn");
+    const rotateBtn = document.getElementById("rotateBtn");
     const centerBtn = document.getElementById("centerBtn");
-    const placementControls = document.getElementById("placementControls");
-    const downloadBtn = document.getElementById("downloadBtn");
-    const artStatus = document.getElementById("artStatus");
-    const colorStatus = document.getElementById("colorStatus");
+    const deleteBtn = document.getElementById("deleteBtn");
+    const fitViewBtn = document.getElementById("fitViewBtn");
+    const qualityCheck = document.getElementById("qualityCheck");
+    const rightsCheck = document.getElementById("rightsCheck");
+    const exportBtn = document.getElementById("exportBtn");
+    const emailBtn = document.getElementById("emailBtn");
+    const mobileExportBtn = document.getElementById("mobileExportBtn");
+    const mobileEmailBtn = document.getElementById("mobileEmailBtn");
     const status = document.getElementById("status");
-    let tintRenderId = 0;
 
-    function renderProductButtons() {
-      productGrid.innerHTML = "";
-      let currentCategory = "";
-      Object.entries(products).forEach(([key, product]) => {
-        const category = product.category || "Product Mockups";
-        if (category !== currentCategory) {
-          const heading = document.createElement("div");
-          heading.className = "product-category";
-          heading.textContent = category;
-          productGrid.appendChild(heading);
-          currentCategory = category;
-        }
-        const button = document.createElement("button");
-        button.className = `product-card ${key === state.product ? "active" : ""}`;
-        button.type = "button";
-        button.innerHTML = `${product.name}<span>${product.note}</span>`;
-        button.addEventListener("click", () => selectProduct(key));
-        productGrid.appendChild(button);
-      });
+    function selectedItem() {
+      return state.items.find((item) => item.id === state.selectedId) || null;
     }
 
-    function activeProduct() {
-      return products[state.product];
+    function inchesToPercentX(value) {
+      return (value / state.sheetWidth) * 100;
     }
 
-    function activeView() {
-      const product = activeProduct();
-      return product.views?.[state.view] || { label: "Front", defaultArt: product.defaultArt };
+    function inchesToPercentY(value) {
+      return (value / state.sheetHeight) * 100;
     }
 
-    function productImageSources(view) {
-      if (!view.file) return [];
-      const embedded = photoAssets[view.assetKey] || photoAssets[view.legacyAssetKey];
-      const localPath = `product-mockup-assets/${view.file}`;
-      const candidates = [
-        view.file,
-        `./${view.file}`,
-        localPath,
-        `./${localPath}`,
-        `outputs/${localPath}`,
-        `./outputs/${localPath}`,
-        `../outputs/${localPath}`,
-        embedded
-      ].filter(Boolean);
-      return [...new Set(candidates)];
+    function clientToInches(event) {
+      const rect = sheet.getBoundingClientRect();
+      const x = ((event.clientX - rect.left) / rect.width) * state.sheetWidth;
+      const y = ((event.clientY - rect.top) / rect.height) * state.sheetHeight;
+      return { x, y };
     }
 
-    function setProductPhoto(view) {
-      const sources = productImageSources(view);
-      let index = 0;
-      productPhoto.onerror = () => {
-        index += 1;
-        if (index < sources.length) {
-          productPhoto.src = sources[index];
-        } else {
-          status.textContent = "Product mockup image could not be loaded. Check that the product-mockup-assets folder is uploaded with this page.";
-        }
-      };
-      productPhoto.onload = () => {
-        productPhoto.onerror = null;
-      };
-      productPhoto.src = sources[0] || "";
+    function clampItem(item) {
+      item.w = Math.min(Math.max(item.w, 0.2), state.sheetWidth);
+      item.h = Math.min(Math.max(item.h, 0.2), state.sheetHeight);
+      item.x = Math.min(Math.max(item.x, 0), state.sheetWidth - item.w);
+      item.y = Math.min(Math.max(item.y, 0), state.sheetHeight - item.h);
     }
 
-    async function loadProductImage(view) {
-      const sources = productImageSources(view);
-      let lastError = null;
-      for (const source of sources) {
-        try {
-          return await loadImage(source);
-        } catch (error) {
-          lastError = error;
-        }
-      }
-      throw lastError || new Error("Product image could not be loaded");
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
     }
 
-    function artworkKey(product = state.product, view = state.view) {
-      return `${product}:${view}`;
+    function formatInches(value) {
+      return Number(value).toFixed(1).replace(/\.0$/, "");
     }
 
-    function saveCurrentArtwork() {
-      state.artworks[artworkKey()] = {
-        imageSrc: state.imageSrc,
-        imageRatio: state.imageRatio,
-        artX: state.artX,
-        artY: state.artY,
-        artSize: state.artSize,
-        rotation: state.rotation,
-        flipped: state.flipped,
-        artSelected: state.artSelected
-      };
+    function sheetLabel() {
+      return `${formatInches(state.sheetWidth)} x ${formatInches(state.sheetHeight)}`;
     }
 
-    function loadCurrentArtwork() {
-      const saved = state.artworks[artworkKey()];
-      const art = activeView().defaultArt || activeProduct().defaultArt;
-      state.imageSrc = saved?.imageSrc || "";
-      state.imageRatio = saved?.imageRatio || 1;
-      state.artX = saved?.artX ?? art.x;
-      state.artY = saved?.artY ?? art.y;
-      state.artSize = saved?.artSize ?? art.size;
-      state.rotation = saved?.rotation || 0;
-      state.flipped = saved?.flipped || false;
-      state.artSelected = saved?.artSelected || false;
-      fileInput.value = "";
+    function formatSizeForFile() {
+      return `${formatInches(state.sheetWidth)}x${formatInches(state.sheetHeight)}`.replaceAll(".", "p");
     }
 
-    function renderViewButtons() {
-      const product = activeProduct();
-      const views = product.views || { front: { label: "Front" } };
-      const entries = Object.entries(views);
-      viewPanel.classList.toggle("is-hidden", entries.length < 2);
-      viewGrid.innerHTML = "";
-      entries.forEach(([key, view]) => {
-        const button = document.createElement("button");
-        button.className = `view-btn ${key === state.view ? "active" : ""}`;
-        button.type = "button";
-        button.textContent = view.label;
-        button.addEventListener("click", () => selectView(key));
-        viewGrid.appendChild(button);
-      });
+    function renderSheetSize() {
+      const label = sheetLabel();
+      sheetBadge.textContent = label;
+      sheetTitle.textContent = `${label} Sheet`;
+      exportSize.textContent = `${Math.round(state.sheetWidth * exportDpi)} x ${Math.round(state.sheetHeight * exportDpi)} px export`;
+      sheet.style.setProperty("--sheet-ratio", `${state.sheetWidth} / ${state.sheetHeight}`);
+      sheet.style.setProperty("--sheet-width", state.sheetWidth);
+      sheet.style.setProperty("--sheet-height", state.sheetHeight);
+      widthInput.max = state.sheetWidth;
+      heightInput.max = state.sheetHeight;
+      sheetWidthInput.value = formatInches(state.sheetWidth);
+      sheetHeightInput.value = formatInches(state.sheetHeight);
     }
 
-    function renderSwatches() {
-      const product = products[state.product];
-      swatches.innerHTML = "";
-      const normalizedColor = normalizeHex(state.color);
-      product.colors.forEach((color) => {
-        const button = document.createElement("button");
-        button.className = `swatch ${normalizeHex(color) === normalizedColor ? "active" : ""}`;
-        button.type = "button";
-        button.style.background = color;
-        button.setAttribute("aria-label", `Choose ${color}`);
-        button.addEventListener("click", () => {
-          setProductColor(color);
-          render();
-        });
-        swatches.appendChild(button);
-      });
-      customColorInput.value = normalizedColor;
-      customColorValue.textContent = normalizedColor.toUpperCase();
-    }
-
-    function setProductColor(color) {
-      state.color = normalizeHex(color);
-    }
-
-    function normalizeHex(color) {
-      const value = String(color || "#ffffff").trim();
-      if (/^#[0-9a-f]{6}$/i.test(value)) return value.toLowerCase();
-      if (/^#[0-9a-f]{3}$/i.test(value)) {
-        return `#${value.slice(1).split("").map((char) => char + char).join("")}`.toLowerCase();
-      }
-      return "#ffffff";
-    }
-
-    function renderEmbroideryShapes() {
-      shapePanel.classList.toggle("is-hidden", state.product !== "embroidery");
-      shapeGrid.innerHTML = "";
-      Object.entries(embroideryShapes).forEach(([key, label]) => {
-        const button = document.createElement("button");
-        button.className = `shape-btn ${key === state.embroideryShape ? "active" : ""}`;
-        button.type = "button";
-        button.textContent = label;
-        button.addEventListener("click", () => {
-          state.embroideryShape = key;
-          status.textContent = `${label} embroidery patch selected.`;
-          render();
-        });
-        shapeGrid.appendChild(button);
-      });
-    }
-
-    function selectProduct(key) {
-      saveCurrentArtwork();
-      state.product = key;
-      state.view = products[key].views?.front ? "front" : "front";
-      setProductColor(products[key].defaultColor);
-      loadCurrentArtwork();
-      status.textContent = `${products[key].name} mockup selected.`;
+    function applySheetSize() {
+      state.sheetWidth = 13;
+      state.sheetHeight = 19;
+      sheetPreset.value = "13x19";
+      clampAllItems();
+      state.downloaded = false;
+      status.textContent = "Gang sheet size is fixed at 13 x 19 inches.";
       render();
     }
 
-    function selectView(key) {
-      if (key === state.view) return;
-      saveCurrentArtwork();
-      state.view = key;
-      loadCurrentArtwork();
-      status.textContent = `${activeProduct().name} ${activeView().label.toLowerCase()} view selected.`;
-      render();
-    }
-
-    function resetArtPlacement(shouldRender = true) {
-      const art = activeView().defaultArt || activeProduct().defaultArt;
-      state.artX = art.x;
-      state.artY = art.y;
-      state.artSize = art.size;
-      state.rotation = 0;
-      state.flipped = false;
-      sizeInput.value = state.artSize;
-      rotateInput.value = state.rotation;
-      if (shouldRender) render();
-    }
-
-    function productSvgMarkup() {
-      const color = state.color;
-      const dark = shade(color, -24);
-      const light = shade(color, 28);
-      if (activeProduct().artworkOnly) {
-        return "";
-      }
-      if (activeView().image) {
-        return "";
-      }
-      if (state.product === "tshirt") {
-        return `
-          <defs>
-            <filter id="soft"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#17212f" flood-opacity=".2"/></filter>
-            <linearGradient id="shirtShade" x1="0" x2="1"><stop offset="0" stop-color="${dark}" stop-opacity=".18"/><stop offset=".5" stop-color="${color}"/><stop offset="1" stop-color="${light}" stop-opacity=".35"/></linearGradient>
-          </defs>
-          <path d="M318 184 L404 126 Q448 164 500 164 Q552 164 596 126 L682 184 L828 276 L736 408 L680 374 L680 830 Q588 858 500 858 Q412 858 320 830 L320 374 L264 408 L172 276 Z" fill="url(#shirtShade)" stroke="${dark}" stroke-width="8" filter="url(#soft)"/>
-          <path d="M404 126 Q500 230 596 126 Q570 272 500 296 Q430 272 404 126" fill="#ffffff" opacity=".28"/>
-          <path d="M428 162 Q500 226 572 162" fill="none" stroke="${dark}" stroke-width="13" opacity=".34"/>
-          <path d="M336 390 Q500 448 664 390" fill="none" stroke="${dark}" stroke-width="5" opacity=".12"/>
-          <path d="M365 270 L350 806" stroke="#ffffff" stroke-width="16" opacity=".12"/>
-          <path d="M635 270 L650 806" stroke="${dark}" stroke-width="10" opacity=".08"/>
-        `;
-      }
-      if (state.product === "polo") {
-        return `
-          <defs>
-            <filter id="soft"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#17212f" flood-opacity=".2"/></filter>
-            <linearGradient id="poloShade" x1="0" x2="1"><stop offset="0" stop-color="${dark}" stop-opacity=".2"/><stop offset=".48" stop-color="${color}"/><stop offset="1" stop-color="${light}" stop-opacity=".36"/></linearGradient>
-          </defs>
-          <path d="M304 202 L410 132 L500 168 L590 132 L696 202 L814 302 L734 420 L678 386 L678 832 Q590 858 500 858 Q410 858 322 832 L322 386 L266 420 L186 302 Z" fill="url(#poloShade)" stroke="${dark}" stroke-width="8" filter="url(#soft)"/>
-          <path d="M410 132 L500 232 L590 132 L614 228 L540 300 L500 252 L460 300 L386 228 Z" fill="${light}" stroke="${dark}" stroke-width="6" opacity=".9"/>
-          <path d="M500 232 L500 386" stroke="${dark}" stroke-width="7" opacity=".38"/>
-          <circle cx="500" cy="278" r="7" fill="${dark}" opacity=".5"/>
-          <circle cx="500" cy="326" r="7" fill="${dark}" opacity=".5"/>
-          <path d="M348 402 Q500 460 652 402" fill="none" stroke="${dark}" stroke-width="5" opacity=".12"/>
-          <path d="M364 278 L348 806" stroke="#ffffff" stroke-width="16" opacity=".12"/>
-        `;
-      }
-      if (state.product === "hat") {
-        return `
-          <defs>
-            <filter id="soft"><feDropShadow dx="0" dy="20" stdDeviation="18" flood-color="#17212f" flood-opacity=".24"/></filter>
-            <linearGradient id="capFront" x1="0" x2="1"><stop offset="0" stop-color="${dark}" stop-opacity=".26"/><stop offset=".5" stop-color="${color}"/><stop offset="1" stop-color="${light}" stop-opacity=".32"/></linearGradient>
-            <linearGradient id="brim" x1="0" x2="1"><stop offset="0" stop-color="${dark}"/><stop offset=".5" stop-color="${color}"/><stop offset="1" stop-color="${dark}"/></linearGradient>
-          </defs>
-          <path d="M212 560 Q238 340 410 284 Q500 250 590 284 Q762 340 788 560 Q642 520 500 520 Q358 520 212 560 Z" fill="url(#capFront)" stroke="${dark}" stroke-width="8" filter="url(#soft)"/>
-          <path d="M410 284 Q468 344 500 520 Q532 344 590 284" fill="none" stroke="${dark}" stroke-width="6" opacity=".24"/>
-          <path d="M296 414 Q394 358 500 520 Q606 358 704 414" fill="none" stroke="#ffffff" stroke-width="8" opacity=".18"/>
-          <path d="M500 254 C490 236 510 236 500 254" stroke="${dark}" stroke-width="18" stroke-linecap="round"/>
-          <path d="M124 574 Q500 484 876 574 Q784 680 500 690 Q216 680 124 574 Z" fill="url(#brim)" stroke="${dark}" stroke-width="8"/>
-          <path d="M214 584 Q500 532 786 584" fill="none" stroke="#ffffff" stroke-width="10" opacity=".18"/>
-          <path d="M326 530 Q500 492 674 530" fill="none" stroke="${light}" stroke-width="13" opacity=".25"/>
-        `;
-      }
-      if (state.product === "tumbler") {
-        return `
-          <defs><linearGradient id="cup" x1="0" x2="1"><stop offset="0" stop-color="${dark}"/><stop offset=".22" stop-color="${color}"/><stop offset=".72" stop-color="${light}"/><stop offset="1" stop-color="${dark}"/></linearGradient><filter id="soft"><feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#17212f" flood-opacity=".2"/></filter></defs>
-          <path d="M340 158 Q500 126 660 158 L606 842 Q500 880 394 842 Z" fill="url(#cup)" stroke="${dark}" stroke-width="8" filter="url(#soft)"/>
-          <ellipse cx="500" cy="158" rx="160" ry="34" fill="${light}" stroke="${dark}" stroke-width="7"/>
-          <path d="M612 230 L570 790" stroke="#fff" stroke-width="20" opacity=".22"/>
-        `;
-      }
-      const outer = patchPath(state.embroideryShape, false);
-      const inner = patchPath(state.embroideryShape, true);
-      return `
-        <defs><filter id="soft"><feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#17212f" flood-opacity=".18"/></filter></defs>
-        ${outer}
-        ${inner}
-        <path d="M330 454 Q500 342 670 454" fill="none" stroke="${light}" stroke-width="18" opacity=".3"/>
-      `;
-    }
-
-    function patchPath(shape, inset) {
-      const color = inset ? "none" : state.color;
-      const dark = shade(state.color, -24);
-      const filter = inset ? "" : ' filter="url(#soft)"';
-      const strokeWidth = inset ? 10 : 9;
-      const dash = inset ? ' stroke-dasharray="13 14" opacity=".58"' : "";
-      const stroke = inset ? dark : dark;
-      const fill = inset ? "none" : color;
-      if (shape === "square") {
-        const x = inset ? 268 : 220;
-        const y = inset ? 248 : 200;
-        const size = inset ? 464 : 560;
-        return `<rect x="${x}" y="${y}" width="${size}" height="${size}" rx="${inset ? 34 : 46}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"${dash}${filter}/>`;
-      }
-      if (shape === "oval") {
-        return `<ellipse cx="500" cy="500" rx="${inset ? 254 : 314}" ry="${inset ? 168 : 220}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"${dash}${filter}/>`;
-      }
-      if (shape === "rectangle") {
-        const x = inset ? 214 : 154;
-        const y = inset ? 334 : 284;
-        const w = inset ? 572 : 692;
-        const h = inset ? 332 : 432;
-        return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${inset ? 38 : 54}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"${dash}${filter}/>`;
-      }
-      return `<circle cx="500" cy="500" r="${inset ? 230 : 290}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}"${dash}${filter}/>`;
-    }
-
-    function shade(hex, amount) {
-      const raw = hex.replace("#", "");
-      const number = parseInt(raw.length === 3 ? raw.split("").map((x) => x + x).join("") : raw, 16);
-      const r = Math.max(0, Math.min(255, (number >> 16) + amount));
-      const g = Math.max(0, Math.min(255, ((number >> 8) & 255) + amount));
-      const b = Math.max(0, Math.min(255, (number & 255) + amount));
-      return `#${[r, g, b].map((x) => x.toString(16).padStart(2, "0")).join("")}`;
-    }
-
-    function renderDesign() {
-      designLayer.classList.toggle("visible", Boolean(state.imageSrc));
-      designLayer.classList.toggle("selected", Boolean(state.imageSrc && state.artSelected));
-      downloadBtn.disabled = !state.imageSrc;
-      deleteArtBtn.disabled = !state.imageSrc;
-      if (!state.imageSrc) {
-        state.artSelected = false;
-        artStatus.textContent = "No artwork uploaded";
-        designImage.removeAttribute("src");
-        return;
-      }
-      const width = state.artSize;
-      const height = width / state.imageRatio;
-      designLayer.style.left = `${state.artX}%`;
-      designLayer.style.top = `${state.artY}%`;
-      designLayer.style.width = `${width}%`;
-      designLayer.style.transform = `translate(-50%, -50%) rotate(${state.rotation}deg) scaleX(${state.flipped ? -1 : 1})`;
-      designImage.src = state.imageSrc;
-      artStatus.textContent = `${width.toFixed(0)}% wide x ${height.toFixed(0)}% tall`;
-      sizeInput.value = state.artSize;
-      rotateInput.value = state.rotation;
-    }
-
-    function render() {
-      const product = activeProduct();
-      const view = activeView();
-      const artworkOnly = Boolean(product.artworkOnly);
-      const usesPhoto = Boolean(view.file) && !artworkOnly;
-      productSvg.innerHTML = usesPhoto ? "" : productSvgMarkup();
-      productPhoto.classList.toggle("visible", usesPhoto);
-      productTint.classList.toggle("visible", usesPhoto);
-      if (usesPhoto) {
-        setProductPhoto(view);
-        updatePhotoTint(view, state.color);
-      } else {
-        productPhoto.removeAttribute("src");
-        clearPhotoTint();
-      }
-      productBadge.textContent = product.name;
-      stageTitle.textContent = artworkOnly ? `${product.name} Artwork` : `${product.name} ${view.label || "Front"} Mockup`;
-      colorStatus.textContent = artworkOnly ? "Original image" : state.color.toUpperCase();
-      colorPanel.classList.toggle("is-hidden", artworkOnly);
-      centerBtn.classList.toggle("is-hidden", artworkOnly);
-      placementControls.classList.toggle("is-hidden", artworkOnly);
-      downloadBtn.textContent = artworkOnly ? "Download Uploaded Artwork" : "Download T-Shirt Mockup PNG";
-      renderProductButtons();
-      renderViewButtons();
-      renderSwatches();
-      renderEmbroideryShapes();
-      renderDesign();
-    }
-
-    async function updatePhotoTint(view, color) {
-      const renderId = ++tintRenderId;
-      const context = productTint.getContext("2d");
-      context.clearRect(0, 0, productTint.width, productTint.height);
-      try {
-        const image = await loadProductImage(view);
-        if (renderId !== tintRenderId || activeView() !== view || state.color !== color) return;
-        context.clearRect(0, 0, productTint.width, productTint.height);
-        context.drawImage(image, 0, 0, productTint.width, productTint.height);
-        context.globalCompositeOperation = "source-in";
-        context.fillStyle = color;
-        context.fillRect(0, 0, productTint.width, productTint.height);
-        context.globalCompositeOperation = "source-over";
-      } catch {
-        context.clearRect(0, 0, productTint.width, productTint.height);
-      }
-    }
-
-    function clearPhotoTint() {
-      tintRenderId += 1;
-      productTint.getContext("2d").clearRect(0, 0, productTint.width, productTint.height);
-    }
-
-    chooseBtn.addEventListener("click", () => fileInput.click());
-    customColorInput.addEventListener("input", () => {
-      setProductColor(customColorInput.value);
-      render();
-    });
-
-    customColorInput.addEventListener("change", () => {
-      status.textContent = `Custom color ${state.color.toUpperCase()} selected.`;
-    });
-
-    fileInput.addEventListener("change", () => {
-      const file = fileInput.files?.[0];
-      if (!file) return;
+    function addImage(file) {
+      if (!file.type.startsWith("image/")) return;
       const reader = new FileReader();
       reader.onload = () => {
         const image = new Image();
         image.onload = () => {
-          state.imageSrc = reader.result;
-          state.imageRatio = image.naturalWidth / image.naturalHeight || 1;
-          state.artSelected = true;
-          resetArtPlacement(false);
-          saveCurrentArtwork();
-          status.textContent = `${file.name} uploaded for ${activeView().label.toLowerCase()} view.`;
+          const naturalW = image.naturalWidth || exportDpi;
+          const naturalH = image.naturalHeight || exportDpi;
+          const rawW = naturalW / exportDpi;
+          const rawH = naturalH / exportDpi;
+          const scale = Math.min(1, state.sheetWidth / rawW, state.sheetHeight / rawH);
+          const w = Math.max(0.5, rawW * scale);
+          const h = Math.max(0.5, rawH * scale);
+          const item = {
+            id: `art-${state.nextId}`,
+            name: file.name,
+            src: reader.result,
+            naturalW,
+            naturalH,
+            aspectRatio: naturalW / naturalH,
+            rotation: 0,
+            x: Math.max(0, (state.sheetWidth - w) / 2),
+            y: Math.max(0, (state.sheetHeight - h) / 2),
+            w,
+            h
+          };
+          state.nextId += 1;
+          clampItem(item);
+          state.items.push(item);
+          state.selectedId = item.id;
+          state.downloaded = false;
+          status.textContent = `${file.name} added to the sheet.`;
           render();
         };
         image.src = reader.result;
       };
       reader.readAsDataURL(file);
-    });
-
-    let dragMode = null;
-    let start = null;
-
-    designLayer.addEventListener("pointerdown", (event) => {
-      if (!state.imageSrc) return;
-      event.stopPropagation();
-      state.artSelected = true;
-      dragMode = event.target.classList.contains("handle") ? "resize" : "move";
-      const rect = preview.getBoundingClientRect();
-      start = {
-        x: ((event.clientX - rect.left) / rect.width) * 100,
-        y: ((event.clientY - rect.top) / rect.height) * 100,
-        artX: state.artX,
-        artY: state.artY,
-        size: state.artSize
-      };
-      designLayer.setPointerCapture(event.pointerId);
-      renderDesign();
-    });
-
-    preview.addEventListener("pointerdown", (event) => {
-      if (!state.imageSrc || event.target === designLayer || designLayer.contains(event.target)) return;
-      state.artSelected = false;
-      renderDesign();
-    });
-
-    designLayer.addEventListener("pointermove", (event) => {
-      if (!dragMode || !start) return;
-      const rect = preview.getBoundingClientRect();
-      const x = ((event.clientX - rect.left) / rect.width) * 100;
-      const y = ((event.clientY - rect.top) / rect.height) * 100;
-      if (dragMode === "move") {
-        state.artX = Math.max(8, Math.min(92, start.artX + x - start.x));
-        state.artY = Math.max(8, Math.min(92, start.artY + y - start.y));
-      } else {
-        state.artSize = Math.max(8, Math.min(70, start.size + (x - start.x)));
-      }
-      renderDesign();
-    });
-
-    function endDrag() {
-      dragMode = null;
-      start = null;
     }
 
-    designLayer.addEventListener("pointerup", endDrag);
-    designLayer.addEventListener("pointercancel", endDrag);
-
-    sizeInput.addEventListener("input", () => {
-      state.artSize = Number(sizeInput.value);
-      renderDesign();
-    });
-
-    rotateInput.addEventListener("input", () => {
-      state.rotation = Number(rotateInput.value);
-      renderDesign();
-    });
-
-    flipBtn.addEventListener("click", () => {
-      state.flipped = !state.flipped;
-      renderDesign();
-    });
-
-    resetBtn.addEventListener("click", () => {
-      state.artSelected = true;
-      resetArtPlacement();
-      saveCurrentArtwork();
-      status.textContent = "Artwork placement reset.";
-    });
-
-    deleteArtBtn.addEventListener("click", () => {
-      state.imageSrc = "";
-      state.imageRatio = 1;
-      state.artSelected = false;
+    function addFiles(files) {
+      [...files].forEach(addImage);
       fileInput.value = "";
-      designImage.removeAttribute("src");
-      renderDesign();
-      saveCurrentArtwork();
-      status.textContent = "Artwork deleted. Upload a new image when ready.";
-    });
+    }
 
-    centerBtn.addEventListener("click", () => {
-      state.artSelected = true;
-      const art = activeView().defaultArt || activeProduct().defaultArt;
-      state.artX = art.x;
-      state.artY = art.y;
-      renderDesign();
-      saveCurrentArtwork();
-    });
+    function selectItem(id) {
+      state.selectedId = id;
+      render();
+    }
 
-    downloadBtn.addEventListener("click", async () => {
-      if (!state.imageSrc) return;
-      state.artSelected = false;
-      renderDesign();
-      downloadBtn.disabled = true;
-      const artworkOnly = Boolean(activeProduct().artworkOnly);
-      status.textContent = artworkOnly ? "Preparing uploaded artwork..." : "Preparing mockup PNG...";
-      try {
-        const canvas = document.createElement("canvas");
-        let originalImage = null;
-        if (artworkOnly) {
-          originalImage = await loadImage(state.imageSrc);
-          canvas.width = originalImage.naturalWidth || originalImage.width;
-          canvas.height = originalImage.naturalHeight || originalImage.height;
-        } else {
-          canvas.width = 1200;
-          canvas.height = 1200;
-        }
-        const context = canvas.getContext("2d");
-        if (artworkOnly) {
-          context.drawImage(originalImage, 0, 0);
-        } else {
-          await drawProductToCanvas(context);
-          await drawDesignToCanvas(context);
-        }
-        const blob = await canvasToBlob(canvas);
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        const productName = activeProduct().name.toLowerCase().replace(/\s+/g, "-");
-        link.download = artworkOnly
-          ? `${productName}-artwork-${Date.now()}.png`
-          : `${productName}-${state.view}-mockup-${Date.now()}.png`;
-        link.href = url;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1200);
-        status.textContent = artworkOnly ? "Uploaded artwork downloaded and ready to submit." : "Mockup PNG downloaded.";
-      } catch (error) {
-        status.textContent = "Download could not be created. Try refreshing the page and uploading the artwork again.";
-        console.error(error);
-      } finally {
-        downloadBtn.disabled = false;
+    function updateItemElement(item, element) {
+      element.style.left = `${inchesToPercentX(item.x)}%`;
+      element.style.top = `${inchesToPercentY(item.y)}%`;
+      element.style.width = `${inchesToPercentX(item.w)}%`;
+      element.style.height = `${inchesToPercentY(item.h)}%`;
+      element.style.setProperty("--rotation", `${item.rotation || 0}deg`);
+      element.classList.toggle("selected", item.id === state.selectedId);
+      const image = element.querySelector("img");
+      if (image) {
+        const turned = Math.abs(item.rotation || 0) % 180 === 90;
+        image.style.width = turned ? `${(item.h / item.w) * 100}%` : "100%";
+        image.style.height = turned ? `${(item.w / item.h) * 100}%` : "100%";
       }
-    });
+    }
 
-    function canvasToBlob(canvas) {
-      return new Promise((resolve, reject) => {
-        canvas.toBlob((blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error("Canvas export failed"));
-          }
-        }, "image/png");
+    function renderSheet() {
+      sheet.querySelectorAll(".art-item").forEach((node) => node.remove());
+      emptySheet.style.display = state.items.length ? "none" : "grid";
+
+      state.items.forEach((item) => {
+        const element = document.createElement("div");
+        element.className = "art-item";
+        element.dataset.id = item.id;
+        element.innerHTML = `<img alt="${escapeHtml(item.name)}" src="${item.src}"><span class="handle" aria-hidden="true"></span>`;
+        updateItemElement(item, element);
+        attachItemEvents(element, item);
+        sheet.appendChild(element);
       });
     }
 
-    async function drawProductToCanvas(context) {
-      const view = activeView();
-      if (view.file) {
-        const image = await loadProductImage(view);
-        context.save();
-        context.shadowColor = "rgba(23,33,47,0.2)";
-        context.shadowBlur = 28;
-        context.shadowOffsetY = 18;
-        context.drawImage(image, 0, 0, 1200, 1200);
-        context.restore();
-        const tint = document.createElement("canvas");
-        tint.width = 1200;
-        tint.height = 1200;
-        const tintContext = tint.getContext("2d");
-        tintContext.drawImage(image, 0, 0, 1200, 1200);
-        tintContext.globalCompositeOperation = "source-in";
-        tintContext.fillStyle = state.color;
-        tintContext.fillRect(0, 0, 1200, 1200);
-        tintContext.globalCompositeOperation = "source-over";
-        context.save();
-        context.globalAlpha = 0.82;
-        context.globalCompositeOperation = "multiply";
-        context.drawImage(tint, 0, 0);
-        context.restore();
+    function renderList() {
+      artList.innerHTML = "";
+      if (state.items.length === 0) {
+        artList.innerHTML = '<div class="upload-text">No artwork uploaded yet.</div>';
         return;
       }
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">${productSvgMarkup()}</svg>`;
-      const image = await loadImage(`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`);
-      context.drawImage(image, 0, 0, 1200, 1200);
+
+      state.items.forEach((item) => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = `art-card ${item.id === state.selectedId ? "selected" : ""}`;
+        card.innerHTML = `
+          <img alt="" src="${item.src}">
+          <span>
+            <strong>${escapeHtml(item.name)}</strong>
+            <span>${item.w.toFixed(2)} in x ${item.h.toFixed(2)} in</span>
+          </span>
+        `;
+        card.addEventListener("click", () => selectItem(item.id));
+        artList.appendChild(card);
+      });
     }
 
-    async function drawDesignToCanvas(context) {
-      const image = await loadImage(state.imageSrc);
-      const baseWidth = (state.artSize / 100) * 1200;
-      const baseHeight = baseWidth / state.imageRatio;
-      const x = (state.artX / 100) * 1200;
-      const y = (state.artY / 100) * 1200;
-      context.save();
-      context.translate(x, y);
-      context.rotate((state.rotation * Math.PI) / 180);
-      context.scale(state.flipped ? -1 : 1, 1);
-      if (state.product === "embroidery") {
-        context.shadowColor = "rgba(23,33,47,0.22)";
-        context.shadowBlur = 8;
-        context.lineWidth = 8;
-        context.strokeStyle = "rgba(255,255,255,0.85)";
-        context.strokeRect(-baseWidth / 2 - 12, -baseHeight / 2 - 12, baseWidth + 24, baseHeight + 24);
+    function renderControls() {
+      const item = selectedItem();
+      const hasItem = Boolean(item);
+      widthInput.disabled = !hasItem;
+      heightInput.disabled = !hasItem;
+      duplicateBtn.disabled = !hasItem;
+      rotateBtn.disabled = !hasItem;
+      centerBtn.disabled = !hasItem;
+      deleteBtn.disabled = !hasItem;
+
+      widthInput.value = item ? item.w.toFixed(2) : "";
+      heightInput.value = item ? item.h.toFixed(2) : "";
+      selectedSize.textContent = item ? `${item.w.toFixed(2)} x ${item.h.toFixed(2)} in selected` : "No selection";
+      artCount.textContent = `${state.items.length} artwork ${state.items.length === 1 ? "file" : "files"}`;
+
+      const ready = state.items.length > 0 && qualityCheck.checked && rightsCheck.checked;
+      exportBtn.disabled = !ready;
+      emailBtn.disabled = !state.downloaded;
+      mobileExportBtn.disabled = !ready;
+      mobileEmailBtn.disabled = !state.downloaded;
+    }
+
+    function render() {
+      renderSheetSize();
+      renderSheet();
+      renderList();
+      renderControls();
+    }
+
+    function attachItemEvents(element, item) {
+      element.addEventListener("pointerdown", (event) => {
+        const isHandle = event.target.classList.contains("handle");
+        state.selectedId = item.id;
+        state.downloaded = false;
+        renderControls();
+
+        const start = clientToInches(event);
+        const startItem = { ...item };
+        element.setPointerCapture(event.pointerId);
+
+        function move(moveEvent) {
+          const current = clientToInches(moveEvent);
+          const dx = current.x - start.x;
+          const dy = current.y - start.y;
+          if (isHandle) {
+            const ratio = startItem.w / startItem.h;
+            item.w = startItem.w + dx;
+            item.h = item.w / ratio;
+            if (item.y + item.h > state.sheetHeight) {
+              item.h = state.sheetHeight - item.y;
+              item.w = item.h * ratio;
+            }
+            if (item.x + item.w > state.sheetWidth) {
+              item.w = state.sheetWidth - item.x;
+              item.h = item.w / ratio;
+            }
+          } else {
+            item.x = startItem.x + dx;
+            item.y = startItem.y + dy;
+          }
+          clampItem(item);
+          updateItemElement(item, element);
+          renderControls();
+        }
+
+        function up() {
+          element.removeEventListener("pointermove", move);
+          element.removeEventListener("pointerup", up);
+          element.removeEventListener("pointercancel", up);
+          render();
+        }
+
+        element.addEventListener("pointermove", move);
+        element.addEventListener("pointerup", up);
+        element.addEventListener("pointercancel", up);
+      });
+    }
+
+    function resizeSelected() {
+      const item = selectedItem();
+      if (!item) return;
+      const ratio = effectiveAspectRatio(item);
+      const nextW = Number(widthInput.value) || item.w;
+      const nextH = Number(heightInput.value) || item.h;
+      if (document.activeElement === widthInput) {
+        item.w = nextW;
+        item.h = nextW / ratio;
+      } else if (document.activeElement === heightInput) {
+        item.h = nextH;
+        item.w = nextH * ratio;
+      } else {
+        item.w = nextW;
+        item.h = nextW / ratio;
       }
-      context.drawImage(image, -baseWidth / 2, -baseHeight / 2, baseWidth, baseHeight);
+      clampItem(item);
+      state.downloaded = false;
+      status.textContent = `${item.name} resized.`;
+      render();
+    }
+
+    function duplicateSelected() {
+      const item = selectedItem();
+      if (!item) return;
+      const copy = {
+        ...item,
+        id: `art-${state.nextId}`,
+        name: `${item.name} copy`,
+        x: item.x + 0.25,
+        y: item.y + 0.25
+      };
+      state.nextId += 1;
+      clampItem(copy);
+      state.items.push(copy);
+      state.selectedId = copy.id;
+      state.downloaded = false;
+      status.textContent = "Artwork duplicated.";
+      render();
+    }
+
+    function rotateSelected() {
+      const item = selectedItem();
+      if (!item) return;
+      const centerX = item.x + item.w / 2;
+      const centerY = item.y + item.h / 2;
+      const oldW = item.w;
+      item.w = item.h;
+      item.h = oldW;
+      item.rotation = ((item.rotation || 0) + 90) % 360;
+      item.x = centerX - item.w / 2;
+      item.y = centerY - item.h / 2;
+      clampItem(item);
+      state.downloaded = false;
+      status.textContent = "Artwork rotated.";
+      render();
+    }
+
+    function centerSelected() {
+      const item = selectedItem();
+      if (!item) return;
+      item.x = (state.sheetWidth - item.w) / 2;
+      item.y = (state.sheetHeight - item.h) / 2;
+      state.downloaded = false;
+      status.textContent = "Artwork centered.";
+      render();
+    }
+
+    function deleteSelected() {
+      const item = selectedItem();
+      if (!item) return;
+      state.items = state.items.filter((art) => art.id !== item.id);
+      state.selectedId = state.items.at(-1)?.id || null;
+      state.downloaded = false;
+      status.textContent = `${item.name} removed.`;
+      render();
+    }
+
+    async function exportPng() {
+      if (exportBtn.disabled) return;
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(state.sheetWidth * exportDpi);
+      canvas.height = Math.round(state.sheetHeight * exportDpi);
+      const context = canvas.getContext("2d");
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (const item of state.items) {
+        const image = await loadImage(item.src);
+        drawArtworkForExport(context, image, item);
+      }
+
+      const link = document.createElement("a");
+      link.download = `sambodi-gang-sheet-${formatSizeForFile()}-${Date.now()}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      state.downloaded = true;
+      status.textContent = "PNG downloaded. Use the email button and attach the downloaded file.";
+      renderControls();
+    }
+
+    function drawArtworkForExport(context, image, item) {
+      const x = item.x * exportDpi;
+      const y = item.y * exportDpi;
+      const w = item.w * exportDpi;
+      const h = item.h * exportDpi;
+      const rotation = ((item.rotation || 0) % 360 + 360) % 360;
+      const turned = rotation % 180 === 90;
+      const frameW = turned ? h : w;
+      const frameH = turned ? w : h;
+      const imageRatio = image.naturalWidth / image.naturalHeight;
+      const frameRatio = frameW / frameH;
+      let drawW = frameW;
+      let drawH = frameH;
+
+      if (imageRatio > frameRatio) {
+        drawH = drawW / imageRatio;
+      } else {
+        drawW = drawH * imageRatio;
+      }
+
+      context.save();
+      context.translate(x + w / 2, y + h / 2);
+      context.rotate((rotation * Math.PI) / 180);
+      context.drawImage(image, -drawW / 2, -drawH / 2, drawW, drawH);
       context.restore();
     }
 
@@ -1468,6 +1243,68 @@
         image.src = src;
       });
     }
+
+    function effectiveAspectRatio(item) {
+      const ratio = item.aspectRatio || item.w / item.h || 1;
+      return Math.abs(item.rotation || 0) % 180 === 90 ? 1 / ratio : ratio;
+    }
+
+    function openEmail() {
+      const subject = encodeURIComponent("Gang Sheet Submission");
+      const body = encodeURIComponent([
+        "Hello Sambodi Creations,",
+        "",
+        `I built a ${sheetLabel()} gang sheet and downloaded the PNG from the builder.`,
+        "I will attach the PNG file to this email before sending.",
+        "",
+        "I confirm the artwork is at least 300 DPI quality to the best of my knowledge.",
+        "I confirm the artwork is not copyrighted or trademarked unless I have permission to use it.",
+        "",
+        "Thank you."
+      ].join("\n"));
+      window.location.href = `mailto:info@sambodicreations.com?subject=${subject}&body=${body}`;
+    }
+
+    chooseFilesBtn.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", () => addFiles(fileInput.files));
+
+    // Sheet size is fixed at 13 x 19 inches; no custom size controls are offered.
+
+    uploadBox.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      uploadBox.classList.add("dragging");
+    });
+
+    uploadBox.addEventListener("dragleave", () => uploadBox.classList.remove("dragging"));
+
+    uploadBox.addEventListener("drop", (event) => {
+      event.preventDefault();
+      uploadBox.classList.remove("dragging");
+      addFiles(event.dataTransfer.files);
+    });
+
+    sheet.addEventListener("pointerdown", (event) => {
+      if (event.target === sheet || event.target === emptySheet) {
+        state.selectedId = null;
+        render();
+      }
+    });
+
+    widthInput.addEventListener("change", resizeSelected);
+    heightInput.addEventListener("change", resizeSelected);
+    duplicateBtn.addEventListener("click", duplicateSelected);
+    rotateBtn.addEventListener("click", rotateSelected);
+    centerBtn.addEventListener("click", centerSelected);
+    deleteBtn.addEventListener("click", deleteSelected);
+    fitViewBtn.addEventListener("click", () => {
+      sheet.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    qualityCheck.addEventListener("change", renderControls);
+    rightsCheck.addEventListener("change", renderControls);
+    exportBtn.addEventListener("click", exportPng);
+    emailBtn.addEventListener("click", openEmail);
+    mobileExportBtn.addEventListener("click", exportPng);
+    mobileEmailBtn.addEventListener("click", openEmail);
 
     render();
   </script>
