@@ -1,0 +1,1314 @@
+
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sambodi Creations Gang Sheet Builder</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17212f;
+      --muted: #667287;
+      --line: #dce3ee;
+      --panel: #ffffff;
+      --soft: #f4f7fb;
+      --teal: #0f766e;
+      --teal-dark: #0b5d57;
+      --coral: #d95d4f;
+      --amber: #e3a12a;
+      --blue: #2f6fca;
+      --violet: #7b5bb7;
+      --shadow: 0 18px 48px rgba(23, 33, 47, 0.14);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: auto;
+      background:
+        linear-gradient(135deg, rgba(15, 118, 110, 0.13), transparent 35%),
+        linear-gradient(45deg, rgba(227, 161, 42, 0.14), transparent 32%),
+        #eef3f7;
+      color: var(--ink);
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      touch-action: manipulation;
+    }
+
+    .app {
+      width: min(1600px, 100%);
+      margin: 0 auto;
+      padding: clamp(12px, 3vw, 24px);
+      padding-bottom: clamp(12px, 3vw, 24px);
+    }
+
+    header {
+      display: grid;
+      grid-template-columns: minmax(280px, 1fr) auto;
+      gap: 18px;
+      align-items: end;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 4.25rem);
+      line-height: 0.98;
+      letter-spacing: 0;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .sheet-badge {
+      min-width: 190px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+
+    .sheet-badge strong {
+      display: block;
+      font-size: 2rem;
+      line-height: 1;
+    }
+
+    .sheet-badge span {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: minmax(0, 390px) minmax(0, 1fr) minmax(0, 360px);
+      gap: 18px;
+      align-items: start;
+      min-width: 0;
+    }
+
+    .panel {
+      min-width: 0;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .pad {
+      padding: 16px;
+    }
+
+    .stack {
+      display: grid;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    h2 {
+      margin: 0 0 12px;
+      font-size: 1.16rem;
+    }
+
+    .notice {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .notice li {
+      display: grid;
+      grid-template-columns: 26px 1fr;
+      gap: 9px;
+      align-items: start;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .notice strong {
+      color: var(--ink);
+    }
+
+    .mark {
+      width: 26px;
+      height: 26px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #e8f5f3;
+      color: var(--teal);
+      font-weight: 900;
+    }
+
+    .upload-box {
+      display: grid;
+      gap: 10px;
+      place-items: center;
+      min-height: 150px;
+      padding: 18px;
+      border: 2px dashed #b9c5d5;
+      border-radius: 8px;
+      background: #f8fbfd;
+      text-align: center;
+    }
+
+    .upload-box.dragging {
+      border-color: var(--teal);
+      background: #eef9f7;
+    }
+
+    .upload-box input {
+      display: none;
+    }
+
+    .upload-text {
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .btn {
+      min-height: 44px;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 13px;
+      cursor: pointer;
+      color: white;
+      background: var(--teal);
+      font-weight: 900;
+      transition: transform 0.12s ease, background 0.12s ease, opacity 0.12s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      background: var(--teal-dark);
+    }
+
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn.secondary {
+      background: var(--blue);
+    }
+
+    .btn.secondary:hover {
+      background: #285ba4;
+    }
+
+    .btn.warning {
+      background: var(--amber);
+      color: #241800;
+    }
+
+    .btn.warning:hover {
+      background: #c98b1a;
+    }
+
+    .btn.danger {
+      background: var(--coral);
+    }
+
+    .btn.danger:hover {
+      background: #b9473d;
+    }
+
+    .btn.full {
+      width: 100%;
+    }
+
+    .canvas-shell {
+      padding: 16px;
+      min-width: 0;
+    }
+
+    .canvas-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+      min-width: 0;
+    }
+
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 800;
+    }
+
+    .stat {
+      padding: 7px 9px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fbfcfe;
+    }
+
+    .sheet-wrap {
+      width: min(100%, 620px);
+      margin: 0 auto;
+    }
+
+    .sheet {
+      position: relative;
+      width: 100%;
+      aspect-ratio: var(--sheet-ratio, 13 / 19);
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(47, 111, 202, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(47, 111, 202, 0.08) 1px, transparent 1px),
+        #ffffff;
+      background-size: calc(100% / var(--sheet-width, 13)) calc(100% / var(--sheet-height, 19));
+      border: 1px solid #aeb9c8;
+      border-radius: 4px;
+      box-shadow: 0 22px 60px rgba(23, 33, 47, 0.18);
+      touch-action: none;
+    }
+
+    .empty-sheet {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: #8a95a5;
+      text-align: center;
+      pointer-events: none;
+      line-height: 1.45;
+    }
+
+    .art-item {
+      position: absolute;
+      border: 2px solid transparent;
+      touch-action: none;
+      cursor: move;
+      user-select: none;
+    }
+
+    .art-item.selected {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 2px rgba(15, 118, 110, 0.22);
+    }
+
+    .art-item img {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: contain;
+      pointer-events: none;
+      transform: translate(-50%, -50%) rotate(var(--rotation, 0deg));
+    }
+
+    .handle {
+      position: absolute;
+      right: -8px;
+      bottom: -8px;
+      width: 20px;
+      height: 20px;
+      display: none;
+      border: 2px solid white;
+      border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 2px 8px rgba(23, 33, 47, 0.25);
+      cursor: nwse-resize;
+    }
+
+    .selected .handle {
+      display: block;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--ink);
+      padding: 10px 11px;
+      outline: none;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .size-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      align-items: end;
+    }
+
+    .size-grid .wide {
+      grid-column: 1 / -1;
+    }
+
+    .tools {
+      display: grid;
+      gap: 10px;
+    }
+
+    .tool-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .art-list {
+      display: grid;
+      gap: 8px;
+      max-height: 260px;
+      overflow: auto;
+    }
+
+    .art-card {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      cursor: pointer;
+    }
+
+    .art-card.selected {
+      border-color: var(--teal);
+      background: #eef9f7;
+    }
+
+    .art-card img {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      border-radius: 6px;
+      background: white;
+      border: 1px solid var(--line);
+    }
+
+    .art-card strong {
+      display: block;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .art-card span {
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    .check {
+      display: grid;
+      grid-template-columns: 20px 1fr;
+      gap: 9px;
+      align-items: start;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .check input {
+      width: 18px;
+      height: 18px;
+      margin: 1px 0 0;
+      accent-color: var(--teal);
+    }
+
+    .status {
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      padding: 10px 12px;
+      border: 1px solid #b7ded8;
+      border-radius: 8px;
+      background: #eef9f7;
+      color: #0b5d57;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .status.warn {
+      border-color: #f0d08c;
+      background: #fff7e5;
+      color: #6f4300;
+    }
+
+    .mobile-actions {
+      display: none;
+    }
+
+    @media (max-width: 1180px) {
+      main {
+        grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+      }
+
+      .right-panel {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 1050px) {
+      header,
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .canvas-shell {
+        order: -1;
+      }
+    }
+
+    @media (max-width: 820px) {
+      .sheet-badge {
+        min-width: 0;
+      }
+
+      .canvas-shell {
+        padding: 10px;
+      }
+
+      .sheet-wrap {
+        width: min(100%, 460px);
+      }
+    }
+
+    @media (max-width: 560px) {
+      body {
+        background:
+          linear-gradient(180deg, rgba(15, 118, 110, 0.16), transparent 230px),
+          #f2f6fa;
+      }
+
+      .app {
+        padding: 10px;
+        padding-bottom: 86px;
+      }
+
+      header {
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      h1 {
+        font-size: 2.05rem;
+        max-width: 11ch;
+      }
+
+      .subtitle {
+        font-size: 0.94rem;
+      }
+
+      .panel {
+        box-shadow: 0 10px 26px rgba(23, 33, 47, 0.1);
+      }
+
+      .pad {
+        padding: 12px;
+      }
+
+      .canvas-top {
+        display: grid;
+        gap: 10px;
+      }
+
+      .stats {
+        font-size: 0.82rem;
+      }
+
+      .stat {
+        padding: 6px 8px;
+      }
+
+      .sheet-badge {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 12px;
+        box-shadow: 0 10px 26px rgba(23, 33, 47, 0.1);
+      }
+
+      .sheet-badge strong {
+        font-size: 1.45rem;
+      }
+
+      .sheet-badge span {
+        font-size: 0.72rem;
+      }
+
+      .upload-box {
+        min-height: 118px;
+        padding: 14px;
+      }
+
+      .notice li {
+        padding: 9px;
+      }
+
+      .field-grid,
+      .tool-row {
+        grid-template-columns: 1fr;
+      }
+
+      .canvas-shell {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        border-radius: 0 0 8px 8px;
+      }
+
+      .sheet-wrap {
+        width: min(100%, 330px);
+      }
+
+      .sheet {
+        box-shadow: 0 14px 34px rgba(23, 33, 47, 0.18);
+      }
+
+      .empty-sheet {
+        font-size: 0.92rem;
+      }
+
+      .art-item.selected {
+        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.22);
+      }
+
+      .handle {
+        right: -12px;
+        bottom: -12px;
+        width: 30px;
+        height: 30px;
+        border-width: 3px;
+      }
+
+      .art-list {
+        max-height: none;
+      }
+
+      .art-card {
+        grid-template-columns: 58px 1fr;
+        padding: 10px;
+      }
+
+      .art-card img {
+        width: 58px;
+        height: 58px;
+      }
+
+      input,
+      select,
+      textarea,
+      .btn {
+        min-height: 46px;
+        font-size: 16px;
+      }
+
+      .mobile-actions {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 10;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        padding: 10px;
+        border-top: 1px solid var(--line);
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 -12px 28px rgba(23, 33, 47, 0.16);
+        backdrop-filter: blur(10px);
+      }
+
+      .mobile-actions .btn {
+        min-height: 48px;
+        padding: 9px 8px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .app {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+
+      h1 {
+        font-size: 1.88rem;
+      }
+
+      .sheet-wrap {
+        width: min(100%, 300px);
+      }
+
+      .canvas-shell,
+      .pad {
+        padding: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>Gang Sheet Builder</h1>
+        <p class="subtitle">Upload artwork, choose a gang sheet size, arrange designs, then export a print-size PNG.</p>
+      </div>
+      <div class="sheet-badge">
+        <strong id="sheetBadge">13 x 19</strong>
+        <span>inches at 300 DPI</span>
+      </div>
+    </header>
+
+    <main>
+      <aside class="stack">
+        <section class="panel pad">
+          <h2>Upload Artwork</h2>
+          <label class="upload-box" id="uploadBox">
+            <input id="fileInput" type="file" accept="image/png,image/jpeg,image/webp" multiple>
+            <button class="btn" type="button" id="chooseFilesBtn">Choose Images</button>
+            <span class="upload-text">PNG, JPG, or WebP files. Multiple images are welcome if they fit on the sheet.</span>
+          </label>
+        </section>
+
+        <section class="panel pad">
+          <h2>Required Reminders</h2>
+          <ul class="notice">
+            <li><span class="mark">1</span><span><strong>Artwork should be at least 300 DPI.</strong> Low quality files may print blurry.</span></li>
+            <li><span class="mark">2</span><span><strong>No copyrighted or trademarked artwork.</strong> Upload only designs you own or have permission to use.</span></li>
+            <li><span class="mark">3</span><span><strong>Keep every image inside the sheet.</strong> The builder will not export artwork outside the selected gang sheet area.</span></li>
+          </ul>
+        </section>
+      </aside>
+
+      <section class="panel canvas-shell">
+        <div class="canvas-top">
+          <div>
+            <h2 id="sheetTitle">13 x 19 Sheet</h2>
+            <div class="stats">
+              <span class="stat" id="artCount">0 artwork files</span>
+              <span class="stat" id="selectedSize">No selection</span>
+              <span class="stat" id="exportSize">3900 x 5700 px export</span>
+            </div>
+          </div>
+          <button class="btn secondary" id="fitViewBtn" type="button">Center View</button>
+        </div>
+        <div class="sheet-wrap">
+          <div class="sheet" id="sheet" aria-label="13 by 19 inch gang sheet canvas">
+            <div class="empty-sheet" id="emptySheet">Upload artwork to start building the gang sheet.</div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="stack right-panel">
+        <section class="panel pad tools">
+          <h2>Sheet Size</h2>
+          <ul class="notice">
+            <li><span class="mark">13</span><span><strong>Only 13 x 19 inch gang sheets are available.</strong> Arrange your artwork inside the fixed sheet area.</span></li>
+          </ul>
+
+          <h2>Selected Artwork</h2>
+          <div class="field-grid">
+            <div>
+              <label for="widthInput">Width (in)</label>
+              <input id="widthInput" type="number" min="0.1" max="13" step="0.1" disabled>
+            </div>
+            <div>
+              <label for="heightInput">Height (in)</label>
+              <input id="heightInput" type="number" min="0.1" max="19" step="0.1" disabled>
+            </div>
+          </div>
+          <div class="tool-row">
+            <button class="btn secondary" id="duplicateBtn" type="button" disabled>Duplicate</button>
+            <button class="btn secondary" id="rotateBtn" type="button" disabled>Rotate 90</button>
+          </div>
+          <div class="tool-row">
+            <button class="btn warning" id="centerBtn" type="button" disabled>Center</button>
+            <button class="btn danger" id="deleteBtn" type="button" disabled>Delete</button>
+          </div>
+          <div class="status" id="status">Upload images to begin.</div>
+        </section>
+
+        <section class="panel pad">
+          <h2>Artwork List</h2>
+          <div class="art-list" id="artList">
+            <div class="upload-text">No artwork uploaded yet.</div>
+          </div>
+        </section>
+
+        <section class="panel pad tools">
+          <h2>Export and Email</h2>
+          <label class="check">
+            <input id="qualityCheck" type="checkbox">
+            <span>I understand uploaded artwork should be at least 300 DPI.</span>
+          </label>
+          <label class="check">
+            <input id="rightsCheck" type="checkbox">
+            <span>I confirm this artwork is not copyrighted or trademarked unless I have permission to use it.</span>
+          </label>
+          <button class="btn full" id="exportBtn" type="button" disabled>Download PNG</button>
+          <button class="btn secondary full" id="emailBtn" type="button" disabled>Email to Sambodi Creations</button>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <div class="mobile-actions" aria-label="Gang sheet mobile actions">
+    <button class="btn" id="mobileExportBtn" type="button" disabled>Download PNG</button>
+    <button class="btn secondary" id="mobileEmailBtn" type="button" disabled>Email Sheet</button>
+  </div>
+
+  <script>
+    const exportDpi = 300;
+    const presets = {
+      "13x19": { width: 13, height: 19 }
+    };
+
+    const state = {
+      items: [],
+      selectedId: null,
+      nextId: 1,
+      sheetWidth: 13,
+      sheetHeight: 19,
+      downloaded: false
+    };
+
+    const sheet = document.getElementById("sheet");
+    const sheetBadge = document.getElementById("sheetBadge");
+    const sheetTitle = document.getElementById("sheetTitle");
+    const sheetPreset = { value: "13x19" };
+    const sheetWidthInput = { value: "13" };
+    const sheetHeightInput = { value: "19" };
+    const exportSize = document.getElementById("exportSize");
+    const emptySheet = document.getElementById("emptySheet");
+    const fileInput = document.getElementById("fileInput");
+    const uploadBox = document.getElementById("uploadBox");
+    const chooseFilesBtn = document.getElementById("chooseFilesBtn");
+    const artList = document.getElementById("artList");
+    const artCount = document.getElementById("artCount");
+    const selectedSize = document.getElementById("selectedSize");
+    const widthInput = document.getElementById("widthInput");
+    const heightInput = document.getElementById("heightInput");
+    const duplicateBtn = document.getElementById("duplicateBtn");
+    const rotateBtn = document.getElementById("rotateBtn");
+    const centerBtn = document.getElementById("centerBtn");
+    const deleteBtn = document.getElementById("deleteBtn");
+    const fitViewBtn = document.getElementById("fitViewBtn");
+    const qualityCheck = document.getElementById("qualityCheck");
+    const rightsCheck = document.getElementById("rightsCheck");
+    const exportBtn = document.getElementById("exportBtn");
+    const emailBtn = document.getElementById("emailBtn");
+    const mobileExportBtn = document.getElementById("mobileExportBtn");
+    const mobileEmailBtn = document.getElementById("mobileEmailBtn");
+    const status = document.getElementById("status");
+
+    function selectedItem() {
+      return state.items.find((item) => item.id === state.selectedId) || null;
+    }
+
+    function inchesToPercentX(value) {
+      return (value / state.sheetWidth) * 100;
+    }
+
+    function inchesToPercentY(value) {
+      return (value / state.sheetHeight) * 100;
+    }
+
+    function clientToInches(event) {
+      const rect = sheet.getBoundingClientRect();
+      const x = ((event.clientX - rect.left) / rect.width) * state.sheetWidth;
+      const y = ((event.clientY - rect.top) / rect.height) * state.sheetHeight;
+      return { x, y };
+    }
+
+    function clampItem(item) {
+      item.w = Math.min(Math.max(item.w, 0.2), state.sheetWidth);
+      item.h = Math.min(Math.max(item.h, 0.2), state.sheetHeight);
+      item.x = Math.min(Math.max(item.x, 0), state.sheetWidth - item.w);
+      item.y = Math.min(Math.max(item.y, 0), state.sheetHeight - item.h);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function formatInches(value) {
+      return Number(value).toFixed(1).replace(/\.0$/, "");
+    }
+
+    function sheetLabel() {
+      return `${formatInches(state.sheetWidth)} x ${formatInches(state.sheetHeight)}`;
+    }
+
+    function formatSizeForFile() {
+      return `${formatInches(state.sheetWidth)}x${formatInches(state.sheetHeight)}`.replaceAll(".", "p");
+    }
+
+    function renderSheetSize() {
+      const label = sheetLabel();
+      sheetBadge.textContent = label;
+      sheetTitle.textContent = `${label} Sheet`;
+      exportSize.textContent = `${Math.round(state.sheetWidth * exportDpi)} x ${Math.round(state.sheetHeight * exportDpi)} px export`;
+      sheet.style.setProperty("--sheet-ratio", `${state.sheetWidth} / ${state.sheetHeight}`);
+      sheet.style.setProperty("--sheet-width", state.sheetWidth);
+      sheet.style.setProperty("--sheet-height", state.sheetHeight);
+      widthInput.max = state.sheetWidth;
+      heightInput.max = state.sheetHeight;
+      sheetWidthInput.value = formatInches(state.sheetWidth);
+      sheetHeightInput.value = formatInches(state.sheetHeight);
+    }
+
+    function applySheetSize() {
+      state.sheetWidth = 13;
+      state.sheetHeight = 19;
+      sheetPreset.value = "13x19";
+      clampAllItems();
+      state.downloaded = false;
+      status.textContent = "Gang sheet size is fixed at 13 x 19 inches.";
+      render();
+    }
+
+    function addImage(file) {
+      if (!file.type.startsWith("image/")) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const image = new Image();
+        image.onload = () => {
+          const naturalW = image.naturalWidth || exportDpi;
+          const naturalH = image.naturalHeight || exportDpi;
+          const rawW = naturalW / exportDpi;
+          const rawH = naturalH / exportDpi;
+          const scale = Math.min(1, state.sheetWidth / rawW, state.sheetHeight / rawH);
+          const w = Math.max(0.5, rawW * scale);
+          const h = Math.max(0.5, rawH * scale);
+          const item = {
+            id: `art-${state.nextId}`,
+            name: file.name,
+            src: reader.result,
+            naturalW,
+            naturalH,
+            aspectRatio: naturalW / naturalH,
+            rotation: 0,
+            x: Math.max(0, (state.sheetWidth - w) / 2),
+            y: Math.max(0, (state.sheetHeight - h) / 2),
+            w,
+            h
+          };
+          state.nextId += 1;
+          clampItem(item);
+          state.items.push(item);
+          state.selectedId = item.id;
+          state.downloaded = false;
+          status.textContent = `${file.name} added to the sheet.`;
+          render();
+        };
+        image.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function addFiles(files) {
+      [...files].forEach(addImage);
+      fileInput.value = "";
+    }
+
+    function selectItem(id) {
+      state.selectedId = id;
+      render();
+    }
+
+    function updateItemElement(item, element) {
+      element.style.left = `${inchesToPercentX(item.x)}%`;
+      element.style.top = `${inchesToPercentY(item.y)}%`;
+      element.style.width = `${inchesToPercentX(item.w)}%`;
+      element.style.height = `${inchesToPercentY(item.h)}%`;
+      element.style.setProperty("--rotation", `${item.rotation || 0}deg`);
+      element.classList.toggle("selected", item.id === state.selectedId);
+      const image = element.querySelector("img");
+      if (image) {
+        const turned = Math.abs(item.rotation || 0) % 180 === 90;
+        image.style.width = turned ? `${(item.h / item.w) * 100}%` : "100%";
+        image.style.height = turned ? `${(item.w / item.h) * 100}%` : "100%";
+      }
+    }
+
+    function renderSheet() {
+      sheet.querySelectorAll(".art-item").forEach((node) => node.remove());
+      emptySheet.style.display = state.items.length ? "none" : "grid";
+
+      state.items.forEach((item) => {
+        const element = document.createElement("div");
+        element.className = "art-item";
+        element.dataset.id = item.id;
+        element.innerHTML = `<img alt="${escapeHtml(item.name)}" src="${item.src}"><span class="handle" aria-hidden="true"></span>`;
+        updateItemElement(item, element);
+        attachItemEvents(element, item);
+        sheet.appendChild(element);
+      });
+    }
+
+    function renderList() {
+      artList.innerHTML = "";
+      if (state.items.length === 0) {
+        artList.innerHTML = '<div class="upload-text">No artwork uploaded yet.</div>';
+        return;
+      }
+
+      state.items.forEach((item) => {
+        const card = document.createElement("button");
+        card.type = "button";
+        card.className = `art-card ${item.id === state.selectedId ? "selected" : ""}`;
+        card.innerHTML = `
+          <img alt="" src="${item.src}">
+          <span>
+            <strong>${escapeHtml(item.name)}</strong>
+            <span>${item.w.toFixed(2)} in x ${item.h.toFixed(2)} in</span>
+          </span>
+        `;
+        card.addEventListener("click", () => selectItem(item.id));
+        artList.appendChild(card);
+      });
+    }
+
+    function renderControls() {
+      const item = selectedItem();
+      const hasItem = Boolean(item);
+      widthInput.disabled = !hasItem;
+      heightInput.disabled = !hasItem;
+      duplicateBtn.disabled = !hasItem;
+      rotateBtn.disabled = !hasItem;
+      centerBtn.disabled = !hasItem;
+      deleteBtn.disabled = !hasItem;
+
+      widthInput.value = item ? item.w.toFixed(2) : "";
+      heightInput.value = item ? item.h.toFixed(2) : "";
+      selectedSize.textContent = item ? `${item.w.toFixed(2)} x ${item.h.toFixed(2)} in selected` : "No selection";
+      artCount.textContent = `${state.items.length} artwork ${state.items.length === 1 ? "file" : "files"}`;
+
+      const ready = state.items.length > 0 && qualityCheck.checked && rightsCheck.checked;
+      exportBtn.disabled = !ready;
+      emailBtn.disabled = !state.downloaded;
+      mobileExportBtn.disabled = !ready;
+      mobileEmailBtn.disabled = !state.downloaded;
+    }
+
+    function render() {
+      renderSheetSize();
+      renderSheet();
+      renderList();
+      renderControls();
+    }
+
+    function attachItemEvents(element, item) {
+      element.addEventListener("pointerdown", (event) => {
+        const isHandle = event.target.classList.contains("handle");
+        state.selectedId = item.id;
+        state.downloaded = false;
+        renderControls();
+
+        const start = clientToInches(event);
+        const startItem = { ...item };
+        element.setPointerCapture(event.pointerId);
+
+        function move(moveEvent) {
+          const current = clientToInches(moveEvent);
+          const dx = current.x - start.x;
+          const dy = current.y - start.y;
+          if (isHandle) {
+            const ratio = startItem.w / startItem.h;
+            item.w = startItem.w + dx;
+            item.h = item.w / ratio;
+            if (item.y + item.h > state.sheetHeight) {
+              item.h = state.sheetHeight - item.y;
+              item.w = item.h * ratio;
+            }
+            if (item.x + item.w > state.sheetWidth) {
+              item.w = state.sheetWidth - item.x;
+              item.h = item.w / ratio;
+            }
+          } else {
+            item.x = startItem.x + dx;
+            item.y = startItem.y + dy;
+          }
+          clampItem(item);
+          updateItemElement(item, element);
+          renderControls();
+        }
+
+        function up() {
+          element.removeEventListener("pointermove", move);
+          element.removeEventListener("pointerup", up);
+          element.removeEventListener("pointercancel", up);
+          render();
+        }
+
+        element.addEventListener("pointermove", move);
+        element.addEventListener("pointerup", up);
+        element.addEventListener("pointercancel", up);
+      });
+    }
+
+    function resizeSelected() {
+      const item = selectedItem();
+      if (!item) return;
+      const ratio = effectiveAspectRatio(item);
+      const nextW = Number(widthInput.value) || item.w;
+      const nextH = Number(heightInput.value) || item.h;
+      if (document.activeElement === widthInput) {
+        item.w = nextW;
+        item.h = nextW / ratio;
+      } else if (document.activeElement === heightInput) {
+        item.h = nextH;
+        item.w = nextH * ratio;
+      } else {
+        item.w = nextW;
+        item.h = nextW / ratio;
+      }
+      clampItem(item);
+      state.downloaded = false;
+      status.textContent = `${item.name} resized.`;
+      render();
+    }
+
+    function duplicateSelected() {
+      const item = selectedItem();
+      if (!item) return;
+      const copy = {
+        ...item,
+        id: `art-${state.nextId}`,
+        name: `${item.name} copy`,
+        x: item.x + 0.25,
+        y: item.y + 0.25
+      };
+      state.nextId += 1;
+      clampItem(copy);
+      state.items.push(copy);
+      state.selectedId = copy.id;
+      state.downloaded = false;
+      status.textContent = "Artwork duplicated.";
+      render();
+    }
+
+    function rotateSelected() {
+      const item = selectedItem();
+      if (!item) return;
+      const centerX = item.x + item.w / 2;
+      const centerY = item.y + item.h / 2;
+      const oldW = item.w;
+      item.w = item.h;
+      item.h = oldW;
+      item.rotation = ((item.rotation || 0) + 90) % 360;
+      item.x = centerX - item.w / 2;
+      item.y = centerY - item.h / 2;
+      clampItem(item);
+      state.downloaded = false;
+      status.textContent = "Artwork rotated.";
+      render();
+    }
+
+    function centerSelected() {
+      const item = selectedItem();
+      if (!item) return;
+      item.x = (state.sheetWidth - item.w) / 2;
+      item.y = (state.sheetHeight - item.h) / 2;
+      state.downloaded = false;
+      status.textContent = "Artwork centered.";
+      render();
+    }
+
+    function deleteSelected() {
+      const item = selectedItem();
+      if (!item) return;
+      state.items = state.items.filter((art) => art.id !== item.id);
+      state.selectedId = state.items.at(-1)?.id || null;
+      state.downloaded = false;
+      status.textContent = `${item.name} removed.`;
+      render();
+    }
+
+    async function exportPng() {
+      if (exportBtn.disabled) return;
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(state.sheetWidth * exportDpi);
+      canvas.height = Math.round(state.sheetHeight * exportDpi);
+      const context = canvas.getContext("2d");
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (const item of state.items) {
+        const image = await loadImage(item.src);
+        drawArtworkForExport(context, image, item);
+      }
+
+      const link = document.createElement("a");
+      link.download = `sambodi-gang-sheet-${formatSizeForFile()}-${Date.now()}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      state.downloaded = true;
+      status.textContent = "PNG downloaded. Use the email button and attach the downloaded file.";
+      renderControls();
+    }
+
+    function drawArtworkForExport(context, image, item) {
+      const x = item.x * exportDpi;
+      const y = item.y * exportDpi;
+      const w = item.w * exportDpi;
+      const h = item.h * exportDpi;
+      const rotation = ((item.rotation || 0) % 360 + 360) % 360;
+      const turned = rotation % 180 === 90;
+      const frameW = turned ? h : w;
+      const frameH = turned ? w : h;
+      const imageRatio = image.naturalWidth / image.naturalHeight;
+      const frameRatio = frameW / frameH;
+      let drawW = frameW;
+      let drawH = frameH;
+
+      if (imageRatio > frameRatio) {
+        drawH = drawW / imageRatio;
+      } else {
+        drawW = drawH * imageRatio;
+      }
+
+      context.save();
+      context.translate(x + w / 2, y + h / 2);
+      context.rotate((rotation * Math.PI) / 180);
+      context.drawImage(image, -drawW / 2, -drawH / 2, drawW, drawH);
+      context.restore();
+    }
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = reject;
+        image.src = src;
+      });
+    }
+
+    function effectiveAspectRatio(item) {
+      const ratio = item.aspectRatio || item.w / item.h || 1;
+      return Math.abs(item.rotation || 0) % 180 === 90 ? 1 / ratio : ratio;
+    }
+
+    function openEmail() {
+      const subject = encodeURIComponent("Gang Sheet Submission");
+      const body = encodeURIComponent([
+        "Hello Sambodi Creations,",
+        "",
+        `I built a ${sheetLabel()} gang sheet and downloaded the PNG from the builder.`,
+        "I will attach the PNG file to this email before sending.",
+        "",
+        "I confirm the artwork is at least 300 DPI quality to the best of my knowledge.",
+        "I confirm the artwork is not copyrighted or trademarked unless I have permission to use it.",
+        "",
+        "Thank you."
+      ].join("\n"));
+      window.location.href = `mailto:info@sambodicreations.com?subject=${subject}&body=${body}`;
+    }
+
+    chooseFilesBtn.addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", () => addFiles(fileInput.files));
+
+    // Sheet size is fixed at 13 x 19 inches; no custom size controls are offered.
+
+    uploadBox.addEventListener("dragover", (event) => {
+      event.preventDefault();
+      uploadBox.classList.add("dragging");
+    });
+
+    uploadBox.addEventListener("dragleave", () => uploadBox.classList.remove("dragging"));
+
+    uploadBox.addEventListener("drop", (event) => {
+      event.preventDefault();
+      uploadBox.classList.remove("dragging");
+      addFiles(event.dataTransfer.files);
+    });
+
+    sheet.addEventListener("pointerdown", (event) => {
+      if (event.target === sheet || event.target === emptySheet) {
+        state.selectedId = null;
+        render();
+      }
+    });
+
+    widthInput.addEventListener("change", resizeSelected);
+    heightInput.addEventListener("change", resizeSelected);
+    duplicateBtn.addEventListener("click", duplicateSelected);
+    rotateBtn.addEventListener("click", rotateSelected);
+    centerBtn.addEventListener("click", centerSelected);
+    deleteBtn.addEventListener("click", deleteSelected);
+    fitViewBtn.addEventListener("click", () => {
+      sheet.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    qualityCheck.addEventListener("change", renderControls);
+    rightsCheck.addEventListener("change", renderControls);
+    exportBtn.addEventListener("click", exportPng);
+    emailBtn.addEventListener("click", openEmail);
+    mobileExportBtn.addEventListener("click", exportPng);
+    mobileEmailBtn.addEventListener("click", openEmail);
+
+    render();
+  </script>
+</body>
+</html>

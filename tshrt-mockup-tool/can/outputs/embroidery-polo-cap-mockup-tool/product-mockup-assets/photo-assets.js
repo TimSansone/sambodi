@@ -1,0 +1,1 @@
+﻿window.photoMockupAssets = window.photoMockupAssets || {};
