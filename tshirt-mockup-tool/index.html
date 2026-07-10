@@ -1985,17 +1985,20 @@
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         const productName = activeProduct().name.toLowerCase().replace(/\s+/g, "-");
-        link.download = artworkOnly
+        const filename = artworkOnly
           ? `${productName}-artwork-${Date.now()}.png`
           : `${productName}-${state.view}-mockup-${Date.now()}.png`;
+        link.download = filename;
         link.href = url;
         document.body.appendChild(link);
         link.click();
         link.remove();
         setTimeout(() => URL.revokeObjectURL(url), 1200);
-        status.textContent = artworkOnly
-          ? "Uploaded artwork downloaded and ready to submit."
-          : "Mockup PNG downloaded. GitHub backup requires a secure server connection.";
+        status.textContent = artworkOnly ? "Uploaded artwork downloaded. Saving a copy..." : "Mockup PNG downloaded. Saving a copy...";
+        const backup = await saveMockupBackup(blob, filename, artworkOnly);
+        status.textContent = backup.ok
+          ? `${artworkOnly ? "Uploaded artwork" : "Mockup PNG"} downloaded and saved to GitHub.`
+          : `${artworkOnly ? "Uploaded artwork" : "Mockup PNG"} downloaded. GitHub backup was not saved: ${backup.error}`;
       } catch (error) {
         status.textContent = "Download could not be created. Try refreshing the page and uploading the artwork again.";
         console.error(error);
@@ -2003,6 +2006,43 @@
         downloadBtn.disabled = false;
       }
     });
+
+    async function saveMockupBackup(blob, filename, artworkOnly) {
+      try {
+        const pngDataUrl = await blobToDataUrl(blob);
+        const response = await fetch("/api/save-mockup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            filename,
+            pngDataUrl,
+            metadata: {
+              product: activeProduct().name,
+              view: artworkOnly ? "Uploaded Artwork" : activeView().label,
+              color: colorName(state.color),
+              hexColor: state.color,
+              artworkZoom: artworkZoom(),
+              rotation: state.rotation,
+              flippedHorizontal: state.flippedX,
+              flippedVertical: state.flippedY,
+              artX: state.artX,
+              artY: state.artY,
+              createdAt: new Date().toISOString()
+            }
+          })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok || !result.ok) {
+          return { ok: false, error: result.error || "server error" };
+        }
+        return { ok: true };
+      } catch (error) {
+        console.error(error);
+        return { ok: false, error: "connection error" };
+      }
+    }
 
     function canvasToBlob(canvas) {
       return new Promise((resolve, reject) => {
@@ -2013,6 +2053,15 @@
             reject(new Error("Canvas export failed"));
           }
         }, "image/png");
+      });
+    }
+
+    function blobToDataUrl(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
       });
     }
 
