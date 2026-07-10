@@ -26,10 +26,17 @@
       box-sizing: border-box;
     }
 
+    html {
+      width: 100%;
+      overflow-x: auto;
+    }
+
     body {
       margin: 0;
+      width: 100%;
+      min-width: 0;
       min-height: 100vh;
-      overflow-x: hidden;
+      overflow-x: auto;
       background:
         linear-gradient(135deg, rgba(15, 118, 110, 0.14), transparent 34%),
         linear-gradient(45deg, rgba(227, 161, 42, 0.15), transparent 30%),
@@ -41,6 +48,8 @@
     input,
     select {
       font: inherit;
+      max-width: 100%;
+      min-width: 0;
     }
 
     button {
@@ -49,6 +58,7 @@
 
     .app {
       width: min(1500px, 100%);
+      max-width: 100%;
       margin: 0 auto;
       padding: clamp(12px, 3vw, 24px);
     }
@@ -161,12 +171,14 @@
 
     main {
       display: grid;
-      grid-template-columns: minmax(300px, 390px) minmax(0, 1fr) minmax(290px, 360px);
+      grid-template-columns: minmax(260px, 360px) minmax(360px, 1fr) minmax(260px, 340px);
       gap: 18px;
       align-items: start;
+      min-width: 0;
     }
 
     .panel {
+      min-width: 0;
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -180,6 +192,7 @@
     .stack {
       display: grid;
       gap: 14px;
+      min-width: 0;
     }
 
     h2 {
@@ -223,6 +236,8 @@
       color: white;
       background: var(--teal);
       font-weight: 900;
+      white-space: normal;
+      overflow-wrap: anywhere;
       transition: transform 0.12s ease, background 0.12s ease, opacity 0.12s ease;
     }
 
@@ -391,6 +406,7 @@
       font-size: 0.95rem;
     }
 
+    .is-hidden,
     .shape-panel.is-hidden {
       display: none;
     }
@@ -459,6 +475,7 @@
     .stats {
       display: flex;
       flex-wrap: wrap;
+      align-items: center;
       gap: 8px;
       color: var(--muted);
       font-size: 0.9rem;
@@ -470,6 +487,17 @@
       border: 1px solid var(--line);
       border-radius: 999px;
       background: #fbfcfe;
+    }
+
+    .stage-view-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .stage-view-grid .view-btn {
+      min-height: 34px;
+      padding: 7px 12px;
     }
 
     .preview-wrap {
@@ -559,6 +587,35 @@
       filter: drop-shadow(0 8px 12px rgba(23, 33, 47, 0.18));
     }
 
+    .center-guide {
+      position: absolute;
+      z-index: 5;
+      pointer-events: none;
+      display: none;
+      background: rgba(15, 118, 110, 0.88);
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.92);
+    }
+
+    .center-guide.visible {
+      display: block;
+    }
+
+    .center-guide.vertical {
+      top: 8%;
+      bottom: 8%;
+      left: 50%;
+      width: 2px;
+      transform: translateX(-50%);
+    }
+
+    .center-guide.horizontal {
+      left: 8%;
+      right: 8%;
+      top: 50%;
+      height: 2px;
+      transform: translateY(-50%);
+    }
+
     .nudge-button {
       min-width: 0;
       border: 1px solid var(--line);
@@ -610,9 +667,10 @@
 
     .range-row {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 74px;
+      grid-template-columns: minmax(90px, 1fr) minmax(64px, 74px);
       gap: 8px;
       align-items: center;
+      min-width: 0;
     }
 
     .range-row input[type="number"] {
@@ -679,14 +737,16 @@
 
     .field-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
+      min-width: 0;
     }
 
     .tool-row {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
+      min-width: 0;
     }
 
     .tools {
@@ -698,6 +758,7 @@
       min-height: 44px;
       display: flex;
       align-items: center;
+      min-width: 0;
       padding: 10px 12px;
       border: 1px solid #b7ded8;
       border-radius: 8px;
@@ -705,6 +766,7 @@
       color: #0b5d57;
       font-weight: 800;
       line-height: 1.35;
+      overflow-wrap: anywhere;
     }
 
     .tips {
@@ -721,13 +783,38 @@
       background: #fbfcfe;
     }
 
-    @media (max-width: 1120px) {
+    @media (max-width: 1320px) {
       main {
-        grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
+        grid-template-columns: minmax(240px, 330px) minmax(0, 1fr);
       }
 
       .right-panel {
         grid-column: 1 / -1;
+      }
+
+      .right-panel .tools {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+      }
+
+      .right-panel .tools h2,
+      .right-panel .tools #placementControls,
+      .right-panel .tools .status {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 1040px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .mockup-panel {
+        order: -1;
+      }
+
+      .right-panel .tools {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -745,8 +832,7 @@
         padding-bottom: 2px;
       }
 
-      .tool-hero,
-      main {
+      .tool-hero {
         grid-template-columns: 1fr;
       }
 
@@ -920,7 +1006,8 @@
           <div>
             <h2 id="stageTitle">T-Shirt Mockup</h2>
             <div class="stats">
-              <span class="stat" id="artStatus">No artwork uploaded</span>
+              <div class="stage-view-grid" id="topViewGrid"></div>
+              <span class="stat is-hidden" id="artStatus">No artwork uploaded</span>
               <span class="stat" id="colorStatus">Color selected</span>
             </div>
           </div>
@@ -934,6 +1021,8 @@
             <svg class="product-svg" id="productSvg" viewBox="0 0 1000 1000" aria-label="Product preview"></svg>
             <img class="product-photo" id="productPhoto" alt="" aria-hidden="true">
             <canvas class="product-tint" id="productTint" width="1200" height="1200" aria-hidden="true"></canvas>
+            <span class="center-guide vertical" id="verticalGuide" aria-hidden="true"></span>
+            <span class="center-guide horizontal" id="horizontalGuide" aria-hidden="true"></span>
             <div class="design-layer" id="designLayer">
               <img id="designImage" alt="Uploaded artwork preview">
               <span class="handle" aria-hidden="true"></span>
@@ -950,17 +1039,17 @@
           <div id="placementControls">
           <div class="field-grid">
             <div>
-              <label for="sizeInput">Size</label>
+              <label for="sizeInput">Artwork Zoom</label>
               <div class="range-row">
-                <input id="sizeInput" type="range" min="8" max="70" value="22">
-                <input id="sizeNumber" type="number" min="8" max="70" step="1" value="22" aria-label="Artwork size number">
+                <input id="sizeInput" type="range" min="25" max="300" value="100">
+                <input id="sizeNumber" type="number" min="25" max="300" step="1" value="100" aria-label="Artwork zoom percentage">
               </div>
             </div>
             <div>
               <label for="rotateInput">Rotate</label>
               <div class="range-row">
-                <input id="rotateInput" type="range" min="-45" max="45" value="0">
-                <input id="rotateNumber" type="number" min="-45" max="45" step="1" value="0" aria-label="Artwork rotation number">
+                <input id="rotateInput" type="range" min="-180" max="180" value="0">
+                <input id="rotateNumber" type="number" min="-180" max="180" step="1" value="0" aria-label="Artwork rotation number">
               </div>
             </div>
           </div>
@@ -1002,8 +1091,12 @@
             <button class="btn secondary" id="reset3dBtn" type="button">Reset 3D View</button>
           </div>
           <div class="tool-row">
-            <button class="btn secondary" id="flipBtn" type="button">Flip</button>
+            <button class="btn secondary" id="flipHorizontalBtn" type="button">Flip Horizontal</button>
+            <button class="btn secondary" id="flipVerticalBtn" type="button">Flip Vertical</button>
+          </div>
+          <div class="tool-row">
             <button class="btn warning" id="resetBtn" type="button">Reset Art</button>
+            <button class="btn secondary" id="centerBtnSide" type="button">Center Artwork</button>
           </div>
           </div>
           <button class="btn danger" id="deleteArtBtn" type="button" disabled>Delete Artwork</button>
@@ -1098,7 +1191,8 @@
       artSize: products.tshirt.defaultArt.size,
       artSelected: false,
       rotation: 0,
-      flipped: false,
+      flippedX: false,
+      flippedY: false,
       imageRatio: 1,
       viewTiltX: 0,
       viewTiltY: 0
@@ -1107,6 +1201,7 @@
     const productGrid = document.getElementById("productGrid");
     const viewPanel = document.getElementById("viewPanel");
     const viewGrid = document.getElementById("viewGrid");
+    const topViewGrid = document.getElementById("topViewGrid");
     const colorPanel = document.getElementById("colorPanel");
     const swatches = document.getElementById("swatches");
     const customColorInput = document.getElementById("customColorInput");
@@ -1134,14 +1229,18 @@
     const tiltYInput = document.getElementById("tiltYInput");
     const tiltYNumber = document.getElementById("tiltYNumber");
     const reset3dBtn = document.getElementById("reset3dBtn");
-    const flipBtn = document.getElementById("flipBtn");
+    const flipHorizontalBtn = document.getElementById("flipHorizontalBtn");
+    const flipVerticalBtn = document.getElementById("flipVerticalBtn");
     const resetBtn = document.getElementById("resetBtn");
     const deleteArtBtn = document.getElementById("deleteArtBtn");
     const centerBtn = document.getElementById("centerBtn");
+    const centerBtnSide = document.getElementById("centerBtnSide");
     const placementControls = document.getElementById("placementControls");
     const downloadBtn = document.getElementById("downloadBtn");
     const artStatus = document.getElementById("artStatus");
     const colorStatus = document.getElementById("colorStatus");
+    const verticalGuide = document.getElementById("verticalGuide");
+    const horizontalGuide = document.getElementById("horizontalGuide");
     const status = document.getElementById("status");
     let tintRenderId = 0;
 
@@ -1234,7 +1333,8 @@
         artY: state.artY,
         artSize: state.artSize,
         rotation: state.rotation,
-        flipped: state.flipped,
+        flippedX: state.flippedX,
+        flippedY: state.flippedY,
         artSelected: state.artSelected
       };
     }
@@ -1248,7 +1348,8 @@
       state.artY = saved?.artY ?? art.y;
       state.artSize = saved?.artSize ?? art.size;
       state.rotation = saved?.rotation || 0;
-      state.flipped = saved?.flipped || false;
+      state.flippedX = saved?.flippedX ?? saved?.flipped ?? false;
+      state.flippedY = saved?.flippedY || false;
       state.artSelected = saved?.artSelected || false;
       fileInput.value = "";
     }
@@ -1257,15 +1358,16 @@
       const product = activeProduct();
       const views = product.views || { front: { label: "Front" } };
       const entries = Object.entries(views);
-      viewPanel.classList.toggle("is-hidden", entries.length < 2);
+      viewPanel.classList.add("is-hidden");
       viewGrid.innerHTML = "";
+      topViewGrid.innerHTML = "";
       entries.forEach(([key, view]) => {
         const button = document.createElement("button");
         button.className = `view-btn ${key === state.view ? "active" : ""}`;
         button.type = "button";
         button.textContent = view.label;
         button.addEventListener("click", () => selectView(key));
-        viewGrid.appendChild(button);
+        topViewGrid.appendChild(button);
       });
     }
 
@@ -1369,9 +1471,10 @@
       state.artY = art.y;
       state.artSize = art.size;
       state.rotation = 0;
-      state.flipped = false;
-      sizeInput.value = state.artSize;
-      sizeNumber.value = state.artSize;
+      state.flippedX = false;
+      state.flippedY = false;
+      sizeInput.value = artworkZoom();
+      sizeNumber.value = artworkZoom();
       rotateInput.value = state.rotation;
       rotateNumber.value = state.rotation;
       if (shouldRender) render();
@@ -1381,9 +1484,24 @@
       return Math.max(min, Math.min(max, value));
     }
 
+    function normalArtSize() {
+      const art = activeView().defaultArt || activeProduct().defaultArt;
+      return art.size || 22;
+    }
+
+    function artworkZoom() {
+      return Math.round((state.artSize / normalArtSize()) * 100);
+    }
+
+    function setArtworkZoom(value) {
+      const zoom = clamp(Number(value) || 100, 25, 300);
+      state.artSize = normalArtSize() * (zoom / 100);
+    }
+
     function syncManualControls() {
-      sizeInput.value = state.artSize;
-      sizeNumber.value = Math.round(state.artSize);
+      const zoom = artworkZoom();
+      sizeInput.value = zoom;
+      sizeNumber.value = zoom;
       rotateInput.value = state.rotation;
       rotateNumber.value = Math.round(state.rotation);
       xNumber.value = Number(state.artX).toFixed(1);
@@ -1401,9 +1519,31 @@
     function updateArtworkPosition(x, y) {
       state.artX = clamp(Number(x), 8, 92);
       state.artY = clamp(Number(y), 8, 92);
+      updateCenterGuides(true);
       state.artSelected = Boolean(state.imageSrc);
       renderDesign();
       saveCurrentArtwork();
+    }
+
+    function updateCenterGuides(isActive = false) {
+      const tolerance = 0.8;
+      let showVertical = false;
+      let showHorizontal = false;
+      if (isActive && state.imageSrc && Math.abs(state.artX - 50) <= tolerance) {
+        state.artX = 50;
+        showVertical = true;
+      }
+      if (isActive && state.imageSrc && Math.abs(state.artY - 50) <= tolerance) {
+        state.artY = 50;
+        showHorizontal = true;
+      }
+      verticalGuide.classList.toggle("visible", showVertical);
+      horizontalGuide.classList.toggle("visible", showHorizontal);
+    }
+
+    function hideCenterGuides() {
+      verticalGuide.classList.remove("visible");
+      horizontalGuide.classList.remove("visible");
     }
 
     function nudgeArtwork(direction) {
@@ -1553,17 +1693,17 @@
         state.artSelected = false;
         artStatus.textContent = "No artwork uploaded";
         designImage.removeAttribute("src");
+        hideCenterGuides();
         syncManualControls();
         return;
       }
       const width = state.artSize;
-      const height = width / state.imageRatio;
       designLayer.style.left = `${state.artX}%`;
       designLayer.style.top = `${state.artY}%`;
       designLayer.style.width = `${width}%`;
-      designLayer.style.transform = `translate(-50%, -50%) rotate(${state.rotation}deg) scaleX(${state.flipped ? -1 : 1})`;
+      designLayer.style.transform = `translate(-50%, -50%) rotate(${state.rotation}deg) scale(${state.flippedX ? -1 : 1}, ${state.flippedY ? -1 : 1})`;
       designImage.src = state.imageSrc;
-      artStatus.textContent = `${width.toFixed(0)}% wide x ${height.toFixed(0)}% tall`;
+      artStatus.textContent = `${artworkZoom()}% artwork zoom`;
       syncManualControls();
     }
 
@@ -1706,14 +1846,17 @@
       if (dragMode === "move") {
         state.artX = clamp(start.artX + x - start.x, 8, 92);
         state.artY = clamp(start.artY + y - start.y, 8, 92);
+        updateCenterGuides(true);
       } else {
-        state.artSize = clamp(start.size + (x - start.x), 8, 70);
+        state.artSize = clamp(start.size + (x - start.x), normalArtSize() * 0.25, normalArtSize() * 3);
+        hideCenterGuides();
       }
       renderDesign();
     });
 
     function endDrag() {
       if (dragMode) saveCurrentArtwork();
+      hideCenterGuides();
       dragMode = null;
       start = null;
     }
@@ -1722,25 +1865,25 @@
     designLayer.addEventListener("pointercancel", endDrag);
 
     sizeInput.addEventListener("input", () => {
-      state.artSize = clamp(Number(sizeInput.value), 8, 70);
+      setArtworkZoom(sizeInput.value);
       renderDesign();
       saveCurrentArtwork();
     });
 
     sizeNumber.addEventListener("input", () => {
-      state.artSize = clamp(Number(sizeNumber.value), 8, 70);
+      setArtworkZoom(sizeNumber.value);
       renderDesign();
       saveCurrentArtwork();
     });
 
     rotateInput.addEventListener("input", () => {
-      state.rotation = clamp(Number(rotateInput.value), -45, 45);
+      state.rotation = clamp(Number(rotateInput.value), -180, 180);
       renderDesign();
       saveCurrentArtwork();
     });
 
     rotateNumber.addEventListener("input", () => {
-      state.rotation = clamp(Number(rotateNumber.value), -45, 45);
+      state.rotation = clamp(Number(rotateNumber.value), -180, 180);
       renderDesign();
       saveCurrentArtwork();
     });
@@ -1769,10 +1912,18 @@
       status.textContent = "3D view reset.";
     });
 
-    flipBtn.addEventListener("click", () => {
-      state.flipped = !state.flipped;
+    flipHorizontalBtn.addEventListener("click", () => {
+      state.flippedX = !state.flippedX;
       renderDesign();
       saveCurrentArtwork();
+      status.textContent = state.flippedX ? "Artwork mirrored horizontally." : "Horizontal mirror removed.";
+    });
+
+    flipVerticalBtn.addEventListener("click", () => {
+      state.flippedY = !state.flippedY;
+      renderDesign();
+      saveCurrentArtwork();
+      status.textContent = state.flippedY ? "Artwork mirrored vertically." : "Vertical mirror removed.";
     });
 
     resetBtn.addEventListener("click", () => {
@@ -1802,6 +1953,8 @@
       renderDesign();
       saveCurrentArtwork();
     });
+
+    centerBtnSide.addEventListener("click", () => centerBtn.click());
 
     downloadBtn.addEventListener("click", async () => {
       if (!state.imageSrc) return;
@@ -1903,7 +2056,7 @@
       context.save();
       context.translate(x, y);
       context.rotate((state.rotation * Math.PI) / 180);
-      context.scale(state.flipped ? -1 : 1, 1);
+      context.scale(state.flippedX ? -1 : 1, state.flippedY ? -1 : 1);
       if (state.product === "embroidery") {
         context.shadowColor = "rgba(23,33,47,0.22)";
         context.shadowBlur = 8;
