@@ -1,3 +1,5 @@
+
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -7,21 +9,66 @@
   <style>
     :root {
       color-scheme: light;
-      --ink: #18202d;
-      --muted: #667287;
-      --line: #dce3ee;
-      --panel: #ffffff;
-      --soft: #f3f7fb;
-      --teal: #0f766e;
-      --teal-dark: #0a5f59;
-      --coral: #d95d4f;
-      --amber: #e6a42b;
-      --blue: #2f6fca;
-      --violet: #7b5bb7;
-      --green: #278653;
-      --shadow: 0 18px 45px rgba(24, 32, 45, 0.12);
+      --ink: #2e241c;
+      --muted: #75685c;
+      --line: #ded2c0;
+      --panel: #fffaf0;
+      --soft: #f4ead8;
+      --field: #fffdf8;
+      --surface-alt: #fbf3e5;
+      --teal: #9a4f2d;
+      --teal-dark: #74381f;
+      --coral: #b74735;
+      --amber: #d69a32;
+      --blue: #536e5a;
+      --violet: #765b7f;
+      --green: #467052;
+      --status-bg: #edf3e8;
+      --status-line: #bfd0b5;
+      --status-ink: #3d6045;
+      --page-bg: #e8ddca;
+      --glow-one: rgba(154, 79, 45, 0.2);
+      --glow-two: rgba(214, 154, 50, 0.2);
+      --shadow: 0 16px 38px rgba(70, 48, 30, 0.13);
       font-family: Arial, Helvetica, sans-serif;
     }
+
+    body[data-theme="casino"] {
+      color-scheme: dark;
+      --ink: #f8ecd2;
+      --muted: #b9ad98;
+      --line: #4b493e;
+      --panel: #171c19;
+      --soft: #222824;
+      --field: #111512;
+      --surface-alt: #1d231f;
+      --teal: #b99446;
+      --teal-dark: #d1ad5b;
+      --coral: #d56a5d;
+      --amber: #d4a74b;
+      --blue: #376c57;
+      --violet: #826598;
+      --green: #67b083;
+      --status-bg: #172a21;
+      --status-line: #355b49;
+      --status-ink: #92d2ad;
+      --page-bg: #080b09;
+      --glow-one: rgba(19, 94, 62, 0.36);
+      --glow-two: rgba(185, 148, 70, 0.17);
+      --shadow: 0 18px 48px rgba(0, 0, 0, 0.36);
+    }
+
+    body[data-theme="casino"] .player-row,
+    body[data-theme="casino"] .icon-btn,
+    body[data-theme="casino"] .dialog,
+    body[data-theme="casino"] .score-card,
+    body[data-theme="casino"] .score-input,
+    body[data-theme="casino"] .score-step-btn,
+    body[data-theme="casino"] tr {
+      background: var(--surface-alt);
+    }
+
+    body[data-theme="casino"] th { background: var(--soft); }
 
     * {
       box-sizing: border-box;
@@ -32,10 +79,11 @@
       min-height: 100vh;
       overflow-x: hidden;
       background:
-        linear-gradient(135deg, rgba(15, 118, 110, 0.14), transparent 34%),
-        linear-gradient(45deg, rgba(230, 164, 43, 0.16), transparent 30%),
-        #eef3f7;
+        radial-gradient(circle at top left, var(--glow-one), transparent 38%),
+        radial-gradient(circle at bottom right, var(--glow-two), transparent 34%),
+        var(--page-bg);
       color: var(--ink);
+      transition: background-color 0.25s ease, color 0.25s ease;
     }
 
     button,
@@ -82,6 +130,19 @@
       min-width: min(340px, 100%);
     }
 
+    .theme-btn {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 9px 12px;
+      background: var(--panel);
+      color: var(--ink);
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .theme-btn:hover { border-color: var(--teal); }
+
     label {
       color: var(--muted);
       font-size: 0.82rem;
@@ -96,7 +157,7 @@
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 8px;
-      background: white;
+      background: var(--field);
       color: var(--ink);
       padding: 11px 12px;
       outline: none;
@@ -479,9 +540,9 @@
       align-items: center;
       padding: 10px 12px;
       border-radius: 8px;
-      border: 1px solid #b7ded8;
-      background: #eef9f7;
-      color: #0b5d57;
+      border: 1px solid var(--status-line);
+      background: var(--status-bg);
+      color: var(--status-ink);
       font-weight: 800;
     }
 
@@ -550,13 +611,12 @@
     @media (max-width: 680px) {
       body {
         background:
-          linear-gradient(180deg, rgba(15, 118, 110, 0.18), transparent 240px),
-          linear-gradient(45deg, rgba(230, 164, 43, 0.13), transparent 260px),
-          #f2f6fa;
+          radial-gradient(circle at top left, var(--glow-one), transparent 300px),
+          var(--page-bg);
       }
 
       .app {
-        padding: 10px;
+        padding: 8px;
       }
 
       header {
@@ -566,8 +626,8 @@
       }
 
       h1 {
-        font-size: 2.25rem;
-        max-width: 12ch;
+        font-size: 2rem;
+        max-width: none;
       }
 
       .subtitle {
@@ -585,10 +645,10 @@
       }
 
       .game-name {
-        padding: 12px;
+        padding: 10px;
         border: 1px solid var(--line);
         border-radius: 8px;
-        background: rgba(255, 255, 255, 0.84);
+        background: var(--panel);
         box-shadow: 0 10px 26px rgba(24, 32, 45, 0.08);
       }
 
@@ -705,6 +765,14 @@
 
       .round-actions {
         gap: 9px;
+        position: sticky;
+        bottom: 6px;
+        z-index: 3;
+        padding: 10px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
       }
 
       .status {
@@ -794,6 +862,7 @@
       <div class="game-name">
         <label for="gameName">Game name</label>
         <input id="gameName" type="text" value="Tonight's Game" maxlength="60">
+        <button class="theme-btn" id="themeBtn" type="button" aria-label="Switch to Dark Casino theme">♠ <span id="themeLabel">Dark Casino</span></button>
       </div>
     </header>
 
@@ -884,6 +953,7 @@
   <script>
     const palette = ["#0f766e", "#d95d4f", "#2f6fca", "#e6a42b", "#7b5bb7", "#278653", "#c25a92", "#5865a8", "#d47b23", "#3d8f9f"];
     const storageKey = "game-night-scorekeeper-v1";
+    const themeStorageKey = "game-night-scorekeeper-theme";
 
     const state = {
       gameName: "Tonight's Game",
@@ -913,7 +983,18 @@
     const samePlayersDialog = document.getElementById("samePlayersDialog");
     const samePlayersYesBtn = document.getElementById("samePlayersYesBtn");
     const samePlayersNoBtn = document.getElementById("samePlayersNoBtn");
+    const themeBtn = document.getElementById("themeBtn");
+    const themeLabel = document.getElementById("themeLabel");
     let samePlayersResolver = null;
+
+    function applyTheme(theme) {
+      const isCasino = theme === "casino";
+      document.body.dataset.theme = isCasino ? "casino" : "cozy";
+      themeLabel.textContent = isCasino ? "Cozy Game Room" : "Dark Casino";
+      themeBtn.firstChild.textContent = isCasino ? "◆ " : "♠ ";
+      themeBtn.setAttribute("aria-label", `Switch to ${isCasino ? "Cozy Game Room" : "Dark Casino"} theme`);
+      localStorage.setItem(themeStorageKey, isCasino ? "casino" : "cozy");
+    }
 
     function save() {
       localStorage.setItem(storageKey, JSON.stringify(state));
@@ -1344,6 +1425,11 @@
       if (event.target === samePlayersDialog) answerSamePlayers(false);
     });
 
+    themeBtn.addEventListener("click", () => {
+      applyTheme(document.body.dataset.theme === "casino" ? "cozy" : "casino");
+    });
+
+    applyTheme(localStorage.getItem(themeStorageKey) || "cozy");
     load();
     render();
   </script>
