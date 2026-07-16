@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Uber Driver Earnings Dashboard</title>
+<style>
+:root{--bg:#070b13;--panel:#0e1521;--panel2:#111a28;--line:#263247;--text:#f7f9fc;--muted:#94a3b8;--purple:#9a5cff;--green:#5fea73;--cyan:#55e6ff;--gold:#ffcb55;--red:#ff6b6b;--glow:0 0 28px rgba(154,92,255,.18)}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0,#15223c 0,transparent 30%),linear-gradient(135deg,#070b13,#0b101a 55%,#090714);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}button,input,textarea{font:inherit}.shell{display:grid;grid-template-columns:230px 1fr;min-height:100vh}.sidebar{border-right:1px solid var(--line);background:rgba(7,11,19,.88);padding:24px 18px;position:sticky;top:0;height:100vh;overflow:hidden}.brand{font-size:2rem;font-weight:800;line-height:.9;letter-spacing:-2px}.brand small{display:block;color:var(--purple);font-size:.78rem;letter-spacing:6px;margin-top:10px}.avatar{width:94px;height:94px;margin:28px auto 12px;border-radius:50%;border:3px solid var(--cyan);display:grid;place-items:center;background:radial-gradient(circle at 50% 30%,#25395c,#101827 70%);font-size:3rem;box-shadow:0 0 24px rgba(85,230,255,.25)}.cheer{text-align:center;color:#c99bff;font-weight:700}.nav{display:grid;gap:8px;margin-top:28px}.nav button{display:flex;align-items:center;gap:10px;width:100%;border:0;border-radius:10px;background:transparent;color:var(--text);padding:12px;text-align:left;cursor:pointer}.nav button:hover,.nav button.active{background:linear-gradient(90deg,rgba(154,92,255,.35),rgba(154,92,255,.08));color:white}.side-art{position:absolute;bottom:0;left:0;right:0;height:230px;background:linear-gradient(transparent,rgba(154,92,255,.18));overflow:hidden}.skyline{position:absolute;bottom:0;width:100%;height:120px;background:repeating-linear-gradient(90deg,transparent 0 14px,#26164c 15px 30px,transparent 31px 38px);clip-path:polygon(0 70%,8% 45%,13% 70%,22% 30%,28% 70%,40% 50%,46% 70%,54% 20%,60% 70%,72% 40%,80% 70%,88% 32%,94% 70%,100% 55%,100% 100%,0 100%)}.car{position:absolute;bottom:38px;left:34px;width:150px;height:50px;border-radius:50% 60% 18% 18%;background:linear-gradient(#172943,#05080d);border:1px solid #536c99;box-shadow:0 0 26px rgba(84,126,255,.35)}.car:before{content:"";position:absolute;width:70px;height:26px;left:38px;top:-18px;border-radius:60% 60% 0 0;background:#14233a;transform:skewX(-18deg)}.car:after{content:"●     ●";position:absolute;bottom:-14px;left:18px;color:#05070b;font-size:25px;letter-spacing:62px}.main{padding:22px;min-width:0}.topbar{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}.title-wrap{display:flex;align-items:center;gap:14px}.speed-icon{width:58px;height:58px;border-radius:16px;background:#111a28;border:1px solid var(--line);display:grid;place-items:center;font-size:2rem;box-shadow:var(--glow)}h1{margin:0;font-size:clamp(1.6rem,3vw,2.4rem)}.subtitle{color:var(--purple);margin-top:4px}.tagline{display:flex;gap:12px;align-items:center;color:#dce8ff}.badge{width:52px;height:52px;border:2px solid var(--cyan);border-radius:12px;display:grid;place-items:center;box-shadow:0 0 18px rgba(85,230,255,.35);font-size:1.6rem}.grid{display:grid;gap:14px}.metrics{grid-template-columns:repeat(5,minmax(0,1fr))}.card{background:linear-gradient(145deg,rgba(18,27,42,.98),rgba(12,18,29,.98));border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 8px 30px rgba(0,0,0,.18)}.metric-card{position:relative;overflow:hidden}.metric-card:after{content:"";position:absolute;inset:auto -30px -45px auto;width:100px;height:100px;border-radius:50%;background:var(--glow-color,rgba(154,92,255,.18));filter:blur(18px)}.metric-label{font-size:.78rem;font-weight:800;letter-spacing:.04em;color:var(--muted)}.metric-value{font-size:clamp(1.45rem,2.6vw,2rem);font-weight:850;margin-top:8px}.metric-note{font-size:.77rem;color:var(--muted);margin-top:6px}.positive{color:var(--green)}.negative{color:var(--red)}.dashboard-grid{grid-template-columns:minmax(0,2fr) minmax(300px,.8fr);margin-top:14px}.stack{display:grid;gap:14px}.section-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}h2{font-size:1rem;margin:0}.bars{display:grid;gap:12px}.bar-row{display:grid;grid-template-columns:70px 1fr 78px;gap:10px;align-items:center;font-size:.82rem}.bar-track{height:12px;background:#1a2536;border-radius:999px;overflow:hidden}.bar-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--green));border-radius:999px;box-shadow:0 0 10px rgba(154,92,255,.5)}.mini-stats{display:grid;grid-template-columns:repeat(6,1fr);margin-top:14px}.mini{padding:14px;text-align:center;border-right:1px solid var(--line)}.mini:last-child{border-right:0}.mini strong{display:block;font-size:1.1rem;margin-top:5px}.vehicle-art{height:150px;display:grid;place-items:center;position:relative;overflow:hidden}.vehicle-art .road{position:absolute;bottom:15px;width:90%;height:25px;background:linear-gradient(90deg,transparent,#3e2b70,transparent);filter:blur(7px)}.vehicle-art .big-car{transform:scale(1.6);position:relative;width:150px;height:50px;border-radius:50% 60% 18% 18%;background:linear-gradient(#1b365d,#05080d);border:1px solid #6583ba;box-shadow:0 0 28px rgba(154,92,255,.5)}.vehicle-art .big-car:before{content:"";position:absolute;width:70px;height:26px;left:38px;top:-18px;border-radius:60% 60% 0 0;background:#1b3151;transform:skewX(-18deg)}.vehicle-art .big-car:after{content:"●     ●";position:absolute;bottom:-14px;left:18px;color:#020408;font-size:25px;letter-spacing:62px}.vehicle-data{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.vehicle-data div{background:#0b121d;border-radius:10px;padding:10px}.vehicle-data span{display:block;color:var(--muted);font-size:.7rem}.insight{padding:11px 0;border-bottom:1px solid var(--line)}.insight:last-child{border-bottom:0}.actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.btn{border:1px solid #6f4ab5;background:#151026;color:#d7bfff;padding:10px 14px;border-radius:10px;font-weight:800;cursor:pointer}.btn.primary{border-color:#3bda64;background:#0d2b18;color:#6cff87}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:760px}th,td{padding:12px 9px;border-bottom:1px solid var(--line);text-align:left;font-size:.84rem}th{color:var(--muted)}.delete{background:transparent;border:0;color:var(--red);font-weight:800;cursor:pointer}.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.full{grid-column:1/-1}label{display:grid;gap:6px;color:var(--muted);font-size:.78rem;font-weight:800}input,textarea{width:100%;border:1px solid var(--line);background:#0a111c;color:white;padding:11px;border-radius:10px}textarea{min-height:90px}.hidden{display:none!important}.small{font-size:.8rem;color:var(--muted);line-height:1.5}.settings-note{background:#0a111c;border-radius:10px;padding:11px;margin-bottom:12px}
+@media(max-width:1100px){.metrics{grid-template-columns:repeat(3,1fr)}.dashboard-grid{grid-template-columns:1fr}.mini-stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){.shell{grid-template-columns:1fr}.sidebar{height:auto;position:relative;padding:14px}.brand,.avatar,.cheer,.side-art{display:none}.nav{grid-template-columns:repeat(3,1fr);margin-top:0}.nav button{justify-content:center;font-size:.78rem}.main{padding:12px}.metrics{grid-template-columns:repeat(2,1fr)}.tagline{display:none}.form-grid{grid-template-columns:1fr}.mini-stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.metrics{grid-template-columns:1fr}.nav button{padding:10px 5px}.title-wrap{align-items:flex-start}.speed-icon{width:46px;height:46px}.vehicle-data{grid-template-columns:1fr}.mini-stats{grid-template-columns:1fr}.mini{border-right:0;border-bottom:1px solid var(--line)}}
+</style></head>
+<body><div class="shell">
+<aside class="sidebar"><div class="brand">Uber<small>DRIVER</small></div><div class="avatar">😎</div><div class="cheer">Great job out there!</div><div class="nav"><button class="active" data-view="dashboard">⌂ Dashboard</button><button data-view="session">＋ Add Session</button><button data-view="settings">⚙ Vehicle</button></div><div class="side-art"><div class="skyline"></div><div class="car"></div></div></aside>
+<main class="main"><header class="topbar"><div class="title-wrap"><div class="speed-icon">🛞</div><div><h1>Uber Earnings Dashboard</h1><div class="subtitle">2025 Toyota Camry Hybrid</div></div></div><div class="tagline"><div class="badge">U</div><div><strong>You drive.<br>You earn.</strong><div class="subtitle">We help you know.</div></div></div></header>
+<section id="dashboardView">
+<div class="grid metrics">
+<div class="card metric-card" style="--glow-color:rgba(95,234,115,.18)"><div class="metric-label">● GROSS EARNINGS</div><div id="grossMetric" class="metric-value">$0.00</div><div class="metric-note">Fares, tips & promotions</div></div>
+<div class="card metric-card"><div class="metric-label">▣ NET PROFIT</div><div id="netMetric" class="metric-value positive">$0.00</div><div class="metric-note">After expenses & taxes</div></div>
+<div class="card metric-card"><div class="metric-label">◷ NET PER HOUR</div><div id="hourMetric" class="metric-value">$0.00</div><div class="metric-note">Online time</div></div>
+<div class="card metric-card" style="--glow-color:rgba(255,203,85,.15)"><div class="metric-label">⌁ EARNINGS PER MILE</div><div id="mileMetric" class="metric-value">$0.00</div><div class="metric-note">All driving miles</div></div>
+<div class="card metric-card" style="--glow-color:rgba(85,230,255,.14)"><div class="metric-label">▥ ESTIMATED TAXES</div><div id="taxMetric" class="metric-value">$0.00</div><div class="metric-note">Reserve amount</div></div>
+</div>
+<div class="grid dashboard-grid"><div class="stack"><div class="card"><div class="section-title"><h2>EARNINGS OVER TIME</h2><span class="small">Net earnings by day</span></div><div id="chart" class="bars"></div><div class="mini-stats"><div class="mini"><span class="small">ONLINE HOURS</span><strong id="onlineMetric">0.0</strong></div><div class="mini"><span class="small">ACTIVE HOURS</span><strong id="activeMetric">0.0</strong></div><div class="mini"><span class="small">TRIPS</span><strong id="tripsMetric">0</strong></div><div class="mini"><span class="small">TOTAL MILES</span><strong id="milesMetric">0</strong></div><div class="mini"><span class="small">PAID MILES</span><strong id="paidMetric">0</strong></div><div class="mini"><span class="small">UNPAID MILES</span><strong id="unpaidMetric">0</strong></div></div></div>
+<div class="card"><div class="section-title"><h2>RECENT DRIVING SESSIONS</h2></div><div class="actions"><button class="btn primary" id="quickAddBtn">＋ Add Driving Session</button><button class="btn" id="exportBtn">⇩ Export CSV</button><button class="btn" id="sampleBtn">★ Load Sample Week</button></div><div class="table-wrap"><table><thead><tr><th>Date</th><th>Gross</th><th>Online</th><th>Trips</th><th>Miles</th><th>Fuel</th><th>Net</th><th></th></tr></thead><tbody id="historyBody"></tbody></table></div></div></div>
+<div class="stack"><div class="card"><h2>YOUR VEHICLE</h2><div class="subtitle">2025 Toyota Camry Hybrid</div><div class="vehicle-art"><div class="road"></div><div class="big-car"></div></div><div class="vehicle-data"><div><span>MPG</span><strong id="mpgDisplay">48</strong></div><div><span>Gas Price</span><strong id="gasDisplay">$3.25</strong></div><div><span>Fuel / Mile</span><strong id="fuelMileDisplay">$0.068</strong></div></div><div class="actions"><button class="btn" onclick="showView('settings')">⚙ Edit Vehicle Settings</button></div></div><div class="card"><h2>★ INSIGHTS</h2><div id="insights"></div></div></div></div></section>
+<section id="sessionView" class="hidden"><div class="card"><h2>ADD DRIVING SESSION</h2><form id="sessionForm"><div class="form-grid"><label>Date<input id="date" type="date" required></label><label>Online Hours<input id="onlineHours" type="number" min="0" step="0.1" required></label><label>Active Hours<input id="activeHours" type="number" min="0" step="0.1"></label><label>Number of Trips<input id="trips" type="number" min="0" step="1" required></label><label>Fare Earnings ($)<input id="fares" type="number" min="0" step="0.01" required></label><label>Tips ($)<input id="tips" type="number" min="0" step="0.01" value="0"></label><label>Promotions / Bonuses ($)<input id="promotions" type="number" min="0" step="0.01" value="0"></label><label>Total Miles<input id="miles" type="number" min="0" step="0.1" required></label><label>Paid Miles<input id="paidMiles" type="number" min="0" step="0.1"></label><label>Fuel Purchased ($)<input id="fuelCost" type="number" min="0" step="0.01" value="0"></label><label>Tolls / Parking ($)<input id="tolls" type="number" min="0" step="0.01" value="0"></label><label>Other Expenses ($)<input id="other" type="number" min="0" step="0.01" value="0"></label><label class="full">Notes<textarea id="notes" placeholder="Airport queue, surge, event, traffic, etc."></textarea></label></div><div class="actions"><button class="btn primary" type="submit">Save Session</button><button class="btn" type="button" data-go-dashboard>Cancel</button></div></form></div></section>
+<section id="settingsView" class="hidden"><div class="card"><h2>CAMRY HYBRID COST SETTINGS</h2><div class="settings-note small">Planning estimates only. All values are editable so the dashboard reflects your real-world driving costs.</div><form id="settingsForm"><div class="form-grid"><label>Vehicle Name<input id="vehicleName" type="text"></label><label>Real-World MPG<input id="mpg" type="number" min="1" step="0.1"></label><label>Average Gas Price ($/gal)<input id="gasPrice" type="number" min="0" step="0.01"></label><label>Maintenance Allowance ($/mile)<input id="maintenanceRate" type="number" min="0" step="0.01"></label><label>Depreciation Allowance ($/mile)<input id="depreciationRate" type="number" min="0" step="0.01"></label><label>Tax Reserve (%)<input id="taxRate" type="number" min="0" max="100" step="0.1"></label><label>Monthly Insurance Allocated to Uber ($)<input id="insuranceMonthly" type="number" min="0" step="0.01"></label><label>Monthly Phone / App Costs ($)<input id="phoneMonthly" type="number" min="0" step="0.01"></label></div><div class="actions"><button class="btn primary" type="submit">Save Settings</button><button class="btn" type="button" id="resetBtn">Reset All Data</button></div></form></div></section>
+</main></div>
+<script>
+const DEFAULT_SETTINGS = {
+  vehicleName: "2025 Toyota Camry Hybrid",
+  mpg: 48,
+  gasPrice: 3.25,
+  maintenanceRate: 0.10,
+  depreciationRate: 0.12,
+  taxRate: 18,
+  insuranceMonthly: 75,
+  phoneMonthly: 30
+};
+
+let settings = JSON.parse(localStorage.getItem("uberSettings")) || DEFAULT_SETTINGS;
+let sessions = JSON.parse(localStorage.getItem("uberSessions")) || [];
+
+const $ = id => document.getElementById(id);
+const money = n => new Intl.NumberFormat("en-US", {style:"currency",currency:"USD"}).format(Number(n)||0);
+const num = id => Number($(id).value) || 0;
+
+function save() {
+  localStorage.setItem("uberSettings", JSON.stringify(settings));
+  localStorage.setItem("uberSessions", JSON.stringify(sessions));
+}
+function fixedMonthlyCostPerDay() {
+  return (settings.insuranceMonthly + settings.phoneMonthly) / 30.4375;
+}
+function calculateSession(s) {
+  const gross = s.fares + s.tips + s.promotions;
+  const estimatedFuel = s.miles / settings.mpg * settings.gasPrice;
+  const fuel = s.fuelCost > 0 ? s.fuelCost : estimatedFuel;
+  const wear = s.miles * (settings.maintenanceRate + settings.depreciationRate);
+  const direct = fuel + s.tolls + s.other + wear + fixedMonthlyCostPerDay();
+  const profitBeforeTax = gross - direct;
+  const taxes = Math.max(0, profitBeforeTax * settings.taxRate / 100);
+  return { gross, fuel, wear, direct, taxes, net: profitBeforeTax - taxes };
+}
+function totals() {
+  return sessions.reduce((a,s) => {
+    const c = calculateSession(s);
+    a.gross += c.gross; a.net += c.net; a.taxes += c.taxes;
+    a.online += s.onlineHours; a.trips += s.trips; a.miles += s.miles;
+    a.paidMiles += s.paidMiles; a.fuel += c.fuel;
+    return a;
+  }, {gross:0,net:0,taxes:0,online:0,trips:0,miles:0,paidMiles:0,fuel:0});
+}
+function render() {
+  const t = totals();
+  const activeTotal = sessions.reduce((sum,s)=>sum+(Number(s.activeHours)||0),0);
+  $("grossMetric").textContent = money(t.gross);
+  $("netMetric").textContent = money(t.net);
+  $("netMetric").className = "metric-value " + (t.net >= 0 ? "positive" : "negative");
+  $("hourMetric").textContent = money(t.online ? t.net/t.online : 0);
+  $("mileMetric").textContent = money(t.miles ? t.net/t.miles : 0);
+  $("onlineMetric").textContent = t.online.toFixed(1);
+  $("tripsMetric").textContent = t.trips;
+  $("milesMetric").textContent = t.miles.toFixed(1);
+  $("taxMetric").textContent = money(t.taxes);
+  if ($("activeMetric")) $("activeMetric").textContent = activeTotal.toFixed(1);
+  if ($("paidMetric")) $("paidMetric").textContent = t.paidMiles.toFixed(1);
+  if ($("unpaidMetric")) $("unpaidMetric").textContent = Math.max(0,t.miles-t.paidMiles).toFixed(1);
+  if ($("mpgDisplay")) $("mpgDisplay").textContent = Number(settings.mpg).toFixed(1);
+  if ($("gasDisplay")) $("gasDisplay").textContent = money(settings.gasPrice);
+  if ($("fuelMileDisplay")) $("fuelMileDisplay").textContent = money(settings.gasPrice/settings.mpg);
+  renderHistory();
+  renderChart();
+  renderInsights();
+  document.querySelector(".subtitle").textContent = settings.vehicleName;
+}
+function renderHistory() {
+  const body = $("historyBody");
+  body.innerHTML = "";
+  [...sessions].sort((a,b)=>b.date.localeCompare(a.date)).forEach(s => {
+    const c = calculateSession(s);
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${s.date}</td><td>${money(c.gross)}</td><td>${s.onlineHours.toFixed(1)}</td>
+      <td>${s.trips}</td><td>${s.miles.toFixed(1)}</td><td>${money(c.fuel)}</td>
+      <td class="${c.net >= 0 ? "positive":"negative"}">${money(c.net)}</td>
+      <td><button class="delete" data-id="${s.id}">Delete</button></td>`;
+    body.appendChild(tr);
+  });
+  body.querySelectorAll(".delete").forEach(b => b.onclick = () => {
+    sessions = sessions.filter(s => s.id !== b.dataset.id); save(); render();
+  });
+}
+function renderChart() {
+  const el = $("chart");
+  if (!sessions.length) { el.innerHTML = '<div class="small">Add a driving session to see your daily net earnings.</div>'; return; }
+  const grouped = {};
+  sessions.forEach(s => grouped[s.date] = (grouped[s.date]||0) + calculateSession(s).net);
+  const rows = Object.entries(grouped).sort().slice(-7);
+  const max = Math.max(...rows.map(r=>Math.abs(r[1])), 1);
+  el.innerHTML = rows.map(([date,value]) => `
+    <div class="bar-row">
+      <span>${date.slice(5)}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.abs(value)/max*100}%"></div></div>
+      <strong class="${value>=0?'positive':'negative'}">${money(value)}</strong>
+    </div>`).join("");
+}
+function renderInsights() {
+  const el = $("insights");
+  if (!sessions.length) {
+    el.innerHTML = '<div class="small">Your most useful insights will appear after you enter a few driving sessions.</div>';
+    return;
+  }
+  const t = totals();
+  const best = [...sessions].sort((a,b)=>calculateSession(b).net-calculateSession(a).net)[0];
+  const unpaid = Math.max(0, t.miles - t.paidMiles);
+  const grossHour = t.online ? t.gross/t.online : 0;
+  const netHour = t.online ? t.net/t.online : 0;
+  el.innerHTML = `
+    <div class="insight"><strong>Best session:</strong> ${best.date} at ${money(calculateSession(best).net)} net.</div>
+    <div class="insight"><strong>Real hourly rate:</strong> ${money(netHour)} net versus ${money(grossHour)} gross.</div>
+    <div class="insight"><strong>Unpaid mileage:</strong> ${unpaid.toFixed(1)} miles (${(t.miles ? unpaid/t.miles*100 : 0).toFixed(1)}%).</div>
+    <div class="insight"><strong>Vehicle efficiency:</strong> ${settings.mpg.toFixed(1)} MPG at ${money(settings.gasPrice)} per gallon.</div>`;
+}
+function showView(name) {
+  $("dashboardView").classList.toggle("hidden", name !== "dashboard");
+  $("sessionView").classList.toggle("hidden", name !== "session");
+  $("settingsView").classList.toggle("hidden", name !== "settings");
+  document.querySelectorAll(".nav button").forEach(b => b.classList.toggle("active", b.dataset.view === name));
+  if (name === "session" && !$("date").value) $("date").value = new Date().toISOString().slice(0,10);
+}
+document.querySelectorAll(".nav button").forEach(b => b.onclick = () => showView(b.dataset.view));
+document.querySelectorAll("[data-go-dashboard]").forEach(b => b.onclick = () => showView("dashboard"));
+$("quickAddBtn").onclick = () => showView("session");
+
+$("sessionForm").addEventListener("submit", e => {
+  e.preventDefault();
+  sessions.push({
+    id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(),
+    date: $("date").value,
+    onlineHours: num("onlineHours"), activeHours: num("activeHours"), trips: Math.round(num("trips")),
+    fares: num("fares"), tips: num("tips"), promotions: num("promotions"),
+    miles: num("miles"), paidMiles: num("paidMiles"),
+    fuelCost: num("fuelCost"), tolls: num("tolls"), other: num("other"), notes: $("notes").value.trim()
+  });
+  save(); e.target.reset(); $("tips").value = 0; $("promotions").value = 0; $("fuelCost").value = 0;
+  $("tolls").value = 0; $("other").value = 0; showView("dashboard"); render();
+});
+function loadSettingsForm() {
+  Object.keys(DEFAULT_SETTINGS).forEach(k => { if ($(k)) $(k).value = settings[k]; });
+}
+$("settingsForm").addEventListener("submit", e => {
+  e.preventDefault();
+  settings = {
+    vehicleName: $("vehicleName").value.trim() || DEFAULT_SETTINGS.vehicleName,
+    mpg: num("mpg"), gasPrice: num("gasPrice"), maintenanceRate: num("maintenanceRate"),
+    depreciationRate: num("depreciationRate"), taxRate: num("taxRate"),
+    insuranceMonthly: num("insuranceMonthly"), phoneMonthly: num("phoneMonthly")
+  };
+  save(); render(); showView("dashboard");
+});
+$("resetBtn").onclick = () => {
+  if (confirm("Delete all sessions and restore default Camry settings?")) {
+    sessions = []; settings = {...DEFAULT_SETTINGS}; save(); loadSettingsForm(); render(); showView("dashboard");
+  }
+};
+$("sampleBtn").onclick = () => {
+  sessions = [
+    {id:"s1",date:"2026-07-09",onlineHours:5.2,activeHours:3.8,trips:10,fares:112,tips:18,promotions:8,miles:92,paidMiles:68,fuelCost:0,tolls:4.25,other:0,notes:"Evening"},
+    {id:"s2",date:"2026-07-10",onlineHours:6.1,activeHours:4.5,trips:13,fares:143,tips:24,promotions:0,miles:118,paidMiles:84,fuelCost:0,tolls:2.5,other:6,notes:"Airport"},
+    {id:"s3",date:"2026-07-11",onlineHours:7.4,activeHours:5.9,trips:17,fares:196,tips:35,promotions:20,miles:146,paidMiles:109,fuelCost:0,tolls:5.5,other:0,notes:"Saturday"},
+    {id:"s4",date:"2026-07-12",onlineHours:4.8,activeHours:3.4,trips:9,fares:104,tips:13,promotions:0,miles:87,paidMiles:61,fuelCost:0,tolls:0,other:0,notes:"Sunday"}
+  ];
+  save(); render();
+};
+$("exportBtn").onclick = () => {
+  const rows = [["Date","Online Hours","Active Hours","Trips","Fares","Tips","Promotions","Miles","Paid Miles","Fuel","Tolls","Other","Net"]];
+  sessions.forEach(s => {
+    const c = calculateSession(s);
+    rows.push([s.date,s.onlineHours,s.activeHours,s.trips,s.fares,s.tips,s.promotions,s.miles,s.paidMiles,c.fuel,s.tolls,s.other,c.net]);
+  });
+  const csv = rows.map(r => r.map(v => `"${String(v).replaceAll('"','""')}"`).join(",")).join("\n");
+  const url = URL.createObjectURL(new Blob([csv], {type:"text/csv"}));
+  const a = document.createElement("a"); a.href = url; a.download = "uber-earnings.csv"; a.click(); URL.revokeObjectURL(url);
+};
+
+loadSettingsForm();
+$("date").value = new Date().toISOString().slice(0,10);
+render();
+</script>
+</body>
+</html>
