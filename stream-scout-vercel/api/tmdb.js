@@ -12,15 +12,12 @@ async function tmdb(path, params = {}) {
   });
 
   const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      accept: "application/json"
-    }
+    headers: { Authorization: `Bearer ${token}`, accept: "application/json" }
   });
 
   if (!response.ok) {
     const detail = await response.text();
-    throw new Error(`TMDB request failed (${response.status}): ${detail.slice(0, 200)}`);
+    throw new Error(`TMDb request failed (${response.status}): ${detail.slice(0, 180)}`);
   }
   return response.json();
 }
@@ -30,10 +27,8 @@ function normalizeProviders(payload, region = "US") {
   const subscription = country.flatrate || [];
   const free = country.free || [];
   const ads = country.ads || [];
-  const rent = country.rent || [];
-  const buy = country.buy || [];
-
   const unique = new Map();
+
   [...subscription, ...free, ...ads].forEach(provider => {
     unique.set(provider.provider_id, {
       id: provider.provider_id,
@@ -41,16 +36,14 @@ function normalizeProviders(payload, region = "US") {
       logo: provider.logo_path,
       type: subscription.some(p => p.provider_id === provider.provider_id)
         ? "subscription"
-        : free.some(p => p.provider_id === provider.provider_id)
-          ? "free"
-          : "ads"
+        : free.some(p => p.provider_id === provider.provider_id) ? "free" : "ads"
     });
   });
 
   return {
     stream: [...unique.values()],
-    rent: rent.map(p => ({ id: p.provider_id, name: p.provider_name, logo: p.logo_path })),
-    buy: buy.map(p => ({ id: p.provider_id, name: p.provider_name, logo: p.logo_path })),
+    rent: (country.rent || []).map(p => ({ id: p.provider_id, name: p.provider_name, logo: p.logo_path })),
+    buy: (country.buy || []).map(p => ({ id: p.provider_id, name: p.provider_name, logo: p.logo_path })),
     link: country.link || null
   };
 }
@@ -60,39 +53,29 @@ export default async function handler(req, res) {
 
   try {
     const action = req.query.action || "popular";
-    const region = (req.query.region || "US").toUpperCase();
+    const region = String(req.query.region || "US").toUpperCase();
 
     if (action === "popular" || action === "trending") {
       const page = Math.min(Math.max(Number(req.query.page) || 1, 1), 5);
       const path = action === "trending" ? "/trending/tv/week" : "/tv/popular";
       const data = await tmdb(path, { language: "en-US", page });
 
-      const shows = await Promise.all(
-        (data.results || []).map(async show => {
-          try {
-            const providers = await tmdb(`/tv/${show.id}/watch/providers`);
-            return { ...show, providers: normalizeProviders(providers, region) };
-          } catch {
-            return { ...show, providers: { stream: [], rent: [], buy: [], link: null } };
-          }
-        })
-      );
-
-      return res.status(200).json({
-        page: data.page,
-        total_pages: data.total_pages,
-        results: shows
-      });
+      const results = await Promise.all((data.results || []).map(async show => {
+        try {
+          const providers = await tmdb(`/tv/${show.id}/watch/providers`);
+          return { ...show, providers: normalizeProviders(providers, region) };
+        } catch {
+          return { ...show, providers: { stream: [], rent: [], buy: [], link: null } };
+        }
+      }));
+      return res.status(200).json({ ...data, results });
     }
 
     if (action === "search") {
       const query = String(req.query.q || "").trim();
       if (!query) return res.status(400).json({ error: "A search query is required." });
       const data = await tmdb("/search/tv", {
-        query,
-        include_adult: false,
-        language: "en-US",
-        page: 1
+        query, include_adult: false, language: "en-US", page: 1
       });
       return res.status(200).json(data);
     }
@@ -102,6 +85,32 @@ export default async function handler(req, res) {
       if (!id) return res.status(400).json({ error: "A TV series id is required." });
       const data = await tmdb(`/tv/${id}/watch/providers`);
       return res.status(200).json(normalizeProviders(data, region));
+    }
+
+    if (action === "details") {
+      const id = Number(req.query.id);
+      if (!id) return res.status(400).json({ error: "A TV series id is required." });
+
+      const data = await tmdb(`/tv/${id}`, {
+        language: "en-US",
+        append_to_response: "videos,credits,recommendations,content_ratings"
+      });
+      const providersRaw = await tmdb(`/tv/${id}/watch/providers`).catch(() => ({ results: {} }));
+
+      return res.status(200).json({
+        ...data,
+        providers: normalizeProviders(providersRaw, region)
+      });
+    }
+
+    if (action === "season") {
+      const id = Number(req.query.id);
+      const season = Number(req.query.season);
+      if (!id || Number.isNaN(season)) {
+        return res.status(400).json({ error: "Series id and season number are required." });
+      }
+      const data = await tmdb(`/tv/${id}/season/${season}`, { language: "en-US" });
+      return res.status(200).json(data);
     }
 
     return res.status(400).json({ error: "Unsupported action." });
