@@ -29,3 +29,5 @@ All data stays in the browser through `localStorage`. Clearing browser site data
 - Vehicle summary card
 - Paid and unpaid mileage summaries
 - Improved responsive mobile layout
+
+- Testing for auto Commit and Push
