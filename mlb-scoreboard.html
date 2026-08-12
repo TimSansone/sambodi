@@ -1,3 +1,4 @@
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -80,6 +81,29 @@
         background: #fff;
         box-shadow: 0 1px 4px rgba(23, 32, 51, .08);
         font-size:.7rem
+    }
+
+    button.ticker-item {
+        color: inherit;
+        font-family: inherit;
+        cursor: pointer;
+        text-align: left
+    }
+
+    button.ticker-item:hover {
+        border-color: var(--blue);
+        background: #f8fbff
+    }
+
+    button.ticker-item:focus-visible {
+        outline: 3px solid rgba(47, 111, 202, .28);
+        outline-offset: 2px;
+        border-color: var(--blue)
+    }
+
+    button.ticker-item[aria-expanded="true"] {
+        border-color: var(--blue);
+        box-shadow: 0 0 0 2px rgba(47, 111, 202, .16)
     }
 
     .ticker-item img {
@@ -1267,6 +1291,14 @@
     .lineup-player strong, .lineup-player small { display:block; overflow:hidden; text-overflow:ellipsis }
     .lineup-player small { color:var(--muted) }
     .lineup-empty { padding:18px; color:var(--muted); text-align:center }
+    .pitching-section { border-top:1px solid var(--line); background:#fbfcfe }
+    .pitching-section h4 { margin:0; padding:9px 12px; color:var(--navy); background:#eef3f9; font-size:.78rem; text-transform:uppercase; letter-spacing:.06em }
+    .pitching-table { width:100%; min-width:560px; border-collapse:collapse; background:#fff; font-size:.78rem }
+    .pitching-table th, .pitching-table td { padding:8px 7px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap }
+    .pitching-table th { color:var(--muted); background:#fbfcfe; font-size:.68rem; text-transform:uppercase }
+    .pitching-table th:first-child, .pitching-table td:first-child { text-align:left }
+    .pitching-table tbody tr:last-child td { border-bottom:0 }
+    .pitching-table .lineup-player { min-width:180px }
     @media (max-width: 900px) {
         .lineups-grid { grid-template-columns:1fr }
     }
@@ -2666,9 +2698,26 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             const away = g.teams.away.team,
                 home = g.teams.home.team,
                 status = gameState(g) === 'final' ? 'Final' : statusLabel(g);
-            return `<span class="ticker-item" style="order:${isFavoriteGame(g) ? 0 : 1}" title="${esc(away.name)} at ${esc(home.name)}"><img src="${logo(away.id)}" alt="${esc(away.abbreviation || away.name)}"><strong>${score(g, 'away')}-${score(g, 'home')}</strong><img src="${logo(home.id)}" alt="${esc(home.abbreviation || home.name)}"><span class="ticker-status">${esc(status)}</span></span>`
+            const expanded = state.selected === g.gamePk;
+            return `<button type="button" class="ticker-item" data-ticker-game="${g.gamePk}" style="order:${isFavoriteGame(g) ? 0 : 1}" title="Open ${esc(away.name)} at ${esc(home.name)}" aria-label="Open ${esc(away.name)} ${score(g, 'away')}, ${esc(home.name)} ${score(g, 'home')}. ${esc(status)}" aria-controls="scoresTab" aria-expanded="${expanded}"><img src="${logo(away.id)}" alt=""><strong>${score(g, 'away')}-${score(g, 'home')}</strong><img src="${logo(home.id)}" alt=""><span class="ticker-status">${esc(status)}</span></button>`
         });
         els.ticker.innerHTML = (items.length ? items : ['<span class="ticker-item">No games</span>']).join('')
+        els.ticker.querySelectorAll('[data-ticker-game]').forEach(item => {
+            item.onclick = () => openTickerGame(Number(item.dataset.tickerGame))
+        })
+    }
+
+    async function openTickerGame(pk) {
+        activateTab('scoresTab');
+        state.statusFilter = 'all';
+        state.teamFilter = '';
+        els.teamBtn.innerHTML = '<span>All teams</span>';
+        await selectGame(pk, false);
+        requestAnimationFrame(() => {
+            const selected = els.grid.querySelector(`.game-card[data-game="${pk}"]`);
+            selected?.closest('.game-slot')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            selected?.focus({ preventScroll: true })
+        })
     }
     function allTeams() {
         const m = new Map();
@@ -2753,13 +2802,46 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         const position = player.position?.abbreviation || player.position?.name || '';
         return `<tr><td>${index + 1}</td><td><span class="lineup-player"><img src="${playerHeadshot(person.id)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><span><strong>${esc(person.fullName || 'Player unavailable')}</strong><small>${esc(position)}</small></span></span></td><td>${esc(statValue(game.hits, 0))}-${esc(statValue(game.atBats, 0))}</td><td>${esc(statValue(game.rbi, 0))}</td><td>${esc(statValue(season.avg))}</td><td>${esc(statValue(season.homeRuns, 0))}</td><td>${esc(statValue(season.rbi, 0))}</td></tr>`
     }
+    function pitchingPlayers(feed, side) {
+        const teamBox = feed?.liveData?.boxscore?.teams?.[side] || {};
+        const players = teamBox.players || {};
+        const appeared = new Set((teamBox.pitchers || []).map(Number));
+        const hasPitchingLine = player => {
+            const stats = player.stats?.pitching;
+            if (!stats || !Object.keys(stats).length) return false;
+            return ['inningsPitched', 'pitchesThrown', 'numberOfPitches', 'strikes', 'balls', 'earnedRuns', 'hits', 'baseOnBalls', 'strikeOuts']
+                .some(key => stats[key] !== undefined && stats[key] !== null)
+        };
+        return Object.values(players)
+            .filter(player => appeared.has(Number(player.person?.id)) || hasPitchingLine(player))
+            .sort((a, b) => {
+                const ai = (teamBox.pitchers || []).map(Number).indexOf(Number(a.person?.id));
+                const bi = (teamBox.pitchers || []).map(Number).indexOf(Number(b.person?.id));
+                return (ai < 0 ? Number.MAX_SAFE_INTEGER : ai) - (bi < 0 ? Number.MAX_SAFE_INTEGER : bi)
+            })
+    }
+    function pitchingRowHtml(player) {
+        const person = player.person || {};
+        const stats = player.stats?.pitching || {};
+        const pitches = Number(stats.pitchesThrown ?? stats.numberOfPitches ?? 0);
+        const strikes = Number(stats.strikes ?? 0);
+        const balls = Number(stats.balls ?? Math.max(0, pitches - strikes));
+        return `<tr><td><span class="lineup-player"><img src="${playerHeadshot(person.id)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"><span><strong>${esc(person.fullName || 'Pitcher unavailable')}</strong><small>${esc(player.position?.abbreviation || player.position?.name || 'P')}</small></span></span></td><td>${esc(pitches)} (${esc(balls)}-${esc(strikes)})</td><td>${esc(statValue(stats.inningsPitched, '0.0'))}</td><td>${esc(statValue(stats.earnedRuns, 0))}</td><td>${esc(statValue(stats.hits, 0))}</td><td>${esc(statValue(stats.baseOnBalls, 0))}</td><td>${esc(statValue(stats.strikeOuts, 0))}</td></tr>`
+    }
+    function pitchingTableHtml(feed, side) {
+        const pitchers = pitchingPlayers(feed, side);
+        const body = pitchers.length
+            ? `<div class="lineup-scroll"><table class="pitching-table"><thead><tr><th>Pitcher</th><th>Pitches (B-S)</th><th>IP</th><th>ER</th><th>H</th><th>BB</th><th>K</th></tr></thead><tbody>${pitchers.map(pitchingRowHtml).join('')}</tbody></table></div>`
+            : '<div class="lineup-empty">Pitching statistics will appear after a pitcher enters the game.</div>';
+        return `<section class="pitching-section"><h4>Pitching</h4>${body}</section>`
+    }
     function lineupCardHtml(g, feed, side) {
         const team = g.teams?.[side]?.team || {};
         const rows = lineupPlayers(feed, side);
         const body = rows.length
             ? `<div class="lineup-scroll"><table class="lineup-table"><thead><tr><th>#</th><th>Player</th><th>Game H-AB</th><th>Game RBI</th><th>Season AVG</th><th>Season HR</th><th>Season RBI</th></tr></thead><tbody>${rows.map(lineupRowHtml).join('')}</tbody></table></div>`
             : '<div class="lineup-empty">Lineup has not been announced yet.</div>';
-        return `<section class="lineup-card"><h3><img src="${logo(team.id)}" alt="">${esc(team.name || side)} lineup</h3>${body}</section>`
+        return `<section class="lineup-card"><h3><img src="${logo(team.id)}" alt="">${esc(team.name || side)} lineup</h3>${body}${pitchingTableHtml(feed, side)}</section>`
     }
     function lineupsHtml(g, feed) {
         return `<section style="margin-top:14px"><h2>Current Lineups</h2><div class="lineups-grid">${lineupCardHtml(g, feed, 'away')}${lineupCardHtml(g, feed, 'home')}</div></section>`
