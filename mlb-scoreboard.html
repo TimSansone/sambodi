@@ -2052,6 +2052,69 @@
         }
     }
 
+    /* Ballpark palette: team colors on cards, stadium navy around the field. */
+    body {
+        background: radial-gradient(ellipse at 8% 0%, #254d78 0, transparent 48%),
+            radial-gradient(ellipse at 100% 35%, #154b48 0, transparent 48%), #0c1c31;
+        background-attachment: fixed;
+    }
+    header { padding: 12px 0 8px; }
+    header h1 { color: #fff; letter-spacing: -.045em; text-shadow: 0 3px 20px #07142666; }
+    .masthead-kicker { color: #7ee0ce; font-size: .72rem; font-weight: 900; letter-spacing: .2em; text-transform: uppercase; margin: 0 0 9px; }
+    .masthead-subtitle { color: #c4d7ed; margin: 10px 0 0; font-size: .88rem; }
+    .controls { background: #ffffff12; border-color: #ffffff30; box-shadow: none; }
+    .score-ticker { background: #091729; border-bottom: 2px solid #36bba0; }
+    .ticker-item { background: #172d48; color: #f5f9ff; border-color: #36516e; }
+    .ticker-status { color: #b9d1e8; }
+    button.ticker-item:hover { background: #274567; color: #fff; }
+    .panel { border-color: #c6d5e4; box-shadow: 0 14px 38px #020b192e; }
+    .top-panel { background: linear-gradient(115deg, #fff, #eef7ff); border-top: 3px solid #39b89f; }
+    .stat { border-top: 3px solid #347aca; background: #edf5ff; }
+    .stat:nth-child(2) { border-top-color: #c64249; background: #fff0f0; }
+    .stat:nth-child(3) { border-top-color: #198570; background: #eaf8f1; }
+    .stat:nth-child(4) { border-top-color: #c58a1b; background: #fff7e5; }
+    .stat:nth-child(5) { border-top-color: #7956af; background: #f4effb; }
+    .tabs-nav { background: #132940; border: 1px solid #3c5672; }
+    .tab-btn { background: #203b58; color: #e3eef9; border-color: #41607e; }
+    .tab-btn:hover { background: #305576; }
+    .tab-btn.active { background: #a3ecd8; border-color: #a3ecd8; color: #103b36; box-shadow: 0 3px 12px #0003; }
+    .game-card, .game-card.favorite-game {
+        border-color: color-mix(in srgb, var(--team) 35%, #d7e1ec);
+        background: linear-gradient(125deg, color-mix(in srgb, var(--team) 11%, white), #fff 55%, color-mix(in srgb, var(--team2) 8%, white));
+        box-shadow: 0 5px 18px #142f4914;
+    }
+    .game-card:before { width: 6px; }
+    .game-card .team-row { padding: 7px 8px; border-radius: 10px; background: color-mix(in srgb, var(--team) 9%, white); border: 1px solid color-mix(in srgb, var(--team) 17%, white); }
+    .game-card .team-row + .team-row { background: color-mix(in srgb, var(--team2) 9%, white); border-color: color-mix(in srgb, var(--team2) 17%, white); }
+    .game-card .score { padding: 6px 9px; border-radius: 8px; background: var(--navy); color: white; font-variant-numeric: tabular-nums; box-shadow: inset 0 1px 0 #ffffff25; }
+    .game-card .logo { filter: drop-shadow(0 2px 2px #0002); }
+    .game-card.live { border-top: 3px solid #d44a50; }
+    .game-card.final { border-top: 3px solid #477792; }
+    .game-card.scheduled { border-top: 3px solid #dba63d; }
+    .game-card .live-card-details { background: #f0f8f6; border-color: #badbd1; }
+    .live-player { border-top: 2px solid #3b9080; }
+    .live-player > span { color: #28685d; }
+    .base.occupied { background: #d59b23; border-color: #8e6310; }
+    .pitch-result { background: #edf4ff; border-color: #c2d4ee; }
+    .pitch-result strong { color: #26549b; }
+    .trend-card { --accent: #286ea7; border-top: 4px solid var(--accent); background: linear-gradient(150deg, color-mix(in srgb, var(--accent) 7%, white), white 65%); }
+    .trend-card:nth-child(4n+2) { --accent: #a84c26; }
+    .trend-card:nth-child(4n+3) { --accent: #167660; }
+    .trend-card:nth-child(4n+4) { --accent: #7751a6; }
+    .trend-card h3 { color: var(--accent); }
+    .trend-row { border-color: #dce5ec; }
+    #dailyScoring .latest-play-card { border-left: 4px solid #23927a; background: linear-gradient(100deg, #edf9f4, #fff 70%); padding: 14px; }
+    #dailyScoring .latest-play-card:nth-child(2n) { border-left-color: #397ac0; background: linear-gradient(100deg, #edf5ff, #fff 70%); }
+    .standing-division h3 { background: #e8f1fb; color: #20496c; }
+    .floating-refresh { background: #a3ecd8; color: #103b36; border: 1px solid #c6ffef; }
+    .floating-refresh small { color: #285b50; }
+    .floating-refresh:hover { background: #c3f7e8; }
+    @media (max-width: 680px) {
+        .masthead-kicker { font-size: .6rem; margin-bottom: 6px; }
+        .masthead-subtitle { font-size: .75rem; margin-top: 6px; }
+        .game-card .team-row { padding: 5px; }
+        .game-card .score { padding: 5px 7px; }
+    }
     </style>
 </head>
 <body>
@@ -2065,7 +2128,9 @@
     <div class="app">
         <header>
             <div>
+                <p class="masthead-kicker">Around the diamond</p>
                 <h1>MLB GameCenter</h1>
+                <p class="masthead-subtitle">Every game. Every big moment.</p>
             </div>
             <div class="controls">
                 <button class="btn secondary" id="prevDayBtn" type="button">Prev</button>
@@ -2124,6 +2189,7 @@
             <button class="tab-btn active" type="button" data-tab="scoresTab">⚾ Scores</button>
             <button class="tab-btn" type="button" data-tab="standingsTab">📊 Standings</button>
             <button class="tab-btn" type="button" data-tab="leadersTab">🏆 League Leaders</button>
+            <button class="tab-btn" type="button" data-tab="scoringTab">⚾ Scoring Plays</button>
             <button class="tab-btn" type="button" data-tab="trendsTab">📈 Stats & Trends</button>
         </nav>
 
@@ -2166,6 +2232,7 @@
             </section>
         </section>
 
+        <section id="scoringTab" class="tab-panel"><section class="panel pad"><div class="section-head"><h2>Scoring Plays</h2><button class="btn secondary" id="scoringRefreshBtn" type="button">Refresh Plays</button></div><p class="subtitle">Every game on the selected date, newest scoring play first. Scores shown are the scores after each play. Times are local to your device.</p><div id="dailyScoring" class="plays"></div></section></section>
         <section id="trendsTab" class="tab-panel">
             <section class="panel pad">
                 <div class="section-head">
@@ -2566,7 +2633,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             return '';
         const pitcherInfo = pitcherLine(g),
             batterInfo = batterLine(g);
-        return `<div class="live-card-details"><div class="live-diamond-row">${baseGraphic(g)}<div class="live-count">${liveCountSummary(g)}</div></div><div class="live-matchup"><div class="live-player"><span>Pitcher</span><strong>${esc(pitcherInfo.name)}</strong><small>${esc(pitcherInfo.detail)}</small></div><div class="live-player"><span>Batter</span><strong>${esc(batterInfo.name)}</strong><small>${esc(batterInfo.detail)}</small></div></div>${pitchResultsHtml(g)}${latestPlayHtml(g)}</div>`
+        return `<div class="live-card-details"><div class="live-diamond-row">${baseGraphic(g)}<div class="live-count">${liveCountSummary(g)}</div></div><div class="live-matchup"><div class="live-player"><span>Pitcher</span><strong>${esc(pitcherInfo.name)}</strong><small>${esc(pitcherInfo.detail)}</small></div><div class="live-player"><span>Batter</span><strong>${esc(batterInfo.name)}</strong><small>${esc(batterInfo.detail)}</small></div></div><div class="live-player"><span>On Deck</span><strong>${esc(onDeckName(g))}</strong></div>${pitchResultsHtml(g)}${latestPlayHtml(g)}</div>`
     }
     function visibleGames() {
         let games = [...state.games];
@@ -3344,12 +3411,71 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         const todayDoublesHtml = todayImpactRows('doubles', '2B', `No doubles recorded for ${dayLabel.toLowerCase()}.`);
         const todayTriplesHtml = todayImpactRows('triples', '3B', `No triples recorded for ${dayLabel.toLowerCase()}.`);
         const todayStrikeoutsHtml = todayImpactRows('pitcherStrikeouts', 'K', `No pitcher strikeout totals available for ${dayLabel.toLowerCase()}.`);
-        els.trends.innerHTML = `<div class="trend-card trend-summary"><h3>📊 Today Snapshot</h3><div class="mini-grid"><div class="mini"><span>Games</span><strong>${state.games.length}</strong></div><div class="mini"><span>Live</span><strong>${live.length}</strong></div><div class="mini"><span>Final</span><strong>${state.games.filter(g => gameState(g) === 'final').length}</strong></div><div class="mini"><span>Upcoming</span><strong>${state.games.filter(g => gameState(g) === 'scheduled').length}</strong></div></div></div><div class="trend-card"><h3>💥 Home Runs Today</h3><div class="trend-list">${todayHrHtml}</div></div><div class="trend-card"><h3>🏃 RBI Today</h3><div class="trend-list">${todayRbiHtml}</div></div><div class="trend-card"><h3>📏 Doubles Today</h3><div class="trend-list">${todayDoublesHtml}</div></div><div class="trend-card"><h3>⚡ Triples Today</h3><div class="trend-list">${todayTriplesHtml}</div></div><div class="trend-card"><h3>🔥 Pitcher Strikeouts Today</h3><div class="trend-list">${todayStrikeoutsHtml}</div></div><div class="trend-card"><h3>💣 MLB Power Watch</h3><div class="trend-list">${powerHtml}</div></div><div class="trend-card"><h3>💨 MLB Speed Watch</h3><div class="trend-list">${speedHtml}</div></div><div class="trend-card"><h3>🔥 Batting Average Leaders</h3><div class="trend-list">${averageHtml}</div></div><div class="trend-card"><h3>🧢 ERA Leaders</h3><div class="trend-list">${eraHtml}</div></div><div class="trend-card"><h3>⚡ Strikeout Leaders</h3><div class="trend-list">${strikeoutHtml}</div></div><div class="trend-card"><h3>🔒 Saves Leaders</h3><div class="trend-list">${savesHtml}</div></div><div class="trend-card"><h3>🎯 Probable Starters Today</h3><div class="trend-list">${startersHtml}</div></div><div class="trend-card"><h3>📈 Highest Scoring Games</h3><div class="trend-list">${highScoringHtml}</div></div><div class="trend-card"><h3>⚔️ Close Game Watch</h3><div class="trend-list">${closeHtml}</div></div><div class="trend-card"><h3>🔴 Live Games</h3><div class="trend-list">${liveHtml}</div></div><div class="trend-card"><h3>✅ Recent Finals</h3><div class="trend-list">${finalHtml}</div></div><div class="trend-card"><h3>⏰ Upcoming First Pitches</h3><div class="trend-list">${upcomingHtml}</div></div><div class="trend-card"><h3>⭐ Favorite Team Watch</h3><div class="trend-list">${favoriteHtml}</div></div>`
+        els.trends.innerHTML = dailyMetricCards() + `<div class="trend-card trend-summary"><h3>📊 Today Snapshot</h3><div class="mini-grid"><div class="mini"><span>Games</span><strong>${state.games.length}</strong></div><div class="mini"><span>Live</span><strong>${live.length}</strong></div><div class="mini"><span>Final</span><strong>${state.games.filter(g => gameState(g) === 'final').length}</strong></div><div class="mini"><span>Upcoming</span><strong>${state.games.filter(g => gameState(g) === 'scheduled').length}</strong></div></div></div><div class="trend-card"><h3>💥 Home Runs Today</h3><div class="trend-list">${todayHrHtml}</div></div><div class="trend-card"><h3>🏃 RBI Today</h3><div class="trend-list">${todayRbiHtml}</div></div><div class="trend-card"><h3>📏 Doubles Today</h3><div class="trend-list">${todayDoublesHtml}</div></div><div class="trend-card"><h3>⚡ Triples Today</h3><div class="trend-list">${todayTriplesHtml}</div></div><div class="trend-card"><h3>🔥 Pitcher Strikeouts Today</h3><div class="trend-list">${todayStrikeoutsHtml}</div></div><div class="trend-card"><h3>💣 MLB Power Watch</h3><div class="trend-list">${powerHtml}</div></div><div class="trend-card"><h3>💨 MLB Speed Watch</h3><div class="trend-list">${speedHtml}</div></div><div class="trend-card"><h3>🔥 Batting Average Leaders</h3><div class="trend-list">${averageHtml}</div></div><div class="trend-card"><h3>🧢 ERA Leaders</h3><div class="trend-list">${eraHtml}</div></div><div class="trend-card"><h3>⚡ Strikeout Leaders</h3><div class="trend-list">${strikeoutHtml}</div></div><div class="trend-card"><h3>🔒 Saves Leaders</h3><div class="trend-list">${savesHtml}</div></div><div class="trend-card"><h3>🎯 Probable Starters Today</h3><div class="trend-list">${startersHtml}</div></div><div class="trend-card"><h3>📈 Highest Scoring Games</h3><div class="trend-list">${highScoringHtml}</div></div><div class="trend-card"><h3>⚔️ Close Game Watch</h3><div class="trend-list">${closeHtml}</div></div><div class="trend-card"><h3>🔴 Live Games</h3><div class="trend-list">${liveHtml}</div></div><div class="trend-card"><h3>✅ Recent Finals</h3><div class="trend-list">${finalHtml}</div></div><div class="trend-card"><h3>⏰ Upcoming First Pitches</h3><div class="trend-list">${upcomingHtml}</div></div><div class="trend-card"><h3>⭐ Favorite Team Watch</h3><div class="trend-list">${favoriteHtml}</div></div>`
+    }
+
+    const daily = { date: '', rows: [], metrics: {}, loading: false, failed: 0, request: 0 };
+    function dailyContext(g, p) {
+        const a = g.teams.away.team, h = g.teams.home.team;
+        return `${a.abbreviation || a.name} at ${h.abbreviation || h.name} · ${p.about?.isTopInning ? 'Top' : 'Bottom'} ${p.about?.inning || '—'}`;
+    }
+    function collectDaily(g, feed, rows, metrics) {
+        for (const p of feed.liveData?.plays?.allPlays || []) {
+            const context = dailyContext(g, p);
+            if (p.about?.isScoringPlay) {
+                const rawTime = p.about.endTime || p.playEvents?.at(-1)?.endTime || p.about.startTime;
+                rows.push({ gamePk: g.gamePk, index: p.about.atBatIndex, time: Date.parse(rawTime) || 0,
+                    context, description: p.result?.description || 'Scoring play',
+                    score: `${g.teams.away.team.abbreviation || g.teams.away.team.name} ${p.result?.awayScore ?? '—'} – ${g.teams.home.team.abbreviation || g.teams.home.team.name} ${p.result?.homeScore ?? '—'}` });
+            }
+            for (const e of p.playEvents || []) {
+                const add = (key, value, person, detail) => {
+                    if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return;
+                    metrics[key].push({ value, name: person?.fullName || 'Player unavailable', context, detail });
+                };
+                add('exit', e.hitData?.launchSpeed, p.matchup?.batter, p.result?.event || 'Batted ball');
+                if (p.result?.eventType === 'home_run') add('distance', e.hitData?.totalDistance, p.matchup?.batter, 'Home run');
+                if (e.isPitch) {
+                    add('speed', e.pitchData?.startSpeed, p.matchup?.pitcher, e.details?.type?.description || 'Pitch');
+                    add('spin', e.pitchData?.breaks?.spinRate, p.matchup?.pitcher, e.details?.type?.description || 'Pitch');
+                }
+            }
+        }
+    }
+    function renderDaily() {
+        const current = daily.date === els.gameDate.value;
+        const notice = daily.loading ? 'Loading plays from every game…' : daily.failed ? `${daily.failed} game feed(s) unavailable. Results may be incomplete; refresh to retry.` : '';
+        const rows = current ? daily.rows : [];
+        $('dailyScoring').innerHTML = `<p class="subtitle" role="status">${esc(notice)}</p>` + (rows.length ? rows.map(r => `<article class="latest-play-card"><strong>${esc(r.context)}</strong><small>${r.time ? esc(new Date(r.time).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'})) : 'Time unavailable'}</small><p>${esc(r.description)}</p><strong>${esc(r.score)}</strong></article>`).join('') : `<div class="empty">${daily.loading ? 'Fetching scoring plays…' : 'No scoring plays available for this date.'}</div>`);
+    }
+    function dailyMetricCards() {
+        return [['exit','💥 Hardest Hit Balls','mph',1], ['distance','🚀 Longest Home Runs','ft',0], ['speed','🔥 Fastest Pitches','mph',1], ['spin','🌀 Highest Spin Pitches','rpm',0]].map(([key,title,unit,digits]) => {
+            const rows = daily.date === els.gameDate.value ? daily.metrics[key] || [] : [];
+            return `<div class="trend-card"><h3>${title}</h3><p class="subtitle">${esc(els.gameDate.value)} · Top 10 recorded plays</p><div class="trend-list">${rows.length ? rows.slice(0,10).map((r,i) => `<div class="trend-row"><span>${i+1}</span><span><strong>${esc(r.name)}</strong><small>${esc(r.context)} · ${esc(r.detail)}</small></span><strong>${r.value.toFixed(digits)} ${unit}</strong></div>`).join('') : `<div class="empty">${daily.loading ? 'Loading tracking data…' : 'No recorded measurements available.'}</div>`}</div><small>MLB tracking data may be delayed or unavailable.${daily.failed ? ' Some game feeds could not be loaded.' : ''}</small></div>`;
+        }).join('');
+    }
+    async function loadDailyPlays() {
+        const request = ++daily.request, date = els.gameDate.value;
+        const games = state.games.filter(g => gameState(g) !== 'scheduled');
+        daily.date = date; daily.loading = true; daily.rows = []; daily.metrics = {}; daily.failed = 0;
+        renderDaily(); renderStatsTrends();
+        const results = await Promise.allSettled(games.map(g => fetchJson(`${LIVE_BASE}/${g.gamePk}/feed/live`)));
+        if (request !== daily.request || date !== els.gameDate.value) return;
+        const rows = [], metrics = { exit: [], distance: [], speed: [], spin: [] };
+        results.forEach((r,i) => {
+            if (r.status === 'fulfilled') collectDaily(games[i], r.value, rows, metrics);
+            else daily.failed++;
+        });
+        rows.sort((a,b) => b.time - a.time || b.gamePk - a.gamePk || b.index - a.index);
+        Object.values(metrics).forEach(list => list.sort((a,b) => b.value - a.value));
+        daily.rows = rows; daily.metrics = metrics; daily.loading = false;
+        renderDaily(); renderStatsTrends();
     }
     function activateTab(tabId) {
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === tabId));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
         if (tabId === 'trendsTab') renderStatsTrends();
+        if (tabId === 'scoringTab') renderDaily();
     }
 
     function renderAll() {
@@ -3416,7 +3542,8 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             restoreViewport(viewport);
             loadStandings();
             loadLeagueLeaders();
-            loadTodayImpactStats()
+            loadTodayImpactStats();
+            loadDailyPlays()
         } catch (e) {
             els.grid.innerHTML = '<div class="empty">Could not load games. Check your connection and try Refresh.</div>';
             els.status.value = 'Unable to load MLB games.'
@@ -3477,7 +3604,8 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
     els.gameDate.onchange = loadGames;
     $('standingsRefreshBtn2').onclick = loadStandings;
     $('leadersRefreshBtn').onclick = loadLeagueLeaders;
-    $('trendsRefreshBtn').onclick = () => { renderStatsTrends(); loadTodayImpactStats(); };
+    $('trendsRefreshBtn').onclick = () => { renderStatsTrends(); loadTodayImpactStats(); loadDailyPlays(); };
+    $('scoringRefreshBtn').onclick = loadDailyPlays;
     els.playerSearchForm.onsubmit = event => {
         event.preventDefault();
         const query = els.playerSearchInput.value.trim();
