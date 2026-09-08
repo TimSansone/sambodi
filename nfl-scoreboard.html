@@ -1,6 +1,3 @@
-
-
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -432,6 +429,7 @@
             <button class="tab-btn" type="button" data-tab="standingsTab">📊 Standings</button>
             <button class="tab-btn" type="button" data-tab="leadersTab">🏆 Top Performers</button>
             <button class="tab-btn" type="button" data-tab="scoringTab">📋 Scoring Plays</button>
+            <button class="tab-btn" type="button" data-tab="trendsTab">📈 Stats &amp; Trends</button>
         </nav>
 
         <section id="scoresTab" class="tab-panel active">
@@ -500,6 +498,19 @@
             </section>
         </section>
 
+        <section id="trendsTab" class="tab-panel">
+            <section class="panel pad">
+                <div class="section-head">
+                    <h2>Season Stats &amp; Trends</h2>
+                    <button class="btn secondary" id="trendsRefreshBtn" type="button">Reload</button>
+                </div>
+                <p class="subtitle" style="margin:0 0 14px">Season-long league leaders across offense and defense for the selected season.</p>
+                <div id="seasonTrends">
+                    <div class="empty">Switch to this tab (or hit Reload) to load season leaders.</div>
+                </div>
+            </section>
+        </section>
+
         <footer>Data from ESPN · Times shown in your local time zone · Scores and statistics may be delayed.</footer>
     </div>
     <button class="floating-refresh" id="floatingRefreshBtn" type="button" aria-label="Refresh scoreboard now">
@@ -547,6 +558,8 @@
         statusFilter: 'all',
         favoriteTeams: new Map(),
         standingsRaw: null,
+        seasonLeaders: null,
+        seasonLeadersLoading: false,
         autoRefresh: true,
         refreshSeconds: 30,
         refreshRemaining: 30,
@@ -580,6 +593,8 @@
         leadersRefreshBtn: $('leadersRefreshBtn'),
         scoringPlays: $('scoringPlays'),
         scoringRefreshBtn: $('scoringRefreshBtn'),
+        seasonTrends: $('seasonTrends'),
+        trendsRefreshBtn: $('trendsRefreshBtn'),
         scoresHeading: $('scoresHeading'),
         scoresSubtitle: $('scoresSubtitle'),
         toast: $('toast')
@@ -930,16 +945,60 @@
     }
 
     // ---------- standings ----------
+    // Division membership is fixed by the league, not by whatever shape ESPN's
+    // standings response happens to nest things in — so we group ourselves.
+    const DIVISIONS = [
+        ['AFC', 'AFC East', ['BUF', 'MIA', 'NE', 'NYJ']],
+        ['AFC', 'AFC North', ['BAL', 'CIN', 'CLE', 'PIT']],
+        ['AFC', 'AFC South', ['HOU', 'IND', 'JAX', 'TEN']],
+        ['AFC', 'AFC West', ['DEN', 'KC', 'LAC', 'LV']],
+        ['NFC', 'NFC East', ['DAL', 'NYG', 'PHI', 'WSH']],
+        ['NFC', 'NFC North', ['CHI', 'DET', 'GB', 'MIN']],
+        ['NFC', 'NFC South', ['ATL', 'CAR', 'NO', 'TB']],
+        ['NFC', 'NFC West', ['ARI', 'LAR', 'SF', 'SEA']]
+    ];
+    const CONFERENCE_NAMES = { AFC: 'American Football Conference', NFC: 'National Football Conference' };
+    const ABBR_ALIASES = { WAS: 'WSH', JAC: 'JAX', LA: 'LAR', OAK: 'LV', SD: 'LAC', STL: 'LAR' };
+
+    function normalizeAbbr(a) {
+        if (!a) return '';
+        a = String(a).toUpperCase();
+        return ABBR_ALIASES[a] || a;
+    }
+
     function statLookup(entry) {
         const map = {};
         (entry.stats || []).forEach(s => { if (s.name) map[s.name] = s; if (s.abbreviation) map[s.abbreviation] = s; });
         return map;
     }
 
+    function statValue(entry, key) {
+        const s = statLookup(entry)[key];
+        if (!s) return 0;
+        if (typeof s.value === 'number') return s.value;
+        return parseFloat(s.displayValue) || 0;
+    }
+
+    // Walk whatever nesting ESPN gives us (conference-only, or conference>division,
+    // or something else entirely) and collect every team entry into a flat map
+    // keyed by team abbreviation, so rendering never depends on that shape.
+    function flattenEntries(node, map) {
+        map = map || new Map();
+        if (!node) return map;
+        const entries = node.standings?.entries;
+        if (Array.isArray(entries)) {
+            entries.forEach(e => {
+                const abbr = normalizeAbbr(e.team?.abbreviation);
+                if (abbr) map.set(abbr, e);
+            });
+        }
+        (node.children || []).forEach(child => flattenEntries(child, map));
+        return map;
+    }
+
     function standingsRowHTML(entry) {
         const t = entry.team || {};
-        const stats = statLookup(entry);
-        const val = key => stats[key]?.displayValue ?? '—';
+        const val = key => statLookup(entry)[key]?.displayValue ?? '—';
         const fav = isFav(t.id) ? 'favorite' : '';
         return `<div class="standings-team-row ${fav}">
             <img src="${esc(t.logos?.[0]?.href || t.logo || '')}" alt="" onerror="this.style.visibility='hidden'">
@@ -954,23 +1013,25 @@
     }
 
     function renderStandings(data) {
-        const conferences = data?.children || [];
-        if (!conferences.length) {
+        const flat = flattenEntries(data);
+        if (!flat.size) {
             els.standingsFull.innerHTML = '<div class="empty">Standings data is not in the expected format right now.</div>';
             return;
         }
-        els.standingsFull.innerHTML = conferences.map(conf => {
-            const divisions = (conf.children && conf.children.length) ? conf.children : [conf];
-            const cards = divisions.map(div => {
-                const entries = div.standings?.entries || [];
-                if (!entries.length) return '';
-                const rows = entries.map(standingsRowHTML).join('');
-                return `<div class="standings-card"><h3>${esc(div.name || div.abbreviation || 'Division')}</h3>
+        els.standingsFull.innerHTML = ['AFC', 'NFC'].map(confKey => {
+            const cards = DIVISIONS.filter(d => d[0] === confKey).map(([, label, abbrs]) => {
+                const rows = abbrs
+                    .map(abbr => flat.get(abbr))
+                    .filter(Boolean)
+                    .sort((a, b) => (statValue(b, 'winPercent') - statValue(a, 'winPercent')) || (statValue(b, 'wins') - statValue(a, 'wins')))
+                    .map(standingsRowHTML)
+                    .join('');
+                return `<div class="standings-card"><h3>${esc(label)}</h3>
                     <div class="standings-header"><span></span><span>Team</span><span>W</span><span>L</span><span>T</span><span>PCT</span><span>PF</span><span>PA</span></div>
-                    ${rows}
+                    ${rows || '<div class="empty" style="border:0;background:none;box-shadow:none;padding:10px 12px;margin:0">No standings data for this division yet.</div>'}
                 </div>`;
             }).join('');
-            return `<div class="standings-section"><h2 class="standings-section-title">${esc(conf.name || conf.abbreviation || 'Conference')}</h2><div class="standings-card-grid">${cards}</div></div>`;
+            return `<div class="standings-section"><h2 class="standings-section-title">${esc(CONFERENCE_NAMES[confKey] || confKey)}</h2><div class="standings-card-grid">${cards}</div></div>`;
         }).join('');
     }
 
@@ -1041,6 +1102,99 @@
         const failedCount = results.filter(r => r.plays === null).length;
         els.scoringPlays.innerHTML = groups || '<div class="empty">No scoring plays are available yet for this week.</div>';
         if (failedCount) showToast(`${failedCount} game${failedCount === 1 ? '' : 's'} could not be loaded.`);
+    }
+
+    // ---------- season stats & trends ----------
+    // ESPN doesn't publish a fixed, documented list of category identifiers here,
+    // so categories are matched by keyword against their displayName rather than
+    // an exact slug — that keeps this working even if the underlying "name" field
+    // differs from what we'd guess.
+    const TREND_CATEGORIES = [
+        { group: 'offense', label: 'Passing Yards', match: d => /passing/i.test(d) && /yard/i.test(d) },
+        { group: 'offense', label: 'Passing Touchdowns', match: d => /passing/i.test(d) && /touchdown/i.test(d) },
+        { group: 'offense', label: 'Rushing Yards', match: d => /rushing/i.test(d) && /yard/i.test(d) },
+        { group: 'offense', label: 'Rushing Touchdowns', match: d => /rushing/i.test(d) && /touchdown/i.test(d) },
+        { group: 'offense', label: 'Receiving Yards', match: d => /receiving/i.test(d) && /yard/i.test(d) },
+        { group: 'offense', label: 'Receiving Touchdowns', match: d => /receiving/i.test(d) && /touchdown/i.test(d) },
+        { group: 'defense', label: 'Sacks', match: d => /sack/i.test(d) },
+        { group: 'defense', label: 'Interceptions', match: d => /interception/i.test(d) && !/passing/i.test(d) },
+        { group: 'defense', label: 'Fumbles Recovered', match: d => /fumble/i.test(d) && /recover/i.test(d) }
+    ];
+
+    async function resolveRef(refObj, cache) {
+        if (!refObj) return null;
+        const url = typeof refObj === 'string' ? refObj : refObj.$ref;
+        if (!url) return refObj;
+        if (cache.has(url)) return cache.get(url);
+        const p = fetchJson(url).catch(() => null);
+        cache.set(url, p);
+        return p;
+    }
+
+    function trendLeaderRowHTML(l, i) {
+        return `<div class="leader-row">
+            <span class="leader-rank">${i + 1}</span>
+            <div class="leader-player-media">${l.headshot ? `<img class="leader-headshot" src="${esc(l.headshot)}" alt="">` : '<div class="leader-headshot"></div>'}${l.teamLogo ? `<img class="leader-team-logo" src="${esc(l.teamLogo)}" alt="">` : ''}</div>
+            <div class="leader-player-name"><strong>${esc(l.name)}</strong><small>${esc(l.teamAbbr || '')}</small></div>
+            <div class="leader-stat">${esc(l.value)}</div>
+        </div>`;
+    }
+
+    function renderSeasonTrends(results) {
+        const groups = ['offense', 'defense'];
+        const html = groups.map(group => {
+            const cats = results.filter(r => r.group === group && r.rows.length);
+            if (!cats.length) return '';
+            const cards = cats.map(({ label, rows }) => `<div class="leader-category"><h3>${esc(label)}</h3><div class="leader-list">${rows.map(trendLeaderRowHTML).join('')}</div></div>`).join('');
+            return `<div class="league-leaders-section"><h2>${group === 'offense' ? 'Offensive Leaders' : 'Defensive Leaders'}</h2><div class="league-leaders-grid">${cards}</div></div>`;
+        }).join('');
+        els.seasonTrends.innerHTML = html || '<div class="empty">No season leader data is available yet for this season.</div>';
+    }
+
+    async function loadSeasonLeaders() {
+        if (state.seasonLeadersLoading) return;
+        state.seasonLeadersLoading = true;
+        els.seasonTrends.innerHTML = '<div class="skeleton" style="min-height:260px"></div>';
+        try {
+            const year = state.year || new Date().getFullYear();
+            const type = state.seasonType || 2;
+            const data = await fetchJson(`https://sports.core.api.espn.com/v2/sports/football/leagues/nfl/seasons/${year}/types/${type}/leaders`);
+            const categories = data?.categories || [];
+            const matched = TREND_CATEGORIES
+                .map(cfg => ({ cfg, cat: categories.find(c => cfg.match(c.displayName || c.shortDisplayName || c.name || '')) }))
+                .filter(x => x.cat);
+            if (!matched.length) {
+                els.seasonTrends.innerHTML = '<div class="empty">Season leader categories are not available in the expected format right now.</div>';
+                return;
+            }
+            const cache = new Map();
+            const results = await Promise.all(matched.map(async ({ cfg, cat }) => {
+                const leaders = (cat.leaders || []).slice(0, 5);
+                const rows = await Promise.all(leaders.map(async l => {
+                    try {
+                        const athlete = await resolveRef(l.athlete, cache);
+                        const team = await resolveRef(l.team || athlete?.team, cache);
+                        return {
+                            name: athlete?.displayName || athlete?.shortName || 'Player',
+                            headshot: athlete?.headshot?.href || '',
+                            teamAbbr: team?.abbreviation || '',
+                            teamLogo: team?.logo || team?.logos?.[0]?.href || '',
+                            value: l.displayValue || String(l.value ?? '')
+                        };
+                    } catch (err) {
+                        return null;
+                    }
+                }));
+                return { group: cfg.group, label: cfg.label, rows: rows.filter(Boolean) };
+            }));
+            state.seasonLeaders = results;
+            renderSeasonTrends(results);
+        } catch (err) {
+            console.warn('Season leaders unavailable:', err);
+            els.seasonTrends.innerHTML = '<div class="empty">Season stat leaders are unavailable right now. Try reloading in a moment.</div>';
+        } finally {
+            state.seasonLeadersLoading = false;
+        }
     }
 
     // ---------- selectors ----------
@@ -1228,12 +1382,14 @@
                 btn.classList.add('active');
                 document.getElementById(btn.dataset.tab).classList.add('active');
                 if (btn.dataset.tab === 'standingsTab' && !state.standingsRaw) loadStandings();
+                if (btn.dataset.tab === 'trendsTab' && !state.seasonLeaders) loadSeasonLeaders();
             });
         });
 
         els.standingsRefreshBtn.addEventListener('click', loadStandings);
         els.leadersRefreshBtn.addEventListener('click', renderWeekLeaders);
         els.scoringRefreshBtn.addEventListener('click', loadScoringPlays);
+        els.trendsRefreshBtn.addEventListener('click', loadSeasonLeaders);
     }
 
     function init() {
