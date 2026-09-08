@@ -43,8 +43,8 @@
         position: sticky;
         top: 0;
         z-index: 10;
-        margin: -24px -24px 18px;
-        padding: 5px 8px;
+        margin: 0 0 18px;
+        padding: 5px clamp(10px, 2.4vw, 24px);
         background: #dce8f5;
         color: var(--ink);
         overflow-x: auto;
@@ -352,7 +352,7 @@
     @media (max-width: 680px) {
         .app { padding: 10px }
         h1 { font-size: 2.1rem }
-        .score-ticker { margin: -10px -10px 12px; padding: 4px 6px }
+        .score-ticker { margin: 0 0 12px; padding: 4px 10px }
         .controls { padding: 9px }
         .mini-grid { grid-template-columns: 1fr }
         .games-grid { grid-template-columns: 1fr }
