@@ -3616,11 +3616,17 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             renderAll();
             if (state.selected)
                 await selectGame(state.selected);
-            restoreViewport(viewport);
-            loadStandings();
-            loadLeagueLeaders();
-            loadTodayImpactStats();
-            loadDailyPlays()
+
+            // Finish every secondary data refresh before restoring the viewport.
+            // This prevents late-rendering Standings/Leaders/Trends content from
+            // shifting the active tab back to the top during auto-refresh.
+            await Promise.allSettled([
+                loadStandings(),
+                loadLeagueLeaders(),
+                loadTodayImpactStats(),
+                loadDailyPlays()
+            ]);
+            restoreViewport(viewport)
         } catch (e) {
             els.grid.innerHTML = '<div class="empty">Could not load games. Check your connection and try Refresh.</div>';
             els.status.value = 'Unable to load MLB games.'
