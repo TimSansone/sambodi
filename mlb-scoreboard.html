@@ -748,6 +748,19 @@
         line-height:1.35
     }
 
+    .live-player-headshot {
+        float: left;
+        width: 42px;
+        height: 42px;
+        margin: 2px 9px 4px 0;
+        border-radius: 999px;
+        object-fit: cover;
+        background: #eef3f9;
+        border: 1px solid var(--line);
+    }
+
+    .live-player::after { content: ""; display: table; clear: both; }
+
     .pitch-results {
         display: grid;
         gap: 6px;
@@ -1310,7 +1323,7 @@
     .standings-card { border:1px solid var(--line); border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 10px 24px rgba(23,32,51,.07) }
     .standings-card h3 { margin:0; padding:11px 12px; background:linear-gradient(90deg, #f7f9fc, #fff); font-size:.92rem; border-bottom:1px solid var(--line) }
     .standings-table { display:grid }
-    .standings-header, .standings-team-row { display:grid; grid-template-columns:34px minmax(150px, 1fr) 52px 52px 58px 58px 62px; gap:8px; align-items:center }
+    .standings-header, .standings-team-row { display:grid; grid-template-columns:34px minmax(150px, 1fr) 52px 52px 58px 58px 62px 82px; gap:8px; align-items:center }
     .standings-header { padding:8px 10px; color:var(--muted); font-size:.68rem; font-weight:900; text-transform:uppercase; letter-spacing:.06em; background:#fbfcfe }
     .standings-team-row { padding:9px 10px; border-top:1px solid var(--line); font-size:.84rem }
     .standings-team-row:first-of-type { background:#fbfcfe }
@@ -1321,6 +1334,11 @@
     .standings-team-name small { display:block; margin-top:2px; color:var(--muted); font-size:.72rem; font-weight:800 }
     .standings-team-row small { color:var(--muted); font-weight:700 }
     .standings-value { text-align:right; white-space:nowrap }
+    .standings-postseason { text-align:right; white-space:nowrap; font-weight:900; font-size:.74rem }
+    .standings-postseason.magic { color:var(--green) }
+    .standings-postseason.elimination { color:#9a5d00 }
+    .standings-postseason.eliminated { color:var(--red) }
+    .standings-postseason.clinched { color:var(--blue) }
     .standings-league-split { display:grid; grid-template-columns:repeat(auto-fit, minmax(330px, 1fr)); gap:16px }
 
     @media (max-width: 1100px) {
@@ -1744,17 +1762,17 @@
 
     /* Keep GB and streak visible in the redesigned standings on all screen sizes. */
     #standingsFull .standings-card { overflow-x: auto; }
-    #standingsFull .standings-table { min-width: 540px; }
+    #standingsFull .standings-table { min-width: 640px; }
     #standingsFull .standings-header,
     #standingsFull .standings-team-row {
-        grid-template-columns: 30px minmax(170px, 1fr) 44px 44px 54px 54px 62px;
+        grid-template-columns: 30px minmax(170px, 1fr) 44px 44px 54px 54px 62px 82px;
     }
     #standingsFull .standings-header span,
     #standingsFull .standings-team-row .standings-value {
         display: block !important;
     }
     @media (max-width: 680px) {
-        #standingsFull .standings-table { min-width: 560px; }
+        #standingsFull .standings-table { min-width: 660px; }
         #standingsFull .standings-card { -webkit-overflow-scrolling: touch; }
         #standingsFull .standings-team-name small { display:block; }
 
@@ -2216,7 +2234,7 @@
                     <h2>Division & Wild Card Standings</h2>
                     <button class="btn secondary" id="standingsRefreshBtn2" type="button">Reload</button>
                 </div>
-                <p class="subtitle" style="margin:0 0 14px">GB shows how many games back each team is from the division or wild-card leader.</p>
+                <p class="subtitle" style="margin:0 0 14px">GB shows games back. M# is the magic number to clinch; E# is the elimination number; ELIM means the team has been eliminated.</p>
                 <div id="standingsFull" class="standings-dashboard">
                     <div class="empty">Standings will load with the scoreboard.</div>
                 </div>
@@ -2553,6 +2571,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             strikes = stats.strikes,
             balls = stats.balls ?? (Number.isFinite(Number(pitches)) && Number.isFinite(Number(strikes)) ? Number(pitches) - Number(strikes) : undefined);
         return {
+            id: p?.id || p?.person?.id || null,
             name: p?.fullName || 'Pitcher unavailable',
             detail: `Pitches: ${statValue(pitches)} · Balls: ${statValue(balls)} · Strikes: ${statValue(strikes)}`
         }
@@ -2566,6 +2585,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             gameStats = box?.stats?.batting || {},
             seasonStats = box?.seasonStats?.batting || player?.seasonStats?.batting || {};
         return {
+            id: b?.id || b?.person?.id || null,
             name: b?.fullName || 'Batter unavailable',
             detail: `${statValue(gameStats.hits, 0)}/${statValue(gameStats.atBats, 0)} · RBI: ${statValue(gameStats.rbi, 0)} · AVG: ${statValue(seasonStats.avg || gameStats.avg)}`
         }
@@ -2611,12 +2631,17 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             || gamePlayer(feed, person)?.fullName
             || fallback
     }
-    function onDeckName(g) {
+    function onDeckLine(g) {
         const feed = feedFor(g);
         const offense = liveLinescore(g).offense || {};
-        const onDeck = offense.onDeck
-            || feed?.liveData?.plays?.currentPlay?.matchup?.onDeck;
-        return livePlayerName(feed, onDeck)
+        const onDeck = offense.onDeck || feed?.liveData?.plays?.currentPlay?.matchup?.onDeck;
+        return { id: onDeck?.id || onDeck?.person?.id || null, name: livePlayerName(feed, onDeck) }
+    }
+
+    function onDeckName(g) { return onDeckLine(g).name }
+
+    function livePlayerHeadshotHtml(id, name = '') {
+        return id ? `<img class="live-player-headshot" src="${playerHeadshot(id)}" alt="${esc(name)} headshot" loading="lazy" onerror="this.style.display='none'">` : ''
     }
     function baseRunnerNames(g) {
         const feed = feedFor(g);
@@ -2632,11 +2657,9 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         return runners.length ? runners.join(' · ') : 'Bases empty'
     }
     function liveCardDetails(g) {
-        if (gameState(g) !== 'live')
-            return '';
-        const pitcherInfo = pitcherLine(g),
-            batterInfo = batterLine(g);
-        return `<div class="live-card-details"><div class="live-diamond-row">${baseGraphic(g)}<div class="live-count">${liveCountSummary(g)}</div></div><div class="live-matchup"><div class="live-player"><span>Pitcher</span><strong>${esc(pitcherInfo.name)}</strong><small>${esc(pitcherInfo.detail)}</small></div><div class="live-player"><span>Batter</span><strong>${esc(batterInfo.name)}</strong><small>${esc(batterInfo.detail)}</small></div></div><div class="live-player"><span>On Deck</span><strong>${esc(onDeckName(g))}</strong></div>${pitchResultsHtml(g)}${latestPlayHtml(g)}</div>`
+        if (gameState(g) !== 'live') return '';
+        const pitcherInfo = pitcherLine(g), batterInfo = batterLine(g), onDeckInfo = onDeckLine(g);
+        return `<div class="live-card-details"><div class="live-diamond-row">${baseGraphic(g)}<div class="live-count">${liveCountSummary(g)}</div></div><div class="live-matchup"><div class="live-player"><span>Pitcher</span>${livePlayerHeadshotHtml(pitcherInfo.id, pitcherInfo.name)}<strong>${esc(pitcherInfo.name)}</strong><small>${esc(pitcherInfo.detail)}</small></div><div class="live-player"><span>Batter</span>${livePlayerHeadshotHtml(batterInfo.id, batterInfo.name)}<strong>${esc(batterInfo.name)}</strong><small>${esc(batterInfo.detail)}</small></div></div><div class="live-player"><span>On Deck</span>${livePlayerHeadshotHtml(onDeckInfo.id, onDeckInfo.name)}<strong>${esc(onDeckInfo.name)}</strong></div>${pitchResultsHtml(g)}${latestPlayHtml(g)}</div>`
     }
     function visibleGames() {
         let games = [...state.games];
@@ -2969,7 +2992,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             ? standingLeagueName(rec)
             : (rec.division?.name || rec.league?.name || 'Standings');
         const rows = rec.teamRecords || [];
-        return `<div class="standings-card"><h3>${esc(title)}</h3><div class="standings-table"><div class="standings-header"><span>#</span><span>Team</span><span class="standings-value">W</span><span class="standings-value">L</span><span class="standings-value">PCT</span><span class="standings-value">GB</span><span class="standings-value">STRK</span></div>${rows.map((r, i) => standingTeamRow(r, i, type)).join('')}</div></div>`
+        return `<div class="standings-card"><h3>${esc(title)}</h3><div class="standings-table"><div class="standings-header"><span>#</span><span>Team</span><span class="standings-value">W</span><span class="standings-value">L</span><span class="standings-value">PCT</span><span class="standings-value">GB</span><span class="standings-value">STRK</span><span class="standings-value" title="Magic number or elimination status">M#/STATUS</span></div>${rows.map((r, i) => standingTeamRow(r, i, type, rec)).join('')}</div></div>`
     }
     function standingGamesBack(r, type = 'division') {
         const candidates = type === 'wildCard'
@@ -2986,14 +3009,62 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         if (r.streak?.streakNumber) return String(r.streak.streakNumber);
         return '-';
     }
-    function standingTeamRow(r, i, type = 'division') {
+    function standingEliminationNumber(r, type = 'division') {
+        const raw = type === 'wildCard' ? (r.wildCardEliminationNumber ?? r.eliminationNumber) : r.eliminationNumber;
+        return raw === undefined || raw === null || raw === '' ? null : String(raw)
+    }
+
+    function standingIsEliminated(r, type = 'division') {
+        const value = standingEliminationNumber(r, type);
+        return value ? ['E', 'ELIM', 'ELIMINATED'].includes(value.toUpperCase()) : false
+    }
+
+    function standingMagicNumber(r, rec, type = 'division') {
+        const supplied = type === 'wildCard'
+            ? (r.wildCardMagicNumber ?? r.wildCardMagic ?? r.magicNumber)
+            : (r.divisionMagicNumber ?? r.magicNumber);
+        if (supplied !== undefined && supplied !== null && supplied !== '') return String(supplied);
+        const wins = Number(r?.wins);
+        if (!Number.isFinite(wins)) return null;
+        let rival = null;
+        if (type === 'wildCard') {
+            const ranked = (rec?.teamRecords || []).filter(x => Number.isFinite(Number(x?.wildCardRank))).sort((a,b) => Number(a.wildCardRank)-Number(b.wildCardRank));
+            const rank = Number(r?.wildCardRank);
+            rival = rank && rank <= 3 ? ranked.find(x => Number(x.wildCardRank) === 4) : ranked.find(x => Number(x.wildCardRank) === 3);
+        } else {
+            rival = (rec?.teamRecords || []).filter(x => x?.team?.id && x.team.id !== r?.team?.id).sort((a,b) => Number(a.losses ?? 999)-Number(b.losses ?? 999))[0];
+        }
+        const rivalLosses = Number(rival?.losses);
+        if (!Number.isFinite(rivalLosses)) return null;
+        return String(Math.max(0, 163 - wins - rivalLosses))
+    }
+
+    function standingPostseasonStatus(r, rec, type = 'division') {
+        const clinch = String(r?.clinchIndicator || '').trim();
+        if (clinch) {
+            const labels = { x:'Playoff berth', y:'Division title', z:'Top seed', w:'Wild Card berth' };
+            return { text:`✓ ${clinch.toUpperCase()}`, cls:'clinched', title:labels[clinch.toLowerCase()] || 'Postseason spot clinched' }
+        }
+        if (standingIsEliminated(r, type)) return { text:'ELIM', cls:'eliminated', title:type === 'wildCard' ? 'Eliminated from Wild Card contention' : 'Eliminated from division contention' };
+        const elimination = standingEliminationNumber(r, type);
+        const rank = Number(type === 'wildCard' ? r?.wildCardRank : r?.divisionRank);
+        const inPosition = Number.isFinite(rank) && (type === 'wildCard' ? rank <= 3 : rank === 1);
+        const magic = standingMagicNumber(r, rec, type);
+        if (inPosition && magic !== null) return { text:`M# ${magic}`, cls:'magic', title:type === 'wildCard' ? 'Magic number to clinch a Wild Card berth' : 'Magic number to clinch the division' };
+        if (elimination !== null) return { text:`E# ${elimination}`, cls:'elimination', title:type === 'wildCard' ? 'Wild Card elimination number' : 'Division elimination number' };
+        if (magic !== null) return { text:`M# ${magic}`, cls:'magic', title:'Calculated magic number' };
+        return { text:'—', cls:'', title:'Postseason status unavailable' }
+    }
+
+    function standingTeamRow(r, i, type = 'division', rec = null) {
         const t = r.team || {};
         const rank = type === 'wildCard' ? (r.wildCardRank || i + 1) : (r.divisionRank || i + 1);
         const gb = standingGamesBack(r, type);
         const gbText = String(gb) === '-' || String(gb) === '0' ? 'Leader' : `${gb} games back`;
         const pct = r.winningPercentage || (r.wins && r.losses ? (r.wins / (r.wins + r.losses)).toFixed(3).replace(/^0/, '') : '-');
         const streak = standingStreak(r);
-        return `<div class="standings-team-row ${isFav(t.id) ? 'favorite' : ''}"><span class="leader-rank">${esc(rank)}</span><div class="standings-team-name"><img src="${logo(t.id)}" alt=""><span>${esc(t.name || 'Team')}<small>${esc(gbText)} · Streak ${esc(streak)}</small></span></div><strong class="standings-value">${esc(r.wins ?? '-')}</strong><strong class="standings-value">${esc(r.losses ?? '-')}</strong><span class="standings-value">${esc(pct)}</span><span class="standings-value" title="Games Back">${esc(gb)}</span><span class="standings-value" title="Current Streak">${esc(streak)}</span></div>`
+        const post = standingPostseasonStatus(r, rec, type);
+        return `<div class="standings-team-row ${isFav(t.id) ? 'favorite' : ''}"><span class="leader-rank">${esc(rank)}</span><div class="standings-team-name"><img src="${logo(t.id)}" alt=""><span>${esc(t.name || 'Team')}<small>${esc(gbText)} · Streak ${esc(streak)}</small></span></div><strong class="standings-value">${esc(r.wins ?? '-')}</strong><strong class="standings-value">${esc(r.losses ?? '-')}</strong><span class="standings-value">${esc(pct)}</span><span class="standings-value" title="Games Back">${esc(gb)}</span><span class="standings-value" title="Current Streak">${esc(streak)}</span><span class="standings-postseason ${post.cls}" title="${esc(post.title)}">${esc(post.text)}</span></div>`
     }
     function standingsSectionHtml(title, records, type) {
         const html = (records || []).map(rec => standingCardHtml(rec, type)).join('');
@@ -3308,7 +3379,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             away ? { team: g.teams.away.team, pitcher: away, text: pitcherRecord(g, 'away') } : null,
             home ? { team: g.teams.home.team, pitcher: home, text: pitcherRecord(g, 'home') } : null
         ].filter(Boolean);
-        return rows.map(r => `<div class="trend-row"><img src="${logo(r.team.id)}" alt=""><span><strong>${esc(r.pitcher.fullName || 'TBD')}</strong><small>${esc(r.team.abbreviation || r.team.name)} · ${esc(r.text.replace((r.pitcher.fullName || '') + ' — ', ''))}</small></span><strong>SP</strong></div>`).join('')
+        return rows.map(r => `<div class="trend-row trend-player-row"><span class="trend-player-media"><img class="leader-headshot" src="${playerHeadshot(r.pitcher.id)}" alt="${esc(r.pitcher.fullName || 'Pitcher')} headshot" loading="lazy" onerror="this.style.display='none'"><img src="${logo(r.team.id)}" alt="" loading="lazy"></span><span><strong>${esc(r.pitcher.fullName || 'TBD')}</strong><small>${esc(r.team.abbreviation || r.team.name)} · ${esc(r.text.replace((r.pitcher.fullName || '') + ' — ', ''))}</small></span><strong>SP</strong></div>`).join('')
     }
     function seasonStatBlock(data) {
         return data?.stats?.[0]?.splits?.[0]?.stat || null
@@ -3406,6 +3477,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         const powerHtml = trendCategoryRows(allLeagueCategory('hitting', 'HR'), 'Home run leaders unavailable.');
         const speedHtml = trendCategoryRows(allLeagueCategory('hitting', 'SB'), 'Stolen base leaders unavailable.');
         const averageHtml = trendCategoryRows(allLeagueCategory('hitting', 'AVG'), 'Batting average leaders unavailable.');
+        const rbiLeadersHtml = trendCategoryRows(allLeagueCategory('hitting', 'RBI'), 'RBI leaders unavailable.');
         const eraHtml = trendCategoryRows(allLeagueCategory('pitching', 'ERA'), 'ERA leaders unavailable.');
         const strikeoutHtml = trendCategoryRows(allLeagueCategory('pitching', 'K'), 'Strikeout leaders unavailable.');
         const savesHtml = trendCategoryRows(allLeagueCategory('pitching', 'SV'), 'Saves leaders unavailable.');
@@ -3414,7 +3486,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         const todayDoublesHtml = todayImpactRows('doubles', '2B', `No doubles recorded for ${dayLabel.toLowerCase()}.`);
         const todayTriplesHtml = todayImpactRows('triples', '3B', `No triples recorded for ${dayLabel.toLowerCase()}.`);
         const todayStrikeoutsHtml = todayImpactRows('pitcherStrikeouts', 'K', `No pitcher strikeout totals available for ${dayLabel.toLowerCase()}.`);
-        els.trends.innerHTML = dailyMetricCards() + `<div class="trend-card trend-summary"><h3>📊 Today Snapshot</h3><div class="mini-grid"><div class="mini"><span>Games</span><strong>${state.games.length}</strong></div><div class="mini"><span>Live</span><strong>${live.length}</strong></div><div class="mini"><span>Final</span><strong>${state.games.filter(g => gameState(g) === 'final').length}</strong></div><div class="mini"><span>Upcoming</span><strong>${state.games.filter(g => gameState(g) === 'scheduled').length}</strong></div></div></div><div class="trend-card"><h3>💥 Home Runs Today</h3><div class="trend-list">${todayHrHtml}</div></div><div class="trend-card"><h3>🏃 RBI Today</h3><div class="trend-list">${todayRbiHtml}</div></div><div class="trend-card"><h3>📏 Doubles Today</h3><div class="trend-list">${todayDoublesHtml}</div></div><div class="trend-card"><h3>⚡ Triples Today</h3><div class="trend-list">${todayTriplesHtml}</div></div><div class="trend-card"><h3>🔥 Pitcher Strikeouts Today</h3><div class="trend-list">${todayStrikeoutsHtml}</div></div><div class="trend-card"><h3>💣 MLB Power Watch</h3><div class="trend-list">${powerHtml}</div></div><div class="trend-card"><h3>💨 MLB Speed Watch</h3><div class="trend-list">${speedHtml}</div></div><div class="trend-card"><h3>🔥 Batting Average Leaders</h3><div class="trend-list">${averageHtml}</div></div><div class="trend-card"><h3>🧢 ERA Leaders</h3><div class="trend-list">${eraHtml}</div></div><div class="trend-card"><h3>⚡ Strikeout Leaders</h3><div class="trend-list">${strikeoutHtml}</div></div><div class="trend-card"><h3>🔒 Saves Leaders</h3><div class="trend-list">${savesHtml}</div></div><div class="trend-card"><h3>🎯 Probable Starters Today</h3><div class="trend-list">${startersHtml}</div></div><div class="trend-card"><h3>📈 Highest Scoring Games</h3><div class="trend-list">${highScoringHtml}</div></div><div class="trend-card"><h3>⚔️ Close Game Watch</h3><div class="trend-list">${closeHtml}</div></div><div class="trend-card"><h3>🔴 Live Games</h3><div class="trend-list">${liveHtml}</div></div><div class="trend-card"><h3>✅ Recent Finals</h3><div class="trend-list">${finalHtml}</div></div><div class="trend-card"><h3>⏰ Upcoming First Pitches</h3><div class="trend-list">${upcomingHtml}</div></div><div class="trend-card"><h3>⭐ Favorite Team Watch</h3><div class="trend-list">${favoriteHtml}</div></div>`
+        els.trends.innerHTML = dailyMetricCards() + `<div class="trend-card trend-summary"><h3>📊 Today Snapshot</h3><div class="mini-grid"><div class="mini"><span>Games</span><strong>${state.games.length}</strong></div><div class="mini"><span>Live</span><strong>${live.length}</strong></div><div class="mini"><span>Final</span><strong>${state.games.filter(g => gameState(g) === 'final').length}</strong></div><div class="mini"><span>Upcoming</span><strong>${state.games.filter(g => gameState(g) === 'scheduled').length}</strong></div></div></div><div class="trend-card"><h3>💥 Home Runs Today</h3><div class="trend-list">${todayHrHtml}</div></div><div class="trend-card"><h3>🏃 RBI Today</h3><div class="trend-list">${todayRbiHtml}</div></div><div class="trend-card"><h3>📏 Doubles Today</h3><div class="trend-list">${todayDoublesHtml}</div></div><div class="trend-card"><h3>⚡ Triples Today</h3><div class="trend-list">${todayTriplesHtml}</div></div><div class="trend-card"><h3>🔥 Pitcher Strikeouts Today</h3><div class="trend-list">${todayStrikeoutsHtml}</div></div><div class="trend-card"><h3>💣 MLB Power Watch</h3><div class="trend-list">${powerHtml}</div></div><div class="trend-card"><h3>💨 MLB Speed Watch</h3><div class="trend-list">${speedHtml}</div></div><div class="trend-card"><h3>🔥 Batting Average Leaders</h3><div class="trend-list">${averageHtml}</div></div><div class="trend-card"><h3>🏃 RBI Leaders</h3><div class="trend-list">${rbiLeadersHtml}</div></div><div class="trend-card"><h3>🧢 ERA Leaders</h3><div class="trend-list">${eraHtml}</div></div><div class="trend-card"><h3>⚡ Strikeout Leaders</h3><div class="trend-list">${strikeoutHtml}</div></div><div class="trend-card"><h3>🔒 Saves Leaders</h3><div class="trend-list">${savesHtml}</div></div><div class="trend-card"><h3>🎯 Probable Starters Today</h3><div class="trend-list">${startersHtml}</div></div><div class="trend-card"><h3>📈 Highest Scoring Games</h3><div class="trend-list">${highScoringHtml}</div></div><div class="trend-card"><h3>⚔️ Close Game Watch</h3><div class="trend-list">${closeHtml}</div></div><div class="trend-card"><h3>🔴 Live Games</h3><div class="trend-list">${liveHtml}</div></div><div class="trend-card"><h3>✅ Recent Finals</h3><div class="trend-list">${finalHtml}</div></div><div class="trend-card"><h3>⏰ Upcoming First Pitches</h3><div class="trend-list">${upcomingHtml}</div></div><div class="trend-card"><h3>⭐ Favorite Team Watch</h3><div class="trend-list">${favoriteHtml}</div></div>`
     }
 
     const daily = { date: '', rows: [], metrics: {}, loading: false, failed: 0, request: 0 };
@@ -3434,7 +3506,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             for (const e of p.playEvents || []) {
                 const add = (key, value, person, detail) => {
                     if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return;
-                    metrics[key].push({ value, name: person?.fullName || 'Player unavailable', context, detail });
+                    metrics[key].push({ value, id: person?.id || person?.person?.id || null, name: person?.fullName || 'Player unavailable', context, detail });
                 };
                 add('exit', e.hitData?.launchSpeed, p.matchup?.batter, p.result?.event || 'Batted ball');
                 if (p.result?.eventType === 'home_run') add('distance', e.hitData?.totalDistance, p.matchup?.batter, 'Home run');
@@ -3454,7 +3526,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
     function dailyMetricCards() {
         return [['exit','💥 Hardest Hit Balls','mph',1], ['distance','🚀 Longest Home Runs','ft',0], ['speed','🔥 Fastest Pitches','mph',1], ['spin','🌀 Highest Spin Pitches','rpm',0]].map(([key,title,unit,digits]) => {
             const rows = daily.date === els.gameDate.value ? daily.metrics[key] || [] : [];
-            return `<div class="trend-card"><h3>${title}</h3><p class="subtitle">${esc(els.gameDate.value)} · Top 10 recorded plays</p><div class="trend-list">${rows.length ? rows.slice(0,10).map((r,i) => `<div class="trend-row"><span>${i+1}</span><span><strong>${esc(r.name)}</strong><small>${esc(r.context)} · ${esc(r.detail)}</small></span><strong>${r.value.toFixed(digits)} ${unit}</strong></div>`).join('') : `<div class="empty">${daily.loading ? 'Loading tracking data…' : 'No recorded measurements available.'}</div>`}</div><small>MLB tracking data may be delayed or unavailable.${daily.failed ? ' Some game feeds could not be loaded.' : ''}</small></div>`;
+            return `<div class="trend-card"><h3>${title}</h3><p class="subtitle">${esc(els.gameDate.value)} · Top 10 recorded plays</p><div class="trend-list">${rows.length ? rows.slice(0,10).map((r,i) => `<div class="trend-row trend-player-row"><span class="trend-player-media">${r.id ? `<img class="leader-headshot" src="${playerHeadshot(r.id)}" alt="${esc(r.name)} headshot" loading="lazy" onerror="this.style.display='none'">` : ''}</span><span><strong>${esc(r.name)}</strong><small>#${i+1} · ${esc(r.context)} · ${esc(r.detail)}</small></span><strong>${r.value.toFixed(digits)} ${unit}</strong></div>`).join('') : `<div class="empty">${daily.loading ? 'Loading tracking data…' : 'No recorded measurements available.'}</div>`}</div><small>MLB tracking data may be delayed or unavailable.${daily.failed ? ' Some game feeds could not be loaded.' : ''}</small></div>`;
         }).join('');
     }
     async function loadDailyPlays() {
