@@ -1,7 +1,5 @@
 
 
-
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -1458,8 +1456,23 @@
 
 
     /* Mobile polish pass */
-    html { -webkit-text-size-adjust: 100%; }
-    body { overflow-x: hidden; }
+    html {
+        -webkit-text-size-adjust: 100%;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        overflow-x: clip;
+    }
+    body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        overflow-x: clip;
+    }
+    .app, .tab-panel, .panel {
+        min-width: 0;
+        max-width: 100%;
+    }
     img { max-width: 100%; }
     .tab-btn, .btn, .fav-btn, .combo-button { -webkit-tap-highlight-color: transparent; }
 
@@ -2126,11 +2139,6 @@
     .trend-card h3 { color: var(--accent); }
     .trend-row { border-color: #dce5ec; }
     #dailyScoring { max-height: none; overflow: visible; }
-    #dailyScoring .scoring-team { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
-    #dailyScoring .scoring-team-logo { width:56px; height:56px; flex:0 0 56px; object-fit:contain; padding:6px; box-sizing:border-box; background:#fff; border:1px solid var(--line); border-radius:12px; }
-    #dailyScoring .scoring-team-name { min-width:0; overflow-wrap:anywhere; }
-    #dailyScoring .scoring-team-name small { display:block; color:var(--muted); font-size:11px; letter-spacing:.08em; text-transform:uppercase; }
-    #dailyScoring .scoring-team-name strong { display:block; font-size:16px; }
     #dailyScoring .latest-play-card { border-left: 4px solid #23927a; background: linear-gradient(100deg, #edf9f4, #fff 70%); padding: 14px; }
     #dailyScoring .latest-play-card:nth-child(2n) { border-left-color: #397ac0; background: linear-gradient(100deg, #edf5ff, #fff 70%); }
     .standing-division h3 { background: #e8f1fb; color: #20496c; }
@@ -2709,7 +2717,6 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             activeTab,
             gamePk: card?.dataset.game || null,
             cardTop: card?.getBoundingClientRect().top || 0,
-            scrollX: window.scrollX,
             scrollY: window.scrollY
         }
     }
@@ -2721,9 +2728,10 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
                 ? els.grid.querySelector(`.game-card[data-game="${viewport.gamePk}"]`)
                 : null;
             if (card) {
-                window.scrollBy(0, card.getBoundingClientRect().top - viewport.cardTop)
+                const deltaY = card.getBoundingClientRect().top - viewport.cardTop;
+                window.scrollTo(0, Math.max(0, window.scrollY + deltaY))
             } else {
-                window.scrollTo(viewport.scrollX, viewport.scrollY)
+                window.scrollTo(0, Math.max(0, viewport.scrollY))
             }
         };
         restore();
@@ -3503,26 +3511,16 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         const a = g.teams.away.team, h = g.teams.home.team;
         return `${a.abbreviation || a.name} at ${h.abbreviation || h.name} · ${p.about?.isTopInning ? 'Top' : 'Bottom'} ${p.about?.inning || '—'}`;
     }
-    function scoringTeamForPlay(g, p) {
-        const about = p.about || {};
-        const half = String(about.halfInning || '').toLowerCase();
-        const side = about.isTopInning === true ? 'away'
-            : about.isTopInning === false ? 'home'
-            : half === 'top' ? 'away' : half === 'bottom' ? 'home' : null;
-        return side ? g.teams?.[side]?.team || null : null;
-    }
-    function scoringTeamHtml(team) {
-        const name = team?.name || team?.abbreviation || 'Team unavailable';
-        const image = team?.id ? `<img class="scoring-team-logo" src="${esc(logo(team.id))}" alt="${esc(name)} logo" width="56" height="56" loading="lazy" onerror="this.style.visibility='hidden'">` : '';
-        return `<div class="scoring-team">${image}<div class="scoring-team-name"><small>Scoring team</small><strong>${esc(name)}</strong></div></div>`;
-    }
     function collectDaily(g, feed, rows, metrics) {
         for (const p of feed.liveData?.plays?.allPlays || []) {
             const context = dailyContext(g, p);
             if (p.about?.isScoringPlay) {
                 const rawTime = p.about.endTime || p.playEvents?.at(-1)?.endTime || p.about.startTime;
+                const scoringTeam = p.about?.isTopInning ? g.teams.away.team : g.teams.home.team;
                 rows.push({ gamePk: g.gamePk, index: p.about.atBatIndex, time: Date.parse(rawTime) || 0,
-                    context, scoringTeam: scoringTeamForPlay(g, p), description: p.result?.description || 'Scoring play',
+                    context, description: p.result?.description || 'Scoring play',
+                    scoringTeamId: scoringTeam?.id || null,
+                    scoringTeamName: scoringTeam?.name || 'Scoring team',
                     score: `${g.teams.away.team.abbreviation || g.teams.away.team.name} ${p.result?.awayScore ?? '—'} – ${g.teams.home.team.abbreviation || g.teams.home.team.name} ${p.result?.homeScore ?? '—'}` });
             }
             for (const e of p.playEvents || []) {
@@ -3543,7 +3541,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         const current = daily.date === els.gameDate.value;
         const notice = daily.loading ? 'Loading plays from every game…' : daily.failed ? `${daily.failed} game feed(s) unavailable. Results may be incomplete; refresh to retry.` : '';
         const rows = current ? daily.rows : [];
-        $('dailyScoring').innerHTML = `<p class="subtitle" role="status">${esc(notice)}</p>` + (rows.length ? rows.map(r => `<article class="latest-play-card">${scoringTeamHtml(r.scoringTeam)}<strong>${esc(r.context)}</strong><small>${r.time ? esc(new Date(r.time).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'})) : 'Time unavailable'}</small><p>${esc(r.description)}</p><strong>${esc(r.score)}</strong></article>`).join('') : `<div class="empty">${daily.loading ? 'Fetching scoring plays…' : 'No scoring plays available for this date.'}</div>`);
+        $('dailyScoring').innerHTML = `<p class="subtitle" role="status">${esc(notice)}</p>` + (rows.length ? rows.map(r => `<article class="latest-play-card"><div style="display:flex;align-items:center;gap:10px;min-width:0">${r.scoringTeamId ? `<img src="${logo(r.scoringTeamId)}" alt="${esc(r.scoringTeamName)} logo" style="width:38px;height:38px;object-fit:contain;flex:0 0 38px">` : ''}<div style="min-width:0"><strong style="display:block">${esc(r.scoringTeamName)} scored</strong><small>${esc(r.context)}</small></div></div><small>${r.time ? esc(new Date(r.time).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'})) : 'Time unavailable'}</small><p>${esc(r.description)}</p><strong>${esc(r.score)}</strong></article>`).join('') : `<div class="empty">${daily.loading ? 'Fetching scoring plays…' : 'No scoring plays available for this date.'}</div>`);
     }
     function dailyMetricCards() {
         return [['exit','💥 Hardest Hit Balls','mph',1], ['distance','🚀 Longest Home Runs','ft',0], ['speed','🔥 Fastest Pitches','mph',1], ['spin','🌀 Highest Spin Pitches','rpm',0]].map(([key,title,unit,digits]) => {
@@ -3573,6 +3571,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
         if (tabId === 'trendsTab') renderStatsTrends();
         if (tabId === 'scoringTab') renderDaily();
+        requestAnimationFrame(() => window.scrollTo(0, window.scrollY));
     }
 
     function renderAll() {
@@ -3719,6 +3718,11 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         searchPlayers(query)
     };
     els.resetPlayerSearch.onclick = resetPlayerSearch;
+    let resizeFrame = 0;
+    window.addEventListener('resize', () => {
+        cancelAnimationFrame(resizeFrame);
+        resizeFrame = requestAnimationFrame(() => window.scrollTo(0, window.scrollY));
+    }, { passive: true });
     document.querySelectorAll('.tab-btn').forEach(btn => btn.onclick = () => activateTab(btn.dataset.tab));
     $('showAllBtn').onclick = () => setStatusFilter('all');
     $('showLiveBtn').onclick = () => setStatusFilter('live');
