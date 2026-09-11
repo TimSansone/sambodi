@@ -1,5 +1,7 @@
 
 
+
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -2124,6 +2126,11 @@
     .trend-card h3 { color: var(--accent); }
     .trend-row { border-color: #dce5ec; }
     #dailyScoring { max-height: none; overflow: visible; }
+    #dailyScoring .scoring-team { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+    #dailyScoring .scoring-team-logo { width:56px; height:56px; flex:0 0 56px; object-fit:contain; padding:6px; box-sizing:border-box; background:#fff; border:1px solid var(--line); border-radius:12px; }
+    #dailyScoring .scoring-team-name { min-width:0; overflow-wrap:anywhere; }
+    #dailyScoring .scoring-team-name small { display:block; color:var(--muted); font-size:11px; letter-spacing:.08em; text-transform:uppercase; }
+    #dailyScoring .scoring-team-name strong { display:block; font-size:16px; }
     #dailyScoring .latest-play-card { border-left: 4px solid #23927a; background: linear-gradient(100deg, #edf9f4, #fff 70%); padding: 14px; }
     #dailyScoring .latest-play-card:nth-child(2n) { border-left-color: #397ac0; background: linear-gradient(100deg, #edf5ff, #fff 70%); }
     .standing-division h3 { background: #e8f1fb; color: #20496c; }
@@ -3496,13 +3503,26 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         const a = g.teams.away.team, h = g.teams.home.team;
         return `${a.abbreviation || a.name} at ${h.abbreviation || h.name} · ${p.about?.isTopInning ? 'Top' : 'Bottom'} ${p.about?.inning || '—'}`;
     }
+    function scoringTeamForPlay(g, p) {
+        const about = p.about || {};
+        const half = String(about.halfInning || '').toLowerCase();
+        const side = about.isTopInning === true ? 'away'
+            : about.isTopInning === false ? 'home'
+            : half === 'top' ? 'away' : half === 'bottom' ? 'home' : null;
+        return side ? g.teams?.[side]?.team || null : null;
+    }
+    function scoringTeamHtml(team) {
+        const name = team?.name || team?.abbreviation || 'Team unavailable';
+        const image = team?.id ? `<img class="scoring-team-logo" src="${esc(logo(team.id))}" alt="${esc(name)} logo" width="56" height="56" loading="lazy" onerror="this.style.visibility='hidden'">` : '';
+        return `<div class="scoring-team">${image}<div class="scoring-team-name"><small>Scoring team</small><strong>${esc(name)}</strong></div></div>`;
+    }
     function collectDaily(g, feed, rows, metrics) {
         for (const p of feed.liveData?.plays?.allPlays || []) {
             const context = dailyContext(g, p);
             if (p.about?.isScoringPlay) {
                 const rawTime = p.about.endTime || p.playEvents?.at(-1)?.endTime || p.about.startTime;
                 rows.push({ gamePk: g.gamePk, index: p.about.atBatIndex, time: Date.parse(rawTime) || 0,
-                    context, description: p.result?.description || 'Scoring play',
+                    context, scoringTeam: scoringTeamForPlay(g, p), description: p.result?.description || 'Scoring play',
                     score: `${g.teams.away.team.abbreviation || g.teams.away.team.name} ${p.result?.awayScore ?? '—'} – ${g.teams.home.team.abbreviation || g.teams.home.team.name} ${p.result?.homeScore ?? '—'}` });
             }
             for (const e of p.playEvents || []) {
@@ -3523,7 +3543,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         const current = daily.date === els.gameDate.value;
         const notice = daily.loading ? 'Loading plays from every game…' : daily.failed ? `${daily.failed} game feed(s) unavailable. Results may be incomplete; refresh to retry.` : '';
         const rows = current ? daily.rows : [];
-        $('dailyScoring').innerHTML = `<p class="subtitle" role="status">${esc(notice)}</p>` + (rows.length ? rows.map(r => `<article class="latest-play-card"><strong>${esc(r.context)}</strong><small>${r.time ? esc(new Date(r.time).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'})) : 'Time unavailable'}</small><p>${esc(r.description)}</p><strong>${esc(r.score)}</strong></article>`).join('') : `<div class="empty">${daily.loading ? 'Fetching scoring plays…' : 'No scoring plays available for this date.'}</div>`);
+        $('dailyScoring').innerHTML = `<p class="subtitle" role="status">${esc(notice)}</p>` + (rows.length ? rows.map(r => `<article class="latest-play-card">${scoringTeamHtml(r.scoringTeam)}<strong>${esc(r.context)}</strong><small>${r.time ? esc(new Date(r.time).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'})) : 'Time unavailable'}</small><p>${esc(r.description)}</p><strong>${esc(r.score)}</strong></article>`).join('') : `<div class="empty">${daily.loading ? 'Fetching scoring plays…' : 'No scoring plays available for this date.'}</div>`);
     }
     function dailyMetricCards() {
         return [['exit','💥 Hardest Hit Balls','mph',1], ['distance','🚀 Longest Home Runs','ft',0], ['speed','🔥 Fastest Pitches','mph',1], ['spin','🌀 Highest Spin Pitches','rpm',0]].map(([key,title,unit,digits]) => {
