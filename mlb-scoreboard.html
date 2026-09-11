@@ -1469,6 +1469,40 @@
         overflow-x: hidden;
         overflow-x: clip;
     }
+
+    /* Transactions */
+    .transactions-shell { display:grid; gap:14px; }
+    .transactions-toolbar { display:flex; gap:10px; align-items:end; flex-wrap:wrap; padding:14px; border:1px solid var(--line); border-radius:12px; background:#f7f9fc; }
+    .transactions-control { display:grid; gap:6px; min-width:180px; }
+    .transactions-control label { font-size:.72rem; font-weight:900; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); }
+    .transactions-control select { min-height:42px; border:1px solid var(--line); border-radius:9px; background:#fff; color:var(--ink); padding:8px 36px 8px 11px; font:inherit; font-weight:700; }
+    .transactions-status { margin-left:auto; align-self:center; color:var(--muted); font-size:.82rem; font-weight:700; }
+    .transactions-table { border:1px solid var(--line); border-radius:12px; overflow:hidden; background:#fff; }
+    .transactions-head, .transaction-row { display:grid; grid-template-columns:minmax(190px, .8fr) 105px minmax(320px, 2.2fr); align-items:center; }
+    .transactions-head { min-height:42px; background:#13294b; color:#fff; font-size:.72rem; font-weight:900; text-transform:uppercase; letter-spacing:.045em; }
+    .transactions-head > span, .transaction-row > div { padding:10px 14px; }
+    .transaction-row { min-height:68px; border-top:1px solid var(--line); }
+    .transaction-row:first-of-type { border-top:0; }
+    .transaction-row:hover { background:#f7faff; }
+    .transaction-team { display:flex; align-items:center; gap:10px; min-width:0; }
+    .transaction-team-logos { display:flex; align-items:center; flex:0 0 auto; }
+    .transaction-team-logos img { width:34px; height:34px; object-fit:contain; background:#fff; border-radius:50%; }
+    .transaction-team-logos img + img { margin-left:-8px; box-shadow:0 0 0 2px #fff; }
+    .transaction-team strong { display:block; line-height:1.15; }
+    .transaction-team small { display:block; margin-top:3px; color:var(--muted); font-weight:700; }
+    .transaction-date { font-weight:800; font-variant-numeric:tabular-nums; }
+    .transaction-desc { line-height:1.45; }
+    .transaction-desc strong { color:#13294b; }
+    .transaction-type { display:inline-block; margin-top:5px; padding:2px 7px; border-radius:999px; background:#edf3f9; color:#52677d; font-size:.68rem; font-weight:900; text-transform:uppercase; letter-spacing:.03em; }
+    .transactions-day { padding:9px 14px; background:#eef3f8; color:#13294b; border-top:1px solid var(--line); font-size:.78rem; font-weight:900; letter-spacing:.035em; text-transform:uppercase; }
+    @media (max-width: 760px) {
+        .transactions-toolbar { align-items:stretch; }
+        .transactions-control { min-width:0; flex:1 1 150px; }
+        .transactions-status { width:100%; margin-left:0; }
+        .transactions-table { overflow-x:auto; }
+        .transactions-head, .transaction-row { min-width:650px; grid-template-columns:190px 95px minmax(330px, 1fr); }
+    }
+
     .app, .tab-panel, .panel {
         min-width: 0;
         max-width: 100%;
@@ -2226,6 +2260,7 @@
             <button class="tab-btn" type="button" data-tab="standingsTab">📊 Standings</button>
             <button class="tab-btn" type="button" data-tab="leadersTab">🏆 League Leaders</button>
             <button class="tab-btn" type="button" data-tab="scoringTab">⚾ Scoring Plays</button>
+            <button class="tab-btn" type="button" data-tab="transactionsTab">🔄 Transactions</button>
             <button class="tab-btn" type="button" data-tab="trendsTab">📈 Stats & Trends</button>
         </nav>
 
@@ -2269,6 +2304,37 @@
         </section>
 
         <section id="scoringTab" class="tab-panel"><section class="panel pad"><div class="section-head"><h2>Scoring Plays</h2></div><div id="dailyScoring" class="plays"></div></section></section>
+
+        <section id="transactionsTab" class="tab-panel">
+            <section class="panel pad">
+                <div class="section-head">
+                    <div>
+                        <h2>MLB Transactions</h2>
+                        <p class="subtitle" style="margin:4px 0 0">Latest roster moves, injured-list activity, call-ups, options, trades and signings across Major League Baseball.</p>
+                    </div>
+                    <button class="btn secondary" id="transactionsRefreshBtn" type="button">Reload</button>
+                </div>
+                <div class="transactions-shell">
+                    <div class="transactions-toolbar">
+                        <div class="transactions-control">
+                            <label for="transactionTeamFilter">Team</label>
+                            <select id="transactionTeamFilter"><option value="">All MLB Teams</option></select>
+                        </div>
+                        <div class="transactions-control">
+                            <label for="transactionRangeFilter">Date range</label>
+                            <select id="transactionRangeFilter">
+                                <option value="7">Last 7 days</option>
+                                <option value="14">Last 14 days</option>
+                                <option value="30">Last 30 days</option>
+                            </select>
+                        </div>
+                        <div class="transactions-status" id="transactionsStatus" aria-live="polite">Transactions load when this tab is opened.</div>
+                    </div>
+                    <div id="transactionsList"><div class="empty">Open this tab to load the latest MLB transactions.</div></div>
+                </div>
+            </section>
+        </section>
+
         <section id="trendsTab" class="tab-panel">
             <section class="panel pad">
                 <div class="section-head">
@@ -2347,6 +2413,11 @@
         standings: [],
         wildCardStandings: [],
         leagueLeaders: { AL: { hitting: [], pitching: [] }, NL: { hitting: [], pitching: [] } },
+        transactions: [],
+        transactionTeams: [],
+        transactionsLoading: false,
+        transactionsLoadedAt: 0,
+        transactionRequest: 0,
         todayImpact: { homeRuns: [], rbi: [], doubles: [], triples: [], pitcherStrikeouts: [] },
         todayImpactDate: '',
         todayImpactLoading: false,
@@ -2389,6 +2460,11 @@
         standings: $('standingsBar'),
         standingsFull: $('standingsFull'),
         leaders: $('leagueLeaders'),
+        transactionsList: $('transactionsList'),
+        transactionsStatus: $('transactionsStatus'),
+        transactionTeamFilter: $('transactionTeamFilter'),
+        transactionRangeFilter: $('transactionRangeFilter'),
+        transactionsRefresh: $('transactionsRefreshBtn'),
         trends: $('statsTrends'),
         playerSearchForm: $('playerSearchForm'),
         playerSearchInput: $('playerSearchInput'),
@@ -3566,11 +3642,100 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         daily.rows = rows; daily.metrics = metrics; daily.loading = false;
         renderDaily(); renderStatsTrends();
     }
+    function formatTransactionDate(date) {
+        if (!date) return 'Date unavailable';
+        const d = new Date(`${date}T12:00:00`);
+        return Number.isNaN(d.getTime()) ? date : d.toLocaleDateString([], { month:'2-digit', day:'2-digit', year:'2-digit' });
+    }
+    function formatTransactionDay(date) {
+        if (!date) return 'Recent transactions';
+        const d = new Date(`${date}T12:00:00`);
+        return Number.isNaN(d.getTime()) ? date : d.toLocaleDateString([], { weekday:'long', month:'long', day:'numeric', year:'numeric' });
+    }
+    function transactionMlbTeams(t) {
+        const ids = new Set(state.transactionTeams.map(team => Number(team.id)));
+        const candidates = [t.toTeam, t.fromTeam].filter(team => team?.id && ids.has(Number(team.id)));
+        const seen = new Set();
+        return candidates.filter(team => !seen.has(team.id) && seen.add(team.id));
+    }
+    function renderTransactionTeamOptions() {
+        if (!els.transactionTeamFilter) return;
+        const current = els.transactionTeamFilter.value;
+        els.transactionTeamFilter.innerHTML = '<option value="">All MLB Teams</option>' + state.transactionTeams
+            .map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
+        if ([...els.transactionTeamFilter.options].some(o => o.value === current)) els.transactionTeamFilter.value = current;
+    }
+    function renderTransactions() {
+        if (!els.transactionsList) return;
+        const teamId = Number(els.transactionTeamFilter?.value || 0);
+        let rows = state.transactions.slice();
+        if (teamId) rows = rows.filter(t => [t.toTeam?.id, t.fromTeam?.id].some(id => Number(id) === teamId));
+        rows.sort((a,b) => String(b.date || '').localeCompare(String(a.date || '')) || Number(b.id || 0) - Number(a.id || 0));
+        if (!rows.length) {
+            els.transactionsList.innerHTML = `<div class="empty">${state.transactionsLoading ? 'Loading MLB transactions…' : 'No MLB transactions found for this filter and date range.'}</div>`;
+            return;
+        }
+        let lastDate = '';
+        const body = rows.map(t => {
+            const teams = transactionMlbTeams(t);
+            const teamName = teams.map(x => x.name).join(' / ') || t.toTeam?.name || t.fromTeam?.name || 'MLB';
+            const logos = teams.length ? teams.map(x => `<img src="${logo(x.id)}" alt="${esc(x.name)} logo" loading="lazy" onerror="this.style.display='none'">`).join('') : '';
+            const player = t.person?.fullName || '';
+            const group = t.date !== lastDate ? `<div class="transactions-day">${esc(formatTransactionDay(t.date))}</div>` : '';
+            lastDate = t.date;
+            return `${group}<article class="transaction-row">
+                <div class="transaction-team"><span class="transaction-team-logos">${logos}</span><span><strong>${esc(teamName)}</strong>${player ? `<small>${esc(player)}</small>` : ''}</span></div>
+                <div class="transaction-date">${esc(formatTransactionDate(t.date))}</div>
+                <div class="transaction-desc"><strong>${esc(t.description || 'Transaction')}</strong>${t.typeDesc ? `<br><span class="transaction-type">${esc(t.typeDesc)}</span>` : ''}</div>
+            </article>`;
+        }).join('');
+        els.transactionsList.innerHTML = `<div class="transactions-table"><div class="transactions-head"><span>Team</span><span>Date</span><span>Transaction</span></div>${body}</div>`;
+    }
+    async function loadTransactionTeams() {
+        if (state.transactionTeams.length) return;
+        const season = todayIso().slice(0,4);
+        const data = await fetchJson(`${API_BASE}/teams?sportId=1&season=${season}`);
+        state.transactionTeams = (data.teams || []).filter(t => t.id && t.name).sort((a,b) => a.name.localeCompare(b.name));
+        renderTransactionTeamOptions();
+    }
+    async function loadTransactions(force = false) {
+        if (!els.transactionsList || state.transactionsLoading) return;
+        const now = Date.now();
+        if (!force && state.transactions.length && now - state.transactionsLoadedAt < 120000) {
+            renderTransactions();
+            return;
+        }
+        const request = ++state.transactionRequest;
+        state.transactionsLoading = true;
+        els.transactionsStatus.textContent = 'Loading latest MLB transactions…';
+        renderTransactions();
+        try {
+            await loadTransactionTeams();
+            const days = Number(els.transactionRangeFilter?.value || 7);
+            const endDate = todayIso();
+            const startDate = addDays(endDate, -(days - 1));
+            const data = await fetchJson(`${API_BASE}/transactions?startDate=${startDate}&endDate=${endDate}&sportId=1&limit=500&order=desc`);
+            if (request !== state.transactionRequest) return;
+            const mlbIds = new Set(state.transactionTeams.map(t => Number(t.id)));
+            state.transactions = (data.transactions || []).filter(t => [t.toTeam?.id, t.fromTeam?.id].some(id => mlbIds.has(Number(id))));
+            state.transactionsLoadedAt = Date.now();
+            els.transactionsStatus.textContent = `${state.transactions.length} transaction${state.transactions.length === 1 ? '' : 's'} · ${startDate} through ${endDate}`;
+            renderTransactions();
+        } catch (e) {
+            if (request !== state.transactionRequest) return;
+            els.transactionsStatus.textContent = 'Unable to load MLB transactions right now.';
+            els.transactionsList.innerHTML = '<div class="empty">Transactions could not be loaded. Please try Reload.</div>';
+        } finally {
+            if (request === state.transactionRequest) state.transactionsLoading = false;
+        }
+    }
+
     function activateTab(tabId) {
         document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === tabId));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
         if (tabId === 'trendsTab') renderStatsTrends();
         if (tabId === 'scoringTab') renderDaily();
+        if (tabId === 'transactionsTab') loadTransactions();
         requestAnimationFrame(() => window.scrollTo(0, window.scrollY));
     }
 
@@ -3707,6 +3872,9 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
     $('standingsRefreshBtn2').onclick = loadStandings;
     $('leadersRefreshBtn').onclick = loadLeagueLeaders;
     $('trendsRefreshBtn').onclick = () => { renderStatsTrends(); loadTodayImpactStats(); loadDailyPlays(); };
+    els.transactionsRefresh.onclick = () => loadTransactions(true);
+    els.transactionTeamFilter.onchange = renderTransactions;
+    els.transactionRangeFilter.onchange = () => loadTransactions(true);
     els.playerSearchForm.onsubmit = event => {
         event.preventDefault();
         const query = els.playerSearchInput.value.trim();
