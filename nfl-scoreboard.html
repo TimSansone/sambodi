@@ -287,9 +287,10 @@
     .play span { display: block; margin-bottom: 4px; color: var(--muted); font-size: .78rem; font-weight: 900; text-transform: uppercase }
     .play strong.pts { float: right; color: var(--navy) }
 
-    .scoring-game-group { margin-bottom: 18px }
-    .scoring-game-group h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: .98rem }
-    .scoring-game-group h3 img { width: 24px; height: 24px; object-fit: contain }
+    .scoring-flat-score { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; padding: 0 0 8px; border-bottom: 1px solid var(--line) }
+    .scoring-flat-score img { width: 22px; height: 22px; object-fit: contain }
+    .scoring-flat-score span { display: inline; margin: 0; color: var(--navy); font-size: 1rem; font-weight: 900; text-transform: none }
+    .scoring-flat-score .scoring-flat-sep { color: var(--muted); font-weight: 700 }
 
     .empty, .message { padding: 18px; color: var(--muted); line-height: 1.45; border: 1px dashed #c6d3e1; border-radius: 12px; background: #fbfcfe }
 
@@ -920,6 +921,22 @@
         return `<div class="play"><span>Q${period || '?'} · ${esc(clock)} · ${esc(teamAbbr)}</span>${situation ? `<span class="play-situation" aria-label="Situation before the play: ${esc(situation)}">${esc(situation)}</span><br>` : ''}${esc(p.text || '')}<strong class="pts">${p.awayScore ?? '–'}-${p.homeScore ?? '–'}</strong></div>`;
     }
 
+    function scoringPlayFlatRow(p, g) {
+        const period = p.period?.number;
+        const clock = p.clock?.displayValue || '';
+        const teamId = p.team?.id ? String(p.team.id) : '';
+        const teamAbbr = p.team?.abbreviation || (teamId === g.away.id ? g.away.abbr : teamId === g.home.id ? g.home.abbr : '');
+        const situation = playSituation(p);
+        return `<div class="play scoring-flat">
+            <div class="scoring-flat-score">
+                <img src="${esc(g.away.logo)}" alt="" onerror="this.style.visibility='hidden'"><span>${esc(g.away.abbr)} ${p.awayScore ?? '–'}</span>
+                <span class="scoring-flat-sep">–</span>
+                <span>${esc(g.home.abbr)} ${p.homeScore ?? '–'}</span><img src="${esc(g.home.logo)}" alt="" onerror="this.style.visibility='hidden'">
+            </div>
+            <span>Q${period || '?'} · ${esc(clock)} · ${esc(teamAbbr)}</span>${situation ? `<span class="play-situation" aria-label="Situation before the play: ${esc(situation)}">${esc(situation)}</span><br>` : ''}${esc(p.text || '')}
+        </div>`;
+    }
+
     function detailLoadingHTML() {
         return `<h2>GameCenter</h2><div class="skeleton" style="min-height:220px"></div>`;
     }
@@ -1195,18 +1212,37 @@
                     summary = await fetchJson(`${API_BASE}/summary?event=${g.id}`);
                     state.summaries.set(g.id, summary);
                 }
-                return { g, plays: summary?.scoringPlays || [] };
+                // Scoring plays don't carry a timestamp of their own, but the matching
+                // play inside drives.previous does (wallclock) -- use it to order plays
+                // by when they actually happened, across every game at once.
+                const wallclockById = new Map();
+                (summary?.drives?.previous || []).forEach(d => (d.plays || []).forEach(pl => {
+                    if (pl.id && pl.wallclock) wallclockById.set(pl.id, pl.wallclock);
+                }));
+                const plays = (summary?.scoringPlays || []).map((p, idx) => ({
+                    p, g, idx,
+                    wallclock: p.id ? wallclockById.get(p.id) : null
+                }));
+                return { g, plays, failed: false };
             } catch (err) {
                 console.warn('Scoring plays unavailable for', g.id, err);
-                return { g, plays: null };
+                return { g, plays: null, failed: true };
             }
         }));
-        const groups = results.filter(r => r.plays && r.plays.length).map(r => {
-            const rows = r.plays.map(p => scoringPlayRow(p, r.g)).join('');
-            return `<div class="scoring-game-group"><h3><img src="${esc(r.g.away.logo)}" alt="">${esc(r.g.away.abbr)} @ <img src="${esc(r.g.home.logo)}" alt="">${esc(r.g.home.abbr)}</h3>${rows}</div>`;
-        }).join('');
-        const failedCount = results.filter(r => r.plays === null).length;
-        els.scoringPlays.innerHTML = groups || '<div class="empty">No scoring plays are available yet for this week.</div>';
+        const allPlays = [];
+        results.forEach(r => { if (r.plays) allPlays.push(...r.plays); });
+        allPlays.sort((a, b) => {
+            if (a.wallclock && b.wallclock) return new Date(b.wallclock) - new Date(a.wallclock);
+            if (a.wallclock) return -1;
+            if (b.wallclock) return 1;
+            // No timestamp for either (older/incomplete data): keep plays from the
+            // same game in latest-first order, otherwise leave their relative order alone.
+            if (a.g.id === b.g.id) return b.idx - a.idx;
+            return 0;
+        });
+        const rows = allPlays.map(item => scoringPlayFlatRow(item.p, item.g)).join('');
+        const failedCount = results.filter(r => r.failed).length;
+        els.scoringPlays.innerHTML = rows || '<div class="empty">No scoring plays are available yet for this week.</div>';
         if (failedCount) showToast(`${failedCount} game${failedCount === 1 ? '' : 's'} could not be loaded.`);
     }
 
