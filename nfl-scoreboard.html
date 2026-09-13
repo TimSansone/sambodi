@@ -371,6 +371,50 @@
         .leader-row { grid-template-columns: 22px 38px minmax(0, 1fr) auto; padding: 8px }
         .standings-header, .standings-team-row { grid-template-columns: 24px minmax(100px, 1fr) 32px 32px 32px }
     }
+    /* Compact header and touch-friendly GameCenter. */
+    h1 { font-size: clamp(1.7rem, 3vw, 2.6rem); line-height: 1.1 }
+    header { align-items: center; gap: 12px }
+    .controls { min-width: 0; box-shadow: none }
+    .top-panel { padding: 10px 14px; box-shadow: none }
+    .status-row { display: flex; flex-wrap: wrap; gap: 10px 22px; margin: 0 }
+    .stat { display: flex; align-items: baseline; gap: 8px; min-height: 0; padding: 0; border: 0; box-shadow: none }
+    .stat strong { font-size: 1rem; margin: 0 }
+    .stat span { font-size: .7rem }
+    .games-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 330px), 1fr)) }
+    .game-slot, .game-card { min-width: 0; scroll-margin-top: 90px }
+    .game-card.live { border-top: 4px solid var(--red) }
+    .game-card.active { border-color: var(--blue); box-shadow: 0 0 0 3px #2f6fca55 }
+    .game-card.favorite-game { background: #fffbec }
+    .fav-btn.team-fav { width: 36px; height: 36px }
+    .ticker-item { min-height: 44px }
+    .ticker-status { grid-column: 1 / -1 }
+    .ticker-item.favorite-game { background: #fff7dc }
+    .badge.red-zone { background: #b42318; color: white }
+    .gc-nav { display: flex; gap: 6px; overflow-x: auto; padding: 4px 0 12px }
+    .gc-nav button { flex: 0 0 auto; width: auto; min-height: 44px }
+    .gc-nav button[aria-pressed="true"] { background: var(--navy); color: #fff }
+    .filter-buttons .btn { width: auto; min-height: 44px }
+    .gc-table { max-width: 100%; overflow: auto }
+    .gc-table table { border-collapse: collapse; width: 100%; font-size: .85rem }
+    .gc-table th, .gc-table td { padding: 9px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap }
+    .gc-table caption { text-align: left; font-weight: bold; padding: 12px 0 }
+    .inline-detail { overflow-wrap: anywhere }
+    .toast { bottom: 85px }
+    footer { padding-bottom: 70px }
+    @media (max-width: 700px) {
+        .game-slot.selected-slot { grid-template-columns: minmax(0, 1fr) }
+        .game-slot.selected-slot .game-card { position: relative; top: auto }
+        .tabs-nav { position: static; display: flex; flex-wrap: nowrap; overflow-x: auto }
+        .tabs-nav .tab-btn { width: auto; flex: 0 0 auto; white-space: nowrap }
+        .matchup-mini { grid-template-columns: 1fr auto 1fr }
+        .match-score { font-size: 1.5rem }
+        .mini-grid { grid-template-columns: minmax(0, 1fr) }
+        .controls .field { flex: 1 1 100px; min-width: 0 }
+        .controls select { width: 100% }
+        .controls .field:has(#seasonTypeSelect) { flex-basis: 145px }
+        .leaders-mini-grid { grid-template-columns: minmax(0, 1fr) }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::after { animation: none !important; scroll-behavior: auto !important } }
     </style>
 </head>
 <body>
@@ -382,9 +426,7 @@
     <div class="app">
         <header>
             <div>
-                <p class="masthead-kicker">Around the league</p>
                 <h1>NFL GameCenter</h1>
-                <p class="masthead-subtitle">Every game. Every big moment.</p>
             </div>
             <div class="controls">
                 <div class="field">
@@ -554,6 +596,8 @@
         games: [],
         summaries: new Map(),
         selectedId: null,
+        detailTab: 'overview',
+        detailRequest: 0,
         teamFilter: '',
         statusFilter: 'all',
         favoriteTeams: new Map(),
@@ -737,7 +781,8 @@
                 (awayRaw.linescores || []).map(l => l.displayValue ?? l.value ?? null),
                 (homeRaw.linescores || []).map(l => l.displayValue ?? l.value ?? null)
             ],
-            situation, lastPlay,
+            situation: situation || (possessionAbbr ? possessionAbbr + ' ball' : null), lastPlay,
+            redZone: status === 'live' && comp.situation?.isRedZone === true,
             leaders
         };
     }
@@ -748,7 +793,7 @@
             els.ticker.innerHTML = '<span class="ticker-item">No games scheduled this week</span>';
             return;
         }
-        els.ticker.innerHTML = state.games.map(g => `<button type="button" class="ticker-item" data-id="${esc(g.id)}" aria-label="${esc(g.away.abbr)} at ${esc(g.home.abbr)}"><img src="${esc(g.away.logo)}" alt="" onerror="this.style.visibility='hidden'"><strong>${g.away.score ?? '–'}</strong><img src="${esc(g.home.logo)}" alt="" onerror="this.style.visibility='hidden'"><strong>${g.home.score ?? '–'}</strong></button>`).join('');
+        els.ticker.innerHTML = state.games.map(g => `<button type="button" class="ticker-item ${isFavoriteGame(g) ? 'favorite-game' : ''}" data-id="${esc(g.id)}" aria-expanded="${state.selectedId === g.id && filteredGames().some(x => x.id === g.id)}" aria-label="${esc(g.away.abbr)} at ${esc(g.home.abbr)}"><img src="${esc(g.away.logo)}" alt="" onerror="this.style.visibility='hidden'"><strong>${g.away.score ?? '–'}</strong><img src="${esc(g.home.logo)}" alt="" onerror="this.style.visibility='hidden'"><strong>${g.home.score ?? '–'}</strong><span class="ticker-status">${esc(g.away.abbr)} · ${esc(g.home.abbr)} · ${esc(statusLabel(g))}</span></button>`).join('');
     }
 
     function renderStatusRow() {
@@ -789,7 +834,7 @@
         return `<div class="team-row ${winner ? 'winner' : ''}">
             <img class="logo" src="${esc(t.logo)}" alt="${esc(t.fullName)} logo" onerror="this.style.visibility='hidden'">
             <div class="team-name">
-                <button type="button" class="fav-btn team-fav ${favActive ? 'active' : ''}" data-fav-id="${esc(t.id)}" data-fav-payload="${payload}" title="Toggle favorite team" aria-label="Toggle favorite ${esc(t.fullName)}">★</button>
+                <button type="button" class="fav-btn team-fav ${favActive ? 'active' : ''}" data-fav-id="${esc(t.id)}" data-fav-payload="${payload}" aria-pressed="${favActive}" title="Toggle favorite team" aria-label="Toggle favorite ${esc(t.fullName)}">★</button>
                 <div class="name-stack"><strong>${esc(t.name)}</strong><span>${esc(t.record)}</span></div>
             </div>
             <div class="score">${t.score ?? '–'}</div>
@@ -815,8 +860,8 @@
     }
 
     function situationHTML(g) {
-        if (g.status === 'live' && (g.situation || g.lastPlay)) {
-            return `<div class="situation-card live">${g.situation ? `<strong>${esc(g.situation)}</strong>` : ''}${g.lastPlay ? `<span>${esc(g.lastPlay)}</span>` : ''}</div>`;
+        if (g.status === 'live' && (g.situation || g.lastPlay || g.redZone)) {
+            return `<div class="situation-card live">${g.redZone ? '<span class="badge red-zone">Red Zone</span>' : ''}${g.situation ? `<strong>${esc(g.situation)}</strong>` : ''}${g.lastPlay ? `<span>${esc(g.lastPlay)}</span>` : ''}</div>`;
         }
         if (g.status === 'scheduled') {
             const when = g.date ? g.date.toLocaleString([], { weekday: 'long', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Time TBD';
@@ -827,7 +872,7 @@
 
     function cardHTML(g) {
         const favGame = isFavoriteGame(g) ? 'favorite-game' : '';
-        return `<article class="game-card ${g.status} ${favGame}" style="--team:${teamAccent(g)};--team2:${teamAccent2(g)}" data-id="${esc(g.id)}" tabindex="0" role="button" aria-label="Open ${esc(g.away.fullName)} at ${esc(g.home.fullName)} game center">
+        return `<article class="game-card ${g.status} ${favGame} ${state.selectedId === g.id ? 'active' : ''}" aria-expanded="${state.selectedId === g.id}" style="--team:${teamAccent(g)};--team2:${teamAccent2(g)}" data-id="${esc(g.id)}" tabindex="0" role="button" aria-label="Open ${esc(g.away.fullName)} at ${esc(g.home.fullName)} game center">
             <div class="game-top">
                 <span class="badge ${g.status}">${esc(statusLabel(g))}</span>
                 <span class="badge">${esc(g.network || 'NFL')}</span>
@@ -862,7 +907,7 @@
         return `<h2>GameCenter</h2><div class="skeleton" style="min-height:220px"></div>`;
     }
 
-    function detailHTML(g, summary) {
+    function overviewHTML(g, summary) {
         const scoringPlays = summary?.scoringPlays || [];
         const playsHTML = scoringPlays.length
             ? scoringPlays.slice(-8).reverse().map(p => scoringPlayRow(p, g)).join('')
@@ -879,26 +924,67 @@
                 <div class="mini"><span>Venue</span><strong>${esc(g.venue || 'TBA')}</strong><small>${esc(g.city || '')}</small></div>
                 <div class="mini"><span>Season</span><strong>${esc(seasonTypeName(state.seasonType))} · Week ${esc(state.week ?? '—')}</strong></div>
             </div>
+            ${situationHTML(g)}
             ${leadersMiniHTML(g.leaders)}
             <h3 style="margin:14px 0 8px">Scoring plays</h3>
             <div class="plays">${playsHTML}</div>
             <div class="card-actions" style="margin-top:12px"><button type="button" class="btn secondary" id="closeDetailBtn">Close</button></div>`;
     }
 
+    const detailSections = [['overview', 'Overview'], ['box', 'Box Score'], ['drives', 'Drives'], ['plays', 'Play-by-Play'], ['stats', 'Team Stats']];
+    const unavailable = label => '<div class="empty">' + esc(label) + ' are not available for this game yet.</div>';
+    function gameDrives(summary) {
+        const drives = [...(summary?.drives?.previous || [])];
+        const current = summary?.drives?.current;
+        if (current && !drives.some(d => d.id && d.id === current.id)) drives.push(current);
+        return drives;
+    }
+    function boxHTML(summary) {
+        return (summary?.boxscore?.players || []).map(t => (t.statistics || []).map(c => {
+            const labels = c.labels || c.names || [];
+            const rows = (c.athletes || []).map(p => '<tr><th scope="row">' + esc(p.athlete?.displayName || 'Player') + '</th>' + labels.map((_, i) => '<td>' + esc(p.stats?.[i] ?? '—') + '</td>').join('') + '</tr>').join('');
+            return rows ? '<div class="gc-table" tabindex="0"><table><caption>' + esc(t.team?.displayName || 'Team') + ' · ' + esc(c.text || c.name || 'Statistics') + '</caption><thead><tr><th>Player</th>' + labels.map(l => '<th scope="col">' + esc(l) + '</th>').join('') + '</tr></thead><tbody>' + rows + '</tbody></table></div>' : '';
+        }).join('')).join('') || unavailable('Player statistics');
+    }
+    function statsHTML(summary) {
+        const teams = summary?.boxscore?.teams || [];
+        const names = [...new Set(teams.flatMap(t => (t.statistics || []).map(s => s.name)).filter(Boolean))];
+        if (!names.length) return unavailable('Team statistics');
+        return '<div class="gc-table" tabindex="0"><table><caption>Team comparison</caption><thead><tr><th>Statistic</th>' + teams.map(t => '<th scope="col">' + esc(t.team?.abbreviation || t.team?.displayName || 'Team') + '</th>').join('') + '</tr></thead><tbody>' + names.map(name => {
+            const stats = teams.map(t => (t.statistics || []).find(s => s.name === name));
+            return '<tr><th scope="row">' + esc(stats.find(Boolean)?.label || name) + '</th>' + stats.map(s => '<td>' + esc(s?.displayValue ?? '—') + '</td>').join('') + '</tr>';
+        }).join('') + '</tbody></table></div>';
+    }
+    function detailHTML(g, summary) {
+        let body;
+        const drives = gameDrives(summary);
+        if (state.detailTab === 'box') body = boxHTML(summary);
+        else if (state.detailTab === 'stats') body = statsHTML(summary);
+        else if (state.detailTab === 'drives') body = drives.map(d => '<div class="play"><span>' + esc(d.team?.displayName || d.team?.abbreviation || 'Drive') + ' · ' + esc(d.result || d.displayResult || 'In progress') + '</span>' + esc([d.description, d.timeElapsed?.displayValue].filter(Boolean).join(' · ') || 'Drive details pending') + '</div>').join('') || unavailable('Drives');
+        else if (state.detailTab === 'plays') {
+            const plays = summary?.plays?.length ? summary.plays : drives.flatMap(d => d.plays || []);
+            const seen = new Set();
+            body = plays.filter(p => { if (!p.id) return true; if (seen.has(p.id)) return false; seen.add(p.id); return true; }).slice().reverse().map(p => scoringPlayRow(p, g)).join('') || unavailable('Play-by-play details');
+        } else body = overviewHTML(g, summary);
+        return '<nav class="gc-nav" aria-label="GameCenter sections">' + detailSections.map(([id, label]) => '<button type="button" class="btn secondary" data-detail-tab="' + id + '" aria-pressed="' + (state.detailTab === id) + '">' + label + '</button>').join('') + '</nav><section aria-label="' + esc(detailSections.find(([id]) => id === state.detailTab)?.[1]) + '">' + body + '</section>' + (state.detailTab !== 'overview' ? '<button type="button" class="btn secondary" id="closeDetailBtn">Close</button>' : '');
+    }
+
     async function loadAndRenderDetail(id) {
+        const generation = ++state.detailRequest;
+        const scoreboardRequest = requestToken;
         const g = state.games.find(x => x.id === id);
         if (!g) return;
         let summary = state.summaries.get(id);
         if (!summary) {
             try {
                 summary = await fetchJson(`${API_BASE}/summary?event=${id}`);
-                state.summaries.set(id, summary);
+                if (scoreboardRequest === requestToken) state.summaries.set(id, summary);
             } catch (err) {
                 console.warn('Game summary unavailable:', err);
                 summary = null;
             }
         }
-        if (state.selectedId !== id) return;
+        if (state.selectedId !== id || generation !== state.detailRequest || scoreboardRequest !== requestToken) return;
         const node = document.getElementById(`detail-${id}`);
         if (!node) return;
         node.innerHTML = detailHTML(g, summary);
@@ -906,8 +992,9 @@
         if (closeBtn) closeBtn.onclick = () => { state.selectedId = null; renderGames(); };
     }
 
-    function selectGame(id) {
-        state.selectedId = state.selectedId === id ? null : id;
+    function selectGame(id, forceOpen = false) {
+        if (state.selectedId !== id) state.detailTab = 'overview';
+        state.selectedId = !forceOpen && state.selectedId === id ? null : id;
         renderGames();
         if (state.selectedId) {
             requestAnimationFrame(() => {
@@ -929,6 +1016,7 @@
 
     function renderGames() {
         const shown = filteredGames();
+        renderTicker();
         if (!shown.length) {
             els.grid.innerHTML = `<div class="empty">${state.games.length ? 'No games match those filters.' : 'No games are scheduled for this week.'}</div>`;
             return;
@@ -1276,6 +1364,8 @@
             syncStateFromResponse(data);
             syncSelectorsFromState();
             state.games = (data.events || []).map(mapEvent);
+            state.summaries.clear();
+            if (!state.games.some(g => g.id === state.selectedId)) state.selectedId = null;
             state.loadedOnce = true;
             renderTicker();
             renderStatusRow();
@@ -1284,7 +1374,10 @@
             updateScoresHeading();
             scheduleAutoRefresh();
         } catch (err) {
+            if (token !== requestToken) return;
             console.warn('NFL scoreboard unavailable:', err);
+            if (state.loadedOnce) renderGames();
+            scheduleAutoRefresh();
             if (!state.loadedOnce) {
                 els.grid.innerHTML = '<div class="empty">Live scores are unavailable right now. Try refreshing in a moment.</div>';
             }
@@ -1311,6 +1404,14 @@
     // ---------- wiring ----------
     function wireEvents() {
         els.grid.addEventListener('click', e => {
+            const section = e.target.closest('[data-detail-tab]');
+            if (section) {
+                state.detailTab = section.dataset.detailTab;
+                loadAndRenderDetail(state.selectedId).then(() => {
+                    els.grid.querySelector('[data-detail-tab="' + state.detailTab + '"]')?.focus();
+                });
+                return;
+            }
             const favBtn = e.target.closest('.fav-btn');
             if (favBtn) {
                 e.stopPropagation();
@@ -1325,6 +1426,7 @@
             if (card) selectGame(card.dataset.id);
         });
         els.grid.addEventListener('keydown', e => {
+            if (e.target.closest('button, a, select')) return;
             if (e.key === 'Enter' || e.key === ' ') {
                 const card = e.target.closest('.game-card');
                 if (card) { e.preventDefault(); selectGame(card.dataset.id); }
@@ -1334,7 +1436,13 @@
             const b = e.target.closest('.ticker-item');
             if (b && b.dataset.id) {
                 document.querySelector('[data-tab="scoresTab"]').click();
-                selectGame(b.dataset.id);
+                if (!filteredGames().some(g => g.id === b.dataset.id)) {
+                    state.teamFilter = '';
+                    state.statusFilter = 'all';
+                    els.teamFilterSelect.value = '';
+                    document.querySelectorAll('.filter-buttons .btn').forEach(btn => btn.setAttribute('aria-pressed', String(btn.dataset.status === 'all')));
+                }
+                selectGame(b.dataset.id, true);
             }
         });
 
@@ -1381,6 +1489,7 @@
                 document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
                 btn.classList.add('active');
                 document.getElementById(btn.dataset.tab).classList.add('active');
+                renderTicker();
                 if (btn.dataset.tab === 'standingsTab' && !state.standingsRaw) loadStandings();
                 if (btn.dataset.tab === 'trendsTab' && !state.seasonLeaders) loadSeasonLeaders();
             });
@@ -1393,6 +1502,7 @@
     }
 
     function init() {
+        [['yearSelect', 'Season'], ['seasonTypeSelect', 'Season phase'], ['weekSelect', 'Week'], ['teamFilterSelect', 'Team']].forEach(([id, label]) => $(id).setAttribute('aria-label', label));
         populateYearSelect();
         populateWeekSelect();
         populateTeamFilter();
