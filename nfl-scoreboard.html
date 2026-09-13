@@ -415,6 +415,9 @@
         .leaders-mini-grid { grid-template-columns: minmax(0, 1fr) }
     }
     @media (prefers-reduced-motion: reduce) { *, *::after { animation: none !important; scroll-behavior: auto !important } }
+    .team-row.has-possession { background: #e5f3ed; border-radius: 8px; box-shadow: inset 3px 0 #176c5c; padding: 6px }
+    .team-name .possession-marker { display: inline-flex; margin-top: 4px; padding: 3px 7px; border-radius: 999px; background: #176c5c; color: #fff; font-size: .68rem; font-weight: 900 }
+    .play .play-situation { display: inline-block; padding: 3px 7px; margin: 0 0 6px; background: #e5f3ed; color: #17372f; border-radius: 6px; font-size: .8rem; font-weight: 900; text-transform: none }
     </style>
 </head>
 <body>
@@ -783,6 +786,7 @@
             ],
             situation: situation || (possessionAbbr ? possessionAbbr + ' ball' : null), lastPlay,
             redZone: status === 'live' && comp.situation?.isRedZone === true,
+            possessionId: status === 'live' ? possessionId : '',
             leaders
         };
     }
@@ -829,13 +833,14 @@
 
     function teamRowHTML(t, g) {
         const winner = g.status === 'final' && t.winner;
+        const hasPossession = !!t.id && g.status === 'live' && g.possessionId === t.id;
         const favActive = isFav(t.id);
         const payload = attrJson({ id: t.id, abbr: t.abbr, name: t.fullName, logo: t.logo });
-        return `<div class="team-row ${winner ? 'winner' : ''}">
+        return `<div class="team-row ${winner ? 'winner' : ''} ${hasPossession ? 'has-possession' : ''}">
             <img class="logo" src="${esc(t.logo)}" alt="${esc(t.fullName)} logo" onerror="this.style.visibility='hidden'">
             <div class="team-name">
                 <button type="button" class="fav-btn team-fav ${favActive ? 'active' : ''}" data-fav-id="${esc(t.id)}" data-fav-payload="${payload}" aria-pressed="${favActive}" title="Toggle favorite team" aria-label="Toggle favorite ${esc(t.fullName)}">★</button>
-                <div class="name-stack"><strong>${esc(t.name)}</strong><span>${esc(t.record)}</span></div>
+                <div class="name-stack"><strong>${esc(t.name)}</strong><span>${esc(t.record)}</span>${hasPossession ? '<span class="possession-marker" aria-label="In possession of the ball">🏈 BALL</span>' : ''}</div>
             </div>
             <div class="score">${t.score ?? '–'}</div>
         </div>`;
@@ -895,12 +900,23 @@
         return cells ? `<div class="leaders-mini-grid">${cells}</div>` : '';
     }
 
+    function playSituation(p) {
+        const start = p.start || {};
+        if (start.downDistanceText) return start.downDistanceText;
+        if (start.shortDownDistanceText) return [start.shortDownDistanceText, start.possessionText].filter(Boolean).join(' · ');
+        const down = Number(start.down);
+        const distance = start.distance;
+        if (![1, 2, 3, 4].includes(down) || distance == null || distance === '' || !Number.isFinite(Number(distance)) || Number(distance) < 0) return '';
+        return `${['', '1st', '2nd', '3rd', '4th'][down]} & ${distance}${start.possessionText ? ' · ' + start.possessionText : ''}`;
+    }
+
     function scoringPlayRow(p, g) {
         const period = p.period?.number;
         const clock = p.clock?.displayValue || '';
         const teamId = p.team?.id ? String(p.team.id) : '';
         const teamAbbr = p.team?.abbreviation || (teamId === g.away.id ? g.away.abbr : teamId === g.home.id ? g.home.abbr : '');
-        return `<div class="play"><span>Q${period || '?'} · ${esc(clock)} · ${esc(teamAbbr)}</span>${esc(p.text || '')}<strong class="pts">${p.awayScore ?? '–'}-${p.homeScore ?? '–'}</strong></div>`;
+        const situation = playSituation(p);
+        return `<div class="play"><span>Q${period || '?'} · ${esc(clock)} · ${esc(teamAbbr)}</span>${situation ? `<span class="play-situation" aria-label="Situation before the play: ${esc(situation)}">${esc(situation)}</span><br>` : ''}${esc(p.text || '')}<strong class="pts">${p.awayScore ?? '–'}-${p.homeScore ?? '–'}</strong></div>`;
     }
 
     function detailLoadingHTML() {
