@@ -529,6 +529,16 @@
                     <div class="empty">Top performers will load with the scoreboard.</div>
                 </div>
             </section>
+            <section class="panel pad">
+                <div class="section-head">
+                    <h2>Touchdowns, Defense &amp; Special Teams</h2>
+                    <button class="btn secondary" id="weekLeadersExtraRefreshBtn" type="button">Load additional stats</button>
+                </div>
+                <p class="subtitle" style="margin:0 0 14px">Pulled from each game's full box score — touchdowns, tackles, sacks, takeaways and kicking.</p>
+                <div id="weekLeadersExtra">
+                    <div class="empty">Choose "Load additional stats" to pull touchdown, defensive and kicking leaders.</div>
+                </div>
+            </section>
         </section>
 
         <section id="scoringTab" class="tab-panel">
@@ -609,6 +619,7 @@
         seasonLeaders: null,
         seasonLeadersLoading: false,
         scoringLoaded: false,
+        extraLeadersLoaded: false,
         autoRefresh: true,
         refreshSeconds: 30,
         refreshRemaining: 30,
@@ -640,6 +651,8 @@
         standingsRefreshBtn: $('standingsRefreshBtn'),
         weekLeaders: $('weekLeaders'),
         leadersRefreshBtn: $('leadersRefreshBtn'),
+        weekLeadersExtra: $('weekLeadersExtra'),
+        weekLeadersExtraRefreshBtn: $('weekLeadersExtraRefreshBtn'),
         scoringPlays: $('scoringPlays'),
         scoringRefreshBtn: $('scoringRefreshBtn'),
         seasonTrends: $('seasonTrends'),
@@ -1206,6 +1219,103 @@
         }).join('');
     }
 
+    // Touchdowns, defense and special-teams leaders aren't in the lightweight
+    // /scoreboard feed used above -- they only show up in each game's full box
+    // score, so these are loaded separately (on demand) rather than on every
+    // auto-refresh, to avoid fetching every game's summary every ~20-30s.
+    const EXTRA_LEADER_CATEGORIES = [
+        { key: 'passingTD', label: 'Passing Touchdowns', group: 'Offense', cat: 'passing', stat: 'TD' },
+        { key: 'rushingTD', label: 'Rushing Touchdowns', group: 'Offense', cat: 'rushing', stat: 'TD' },
+        { key: 'receivingTD', label: 'Receiving Touchdowns', group: 'Offense', cat: 'receiving', stat: 'TD' },
+        { key: 'tackles', label: 'Tackles', group: 'Defense', cat: 'defensive', stat: 'TOT' },
+        { key: 'sacks', label: 'Sacks', group: 'Defense', cat: 'defensive', stat: 'SACKS' },
+        { key: 'interceptions', label: 'Interceptions', group: 'Defense', cat: 'interceptions', stat: 'INT' },
+        { key: 'fumblesRecovered', label: 'Fumbles Recovered', group: 'Defense', cat: 'fumbles', stat: 'REC' },
+        { key: 'kickingPoints', label: 'Kicking Points', group: 'Special Teams', cat: 'kicking', stat: 'PTS' }
+    ];
+
+    // Finds the single best performer for one box-score stat category+column
+    // (e.g. "defensive" / "SACKS") across both teams in a game's box score.
+    function topFromBoxStat(players, catName, statLabel) {
+        let best = null;
+        (players || []).forEach(teamEntry => {
+            const cat = (teamEntry.statistics || []).find(s => s.name === catName);
+            if (!cat || !Array.isArray(cat.labels)) return;
+            const idx = cat.labels.indexOf(statLabel);
+            if (idx === -1) return;
+            (cat.athletes || []).forEach(a => {
+                const raw = a.stats?.[idx];
+                const val = parseFloat(raw);
+                if (!Number.isFinite(val) || val <= 0) return;
+                if (!best || val > best.val) best = { val, raw, athlete: a.athlete, team: teamEntry.team };
+            });
+        });
+        return best;
+    }
+
+    async function loadExtraWeekLeaders() {
+        state.extraLeadersLoaded = true;
+        if (!state.games.length) {
+            els.weekLeadersExtra.innerHTML = '<div class="empty">No games are scheduled for this week.</div>';
+            return;
+        }
+        els.weekLeadersExtra.innerHTML = '<div class="skeleton" style="min-height:260px"></div>';
+        const results = await Promise.all(state.games.map(async g => {
+            try {
+                let summary = state.summaries.get(g.id);
+                if (!summary) {
+                    summary = await fetchJson(`${API_BASE}/summary?event=${g.id}`);
+                    state.summaries.set(g.id, summary);
+                }
+                const players = summary?.boxscore?.players || [];
+                const out = {};
+                EXTRA_LEADER_CATEGORIES.forEach(cfg => {
+                    const best = topFromBoxStat(players, cfg.cat, cfg.stat);
+                    if (!best) return;
+                    const teamId = best.team?.id ? String(best.team.id) : '';
+                    const side = teamId && teamId === g.away.id ? g.away : (teamId && teamId === g.home.id ? g.home : null);
+                    out[cfg.key] = {
+                        name: best.athlete?.shortName || best.athlete?.displayName || 'Player',
+                        headshot: headshotUrl(best.athlete),
+                        value: best.raw,
+                        sortVal: best.val,
+                        teamAbbr: side?.abbr || best.team?.abbreviation || '',
+                        teamLogo: side?.logo || best.team?.logo || ''
+                    };
+                });
+                return { out, failed: false };
+            } catch (err) {
+                console.warn('Additional stat leaders unavailable for', g.id, err);
+                return { out: null, failed: true };
+            }
+        }));
+        const collected = {};
+        EXTRA_LEADER_CATEGORIES.forEach(cfg => { collected[cfg.key] = []; });
+        results.forEach(r => {
+            if (!r.out) return;
+            Object.entries(r.out).forEach(([key, val]) => { if (collected[key]) collected[key].push(val); });
+        });
+        const failedCount = results.filter(r => r.failed).length;
+        const hasAny = Object.values(collected).some(arr => arr.length);
+        if (!hasAny) {
+            els.weekLeadersExtra.innerHTML = "<div class=\"empty\">Additional stat leaders will appear once this week's games are underway.</div>";
+            if (failedCount) showToast(`${failedCount} game${failedCount === 1 ? '' : 's'} could not be loaded.`);
+            return;
+        }
+        const groups = ['Offense', 'Defense', 'Special Teams'];
+        els.weekLeadersExtra.innerHTML = groups.map(group => {
+            const cats = EXTRA_LEADER_CATEGORIES.filter(cfg => cfg.group === group && collected[cfg.key].length);
+            if (!cats.length) return '';
+            const cards = cats.map(cfg => {
+                const list = collected[cfg.key].slice().sort((a, b) => b.sortVal - a.sortVal).slice(0, 8);
+                const rows = list.map(trendLeaderRowHTML).join('');
+                return `<div class="leader-category"><h3>${esc(cfg.label)}</h3><div class="leader-list">${rows}</div></div>`;
+            }).join('');
+            return `<div class="league-leaders-section"><h2>${esc(group)}</h2><div class="league-leaders-grid">${cards}</div></div>`;
+        }).join('') || '<div class="empty">Additional stat leaders are not available yet.</div>';
+        if (failedCount) showToast(`${failedCount} game${failedCount === 1 ? '' : 's'} could not be loaded.`);
+    }
+
     // ---------- scoring plays tab ----------
     async function loadScoringPlays() {
         state.scoringLoaded = true;
@@ -1433,6 +1543,7 @@
             state.games = (data.events || []).map(mapEvent);
             state.summaries.clear();
             state.scoringLoaded = false;
+            state.extraLeadersLoaded = false;
             if (!state.games.some(g => g.id === state.selectedId)) state.selectedId = null;
             state.loadedOnce = true;
             renderTicker();
@@ -1561,11 +1672,13 @@
                 if (btn.dataset.tab === 'standingsTab' && !state.standingsRaw) loadStandings();
                 if (btn.dataset.tab === 'trendsTab' && !state.seasonLeaders) loadSeasonLeaders();
                 if (btn.dataset.tab === 'scoringTab' && !state.scoringLoaded) loadScoringPlays();
+                if (btn.dataset.tab === 'leadersTab' && !state.extraLeadersLoaded) loadExtraWeekLeaders();
             });
         });
 
         els.standingsRefreshBtn.addEventListener('click', loadStandings);
         els.leadersRefreshBtn.addEventListener('click', renderWeekLeaders);
+        els.weekLeadersExtraRefreshBtn.addEventListener('click', loadExtraWeekLeaders);
         els.scoringRefreshBtn.addEventListener('click', loadScoringPlays);
         els.trendsRefreshBtn.addEventListener('click', loadSeasonLeaders);
     }
