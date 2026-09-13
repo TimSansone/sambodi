@@ -607,6 +607,7 @@
         standingsRaw: null,
         seasonLeaders: null,
         seasonLeadersLoading: false,
+        scoringLoaded: false,
         autoRefresh: true,
         refreshSeconds: 30,
         refreshRemaining: 30,
@@ -1181,6 +1182,7 @@
 
     // ---------- scoring plays tab ----------
     async function loadScoringPlays() {
+        state.scoringLoaded = true;
         if (!state.games.length) {
             els.scoringPlays.innerHTML = '<div class="empty">No games are scheduled for this week.</div>';
             return;
@@ -1381,6 +1383,7 @@
             syncSelectorsFromState();
             state.games = (data.events || []).map(mapEvent);
             state.summaries.clear();
+            state.scoringLoaded = false;
             if (!state.games.some(g => g.id === state.selectedId)) state.selectedId = null;
             state.loadedOnce = true;
             renderTicker();
@@ -1508,6 +1511,7 @@
                 renderTicker();
                 if (btn.dataset.tab === 'standingsTab' && !state.standingsRaw) loadStandings();
                 if (btn.dataset.tab === 'trendsTab' && !state.seasonLeaders) loadSeasonLeaders();
+                if (btn.dataset.tab === 'scoringTab' && !state.scoringLoaded) loadScoringPlays();
             });
         });
 
