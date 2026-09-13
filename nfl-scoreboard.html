@@ -657,6 +657,15 @@
         return esc(JSON.stringify(obj));
     }
 
+    // ESPN's athlete "headshot" field is a plain URL string on some endpoints
+    // (e.g. /scoreboard leaders) and an { href, alt } object on others (e.g.
+    // the core API athlete resource) -- handle both shapes.
+    function headshotUrl(athlete) {
+        const h = athlete?.headshot;
+        if (!h) return '';
+        return typeof h === 'string' ? h : (h.href || '');
+    }
+
     function fetchJson(url) {
         return fetch(url, { cache: 'no-store' }).then(r => {
             if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -744,7 +753,7 @@
             else if (teamId && teamId === home.id) side = home;
             out[key] = {
                 name: top.athlete?.shortName || top.athlete?.displayName || 'Player',
-                headshot: top.athlete?.headshot?.href || '',
+                headshot: headshotUrl(top.athlete),
                 value: top.displayValue || '',
                 teamAbbr: side?.abbr || '',
                 teamLogo: side?.logo || ''
@@ -1265,8 +1274,12 @@
 
     async function resolveRef(refObj, cache) {
         if (!refObj) return null;
-        const url = typeof refObj === 'string' ? refObj : refObj.$ref;
+        let url = typeof refObj === 'string' ? refObj : refObj.$ref;
         if (!url) return refObj;
+        // ESPN's core API hands back $ref links as plain http:// -- fetching those
+        // from an https:// page is blocked by the browser as mixed content, which
+        // silently fails every athlete/team lookup here. Upgrade to https first.
+        url = url.replace(/^http:\/\//, 'https://');
         if (cache.has(url)) return cache.get(url);
         const p = fetchJson(url).catch(() => null);
         cache.set(url, p);
@@ -1318,7 +1331,7 @@
                         const team = await resolveRef(l.team || athlete?.team, cache);
                         return {
                             name: athlete?.displayName || athlete?.shortName || 'Player',
-                            headshot: athlete?.headshot?.href || '',
+                            headshot: headshotUrl(athlete),
                             teamAbbr: team?.abbreviation || '',
                             teamLogo: team?.logo || team?.logos?.[0]?.href || '',
                             value: l.displayValue || String(l.value ?? '')
