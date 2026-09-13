@@ -1669,6 +1669,7 @@
                 btn.classList.add('active');
                 document.getElementById(btn.dataset.tab).classList.add('active');
                 renderTicker();
+                try { localStorage.setItem('nflActiveTab', btn.dataset.tab); } catch (e) { /* ignore */ }
                 if (btn.dataset.tab === 'standingsTab' && !state.standingsRaw) loadStandings();
                 if (btn.dataset.tab === 'trendsTab' && !state.seasonLeaders) loadSeasonLeaders();
                 if (btn.dataset.tab === 'scoringTab' && !state.scoringLoaded) loadScoringPlays();
@@ -1683,14 +1684,22 @@
         els.trendsRefreshBtn.addEventListener('click', loadSeasonLeaders);
     }
 
-    function init() {
+    async function init() {
         [['yearSelect', 'Season'], ['seasonTypeSelect', 'Season phase'], ['weekSelect', 'Week'], ['teamFilterSelect', 'Team']].forEach(([id, label]) => $(id).setAttribute('aria-label', label));
         populateYearSelect();
         populateWeekSelect();
         populateTeamFilter();
         loadFavs();
         wireEvents();
-        loadWeek({ isInitial: true });
+        await loadWeek({ isInitial: true });
+        // Restore whichever tab was open before the page was reloaded (a browser
+        // refresh reloads this file from scratch, so without this it always
+        // snaps back to the Scoreboard tab).
+        let savedTab = null;
+        try { savedTab = localStorage.getItem('nflActiveTab'); } catch (e) { /* ignore */ }
+        if (savedTab && savedTab !== 'scoresTab') {
+            [...document.querySelectorAll('.tab-btn')].find(b => b.dataset.tab === savedTab)?.click();
+        }
     }
 
     init();
