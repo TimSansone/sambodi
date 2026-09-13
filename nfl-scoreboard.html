@@ -415,6 +415,13 @@
         .controls .field:has(#seasonTypeSelect) { flex-basis: 145px }
         .leaders-mini-grid { grid-template-columns: minmax(0, 1fr) }
         .gc-nav button { padding: 7px 11px; font-size: .82rem; min-height: 38px }
+        /* Per-game leader cards (e.g. "18/25, 163 YDS, 1 TD, 1 INT") are too long to
+           share a row with the name on narrow screens -- the name/label column has
+           min-width:0 so it was the one that gave way, collapsing to a sliver and
+           wrapping letter-by-letter. Drop the stat line to its own row instead. */
+        .leader-mini { flex-wrap: wrap; row-gap: 4px }
+        .leader-mini .info { flex: 1 1 auto }
+        .leader-mini .stat-val { flex: 1 0 100%; margin-left: 0; padding-left: 47px; text-align: left; white-space: normal }
     }
     @media (prefers-reduced-motion: reduce) { *, *::after { animation: none !important; scroll-behavior: auto !important } }
     .team-row.has-possession { background: #e5f3ed; border-radius: 8px; box-shadow: inset 3px 0 #176c5c; padding: 6px }
