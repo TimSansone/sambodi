@@ -1,5 +1,3 @@
-
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -1316,6 +1314,32 @@
     @media (max-width: 900px) {
         .lineups-grid { grid-template-columns:1fr }
     }
+    .team-stats-subnav { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 14px }
+    .team-stats-group-btn.active { background:var(--navy); border-color:var(--navy); color:#fff }
+    .team-stats-table { width:100%; min-width:980px; border-collapse:collapse; background:#fff; font-size:.82rem }
+    .team-stats-table th, .team-stats-table td { padding:9px 8px; border-bottom:1px solid var(--line); text-align:center; white-space:nowrap }
+    .team-stats-table th { position:sticky; top:0; z-index:2; padding:0; color:var(--muted); background:#fbfcfe; font-size:.66rem; letter-spacing:.04em; text-transform:uppercase }
+    .team-stats-table tbody tr:last-child td { border-bottom:0 }
+    .team-stats-table tbody tr:hover { background:#f5f8fc }
+    .team-stats-rank { color:var(--muted); font-weight:800 }
+    .team-stats-team { position:sticky; left:0; z-index:1; min-width:190px; background:#fff; text-align:left !important }
+    .team-stats-table th.team-stats-team { z-index:3; background:#fbfcfe }
+    .team-stats-table tbody tr:hover .team-stats-team { background:#f5f8fc }
+    .team-stats-team { display:flex; align-items:center; gap:9px }
+    .team-stats-team img { width:26px; height:26px; object-fit:contain; flex:0 0 auto }
+    .team-stats-row.favorite { background:#fff7dc; font-weight:900 }
+    .team-stats-row.favorite .team-stats-team { background:#fff7dc }
+    .team-stats-row.favorite:hover .team-stats-team { background:#fdf0b8 }
+    .team-stats-sort-btn { display:flex; align-items:center; justify-content:center; gap:3px; width:100%; padding:10px 8px; color:var(--muted); background:none; border:0; cursor:pointer; font-size:.66rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase }
+    .team-stats-sort-btn:hover { color:var(--navy) }
+    .team-stats-sort-btn.active { color:var(--navy); background:#eef3f9 }
+    .team-stats-sort-arrow { font-size:.6rem }
+    .team-stats-active-cell { color:var(--navy); font-weight:800; background:#f3f7fc }
+    .team-stats-row.favorite .team-stats-active-cell { background:#fdeeb0 }
+    @media (max-width: 700px) {
+        .team-stats-table { min-width:860px }
+        .team-stats-team { min-width:160px }
+    }
     .standings-dashboard { display:grid; gap:20px }
     .standings-section { display:grid; gap:14px }
     .standings-section-title { margin:0; padding:12px 14px; border-radius:12px; background:var(--navy); color:#fff; font-size:1.05rem }
@@ -2259,6 +2283,7 @@
             <button class="tab-btn active" type="button" data-tab="scoresTab">⚾ Scores</button>
             <button class="tab-btn" type="button" data-tab="standingsTab">📊 Standings</button>
             <button class="tab-btn" type="button" data-tab="leadersTab">🏆 League Leaders</button>
+            <button class="tab-btn" type="button" data-tab="teamStatsTab">🥇 Team Stats</button>
             <button class="tab-btn" type="button" data-tab="scoringTab">⚾ Scoring Plays</button>
             <button class="tab-btn" type="button" data-tab="transactionsTab">🔄 Transactions</button>
             <button class="tab-btn" type="button" data-tab="trendsTab">📈 Stats & Trends</button>
@@ -2300,6 +2325,22 @@
                 <div id="leagueLeaders" class="leaders-grid">
                     <div class="empty">League leaders will load with the scoreboard.</div>
                 </div>
+            </section>
+        </section>
+
+        <section id="teamStatsTab" class="tab-panel">
+            <section class="panel pad">
+                <div class="section-head">
+                    <h2>Team Stats</h2>
+                    <button class="btn secondary" id="teamStatsRefreshBtn" type="button">Reload</button>
+                </div>
+                <p class="subtitle" style="margin:0 0 14px">League-wide rankings for all 30 teams. Click any column to sort by that stat; click it again to flip from best-to-worst to worst-to-best.</p>
+                <div class="team-stats-subnav" id="teamStatsSubnav">
+                    <button class="btn secondary team-stats-group-btn active" data-group="hitting" type="button">Batting</button>
+                    <button class="btn secondary team-stats-group-btn" data-group="pitching" type="button">Pitching</button>
+                    <button class="btn secondary team-stats-group-btn" data-group="fielding" type="button">Fielding</button>
+                </div>
+                <div id="teamStatsContent"><div class="empty">Team stats will load when this tab is opened.</div></div>
             </section>
         </section>
 
@@ -2413,6 +2454,15 @@
         standings: [],
         wildCardStandings: [],
         leagueLeaders: { AL: { hitting: [], pitching: [] }, NL: { hitting: [], pitching: [] } },
+        teamStats: { hitting: [], pitching: [], fielding: [] },
+        teamStatsGroup: 'hitting',
+        teamStatsSort: {
+            hitting: { key: 'avg', dir: 'best' },
+            pitching: { key: 'era', dir: 'best' },
+            fielding: { key: 'fielding', dir: 'best' }
+        },
+        teamStatsLoadedAt: 0,
+        teamStatsRequest: 0,
         transactions: [],
         transactionTeams: [],
         transactionsLoading: false,
@@ -2460,6 +2510,9 @@
         standings: $('standingsBar'),
         standingsFull: $('standingsFull'),
         leaders: $('leagueLeaders'),
+        teamStatsRefresh: $('teamStatsRefreshBtn'),
+        teamStatsSubnav: $('teamStatsSubnav'),
+        teamStatsContent: $('teamStatsContent'),
         transactionsList: $('transactionsList'),
         transactionsStatus: $('transactionsStatus'),
         transactionTeamFilter: $('transactionTeamFilter'),
@@ -3299,6 +3352,160 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         restoreViewport(viewport)
     }
 
+    function teamStatNum(stat, key) {
+        const v = stat ? stat[key] : undefined;
+        if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
+        if (typeof v === 'string') { const n = parseFloat(v); return Number.isFinite(n) ? n : 0 }
+        return 0
+    }
+    function teamStatStr(stat, key) {
+        const v = stat ? stat[key] : undefined;
+        return (v === undefined || v === null || v === '') ? '—' : String(v)
+    }
+    function inningsPitchedToFloat(stat) {
+        const raw = stat ? stat.inningsPitched : undefined;
+        if (typeof raw !== 'string') return 0;
+        const parts = raw.split('.');
+        const whole = parseInt(parts[0], 10) || 0;
+        const frac = parts[1] === '1' ? 1 / 3 : parts[1] === '2' ? 2 / 3 : 0;
+        return whole + frac
+    }
+    function teamStatCol(key, label, title, higherIsBetter = true) {
+        return { key, label, title, higherIsBetter, value: s => teamStatNum(s, key), format: s => teamStatStr(s, key) }
+    }
+    const TEAM_STAT_COLUMNS = {
+        hitting: [
+            teamStatCol('avg', 'AVG', 'Batting average'),
+            teamStatCol('runs', 'R', 'Runs scored'),
+            teamStatCol('homeRuns', 'HR', 'Home runs'),
+            teamStatCol('doubles', '2B', 'Doubles'),
+            teamStatCol('triples', '3B', 'Triples'),
+            teamStatCol('stolenBases', 'SB', 'Stolen bases'),
+            teamStatCol('hits', 'H', 'Hits'),
+            teamStatCol('rbi', 'RBI', 'Runs batted in'),
+            teamStatCol('obp', 'OBP', 'On-base percentage'),
+            teamStatCol('slg', 'SLG', 'Slugging percentage'),
+            teamStatCol('ops', 'OPS', 'On-base plus slugging'),
+            teamStatCol('baseOnBalls', 'BB', 'Walks'),
+            teamStatCol('strikeOuts', 'SO', 'Strikeouts', false),
+            teamStatCol('totalBases', 'TB', 'Total bases')
+        ],
+        pitching: [
+            teamStatCol('era', 'ERA', 'Earned run average', false),
+            teamStatCol('whip', 'WHIP', 'Walks + hits per inning pitched', false),
+            teamStatCol('wins', 'W', 'Wins'),
+            teamStatCol('losses', 'L', 'Losses', false),
+            teamStatCol('saves', 'SV', 'Saves'),
+            teamStatCol('strikeOuts', 'SO', 'Strikeouts'),
+            teamStatCol('baseOnBalls', 'BB', 'Walks allowed', false),
+            { key: 'inningsPitched', label: 'IP', title: 'Innings pitched', higherIsBetter: true, value: inningsPitchedToFloat, format: s => teamStatStr(s, 'inningsPitched') },
+            teamStatCol('shutouts', 'SHO', 'Shutouts'),
+            teamStatCol('holds', 'HLD', 'Holds'),
+            teamStatCol('homeRuns', 'HR', 'Home runs allowed', false),
+            teamStatCol('avg', 'OPP AVG', "Opponents' batting average", false)
+        ],
+        fielding: [
+            teamStatCol('fielding', 'FLD%', 'Fielding percentage'),
+            teamStatCol('errors', 'E', 'Errors', false),
+            teamStatCol('doublePlays', 'DP', 'Double plays turned'),
+            teamStatCol('assists', 'A', 'Assists')
+        ]
+    };
+    async function fetchTeamStatsGroup(group, season) {
+        try {
+            const url = `${API_BASE}/teams/stats?stats=season&group=${group}&season=${season}&sportId=1&gameType=R`;
+            const data = await fetchJson(url);
+            const splits = (data.stats || []).flatMap(s => s.splits || []);
+            return splits.filter(s => s.team && s.team.id).map(s => ({ team: s.team, stat: s.stat || {} }))
+        } catch {
+            return []
+        }
+    }
+    function teamStatsSortedRows(group) {
+        const rows = state.teamStats[group] || [];
+        const columns = TEAM_STAT_COLUMNS[group];
+        const sort = state.teamStatsSort[group];
+        const col = columns.find(c => c.key === sort.key) || columns[0];
+        const withValues = rows.map(row => ({ row, value: col.value(row.stat) }));
+        const bestFirst = col.higherIsBetter
+            ? withValues.sort((a, b) => b.value - a.value)
+            : withValues.sort((a, b) => a.value - b.value);
+        const ordered = sort.dir === 'best' ? bestFirst : bestFirst.slice().reverse();
+        return ordered.map(e => e.row)
+    }
+    function teamStatsTableHtml(group) {
+        const columns = TEAM_STAT_COLUMNS[group];
+        const sort = state.teamStatsSort[group];
+        const rows = teamStatsSortedRows(group);
+        if (!rows.length) return '<div class="empty">Team stats unavailable right now.</div>';
+        const headHtml = columns.map(col => {
+            const active = col.key === sort.key;
+            const arrow = active ? (sort.dir === 'best' ? '▾' : '▴') : '';
+            return `<th><button type="button" class="team-stats-sort-btn${active ? ' active' : ''}" data-sort-key="${col.key}" data-group="${group}" title="Sort by ${esc(col.title)}">${esc(col.label)}${arrow ? ` <span class="team-stats-sort-arrow">${arrow}</span>` : ''}</button></th>`
+        }).join('');
+        const bodyHtml = rows.map((row, i) => {
+            const fav = isFav(row.team.id) ? ' favorite' : '';
+            const cells = columns.map(col => `<td class="${col.key === sort.key ? 'team-stats-active-cell' : ''}">${esc(col.format(row.stat))}</td>`).join('');
+            return `<tr class="team-stats-row${fav}"><td class="team-stats-rank">${i + 1}</td><td class="team-stats-team"><img src="${logo(row.team.id)}" alt="" loading="lazy"><span>${esc(row.team.name)}</span></td>${cells}</tr>`
+        }).join('');
+        return `<div class="lineup-scroll"><table class="team-stats-table"><thead><tr><th class="team-stats-rank">#</th><th class="team-stats-team">Team</th>${headHtml}</tr></thead><tbody>${bodyHtml}</tbody></table></div>`
+    }
+    function renderTeamStats() {
+        if (!els.teamStatsContent) return;
+        if (els.teamStatsSubnav) {
+            els.teamStatsSubnav.querySelectorAll('.team-stats-group-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.group === state.teamStatsGroup)
+            })
+        }
+        if (!state.teamStatsLoadedAt) {
+            els.teamStatsContent.innerHTML = '<div class="empty">Team stats will load when this tab is opened.</div>';
+            return
+        }
+        els.teamStatsContent.innerHTML = teamStatsTableHtml(state.teamStatsGroup);
+        els.teamStatsContent.querySelectorAll('.team-stats-sort-btn').forEach(btn => {
+            btn.onclick = () => setTeamStatsSort(btn.dataset.group, btn.dataset.sortKey)
+        })
+    }
+    function setTeamStatsGroup(group) {
+        state.teamStatsGroup = group;
+        renderTeamStats()
+    }
+    function setTeamStatsSort(group, key) {
+        const current = state.teamStatsSort[group];
+        if (current.key === key) {
+            current.dir = current.dir === 'best' ? 'worst' : 'best'
+        } else {
+            current.key = key;
+            current.dir = 'best'
+        }
+        renderTeamStats()
+    }
+    async function loadTeamStats(force = false) {
+        if (!els.teamStatsContent) return;
+        const now = Date.now();
+        if (!force && state.teamStatsLoadedAt && now - state.teamStatsLoadedAt < 120000) {
+            renderTeamStats();
+            return
+        }
+        const request = ++state.teamStatsRequest;
+        els.teamStatsContent.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>';
+        try {
+            const season = (els.gameDate.value || todayIso()).slice(0, 4) || new Date().getFullYear();
+            const [hitting, pitching, fielding] = await Promise.all([
+                fetchTeamStatsGroup('hitting', season),
+                fetchTeamStatsGroup('pitching', season),
+                fetchTeamStatsGroup('fielding', season)
+            ]);
+            if (request !== state.teamStatsRequest) return;
+            state.teamStats = { hitting, pitching, fielding };
+            state.teamStatsLoadedAt = Date.now()
+        } catch {
+            if (request !== state.teamStatsRequest) return;
+            state.teamStats = { hitting: [], pitching: [], fielding: [] }
+        }
+        renderTeamStats()
+    }
+
     function toast(msg) {
         const n = document.createElement('div');
         n.className = 'toast-item';
@@ -3736,6 +3943,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         if (tabId === 'trendsTab') renderStatsTrends();
         if (tabId === 'scoringTab') renderDaily();
         if (tabId === 'transactionsTab') loadTransactions();
+        if (tabId === 'teamStatsTab') loadTeamStats();
         requestAnimationFrame(() => window.scrollTo(0, window.scrollY));
     }
 
@@ -3871,6 +4079,10 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
     els.gameDate.onchange = loadGames;
     $('standingsRefreshBtn2').onclick = loadStandings;
     $('leadersRefreshBtn').onclick = loadLeagueLeaders;
+    if (els.teamStatsRefresh) els.teamStatsRefresh.onclick = () => loadTeamStats(true);
+    if (els.teamStatsSubnav) els.teamStatsSubnav.querySelectorAll('.team-stats-group-btn').forEach(btn => {
+        btn.onclick = () => setTeamStatsGroup(btn.dataset.group)
+    });
     $('trendsRefreshBtn').onclick = () => { renderStatsTrends(); loadTodayImpactStats(); loadDailyPlays(); };
     els.transactionsRefresh.onclick = () => loadTransactions(true);
     els.transactionTeamFilter.onchange = renderTransactions;
