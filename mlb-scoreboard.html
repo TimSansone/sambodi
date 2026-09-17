@@ -1,3 +1,6 @@
+
+
+
 <!doctype html>
 <html lang="en">
 <head>
@@ -1340,6 +1343,21 @@
         .team-stats-table { min-width:860px }
         .team-stats-team { min-width:160px }
     }
+    .roster-section { margin:0 0 26px }
+    .roster-section:last-child { margin-bottom:0 }
+    .roster-section-title { margin:0 0 12px; padding:12px 14px; border-radius:12px; background:var(--navy); color:#fff; font-size:1.05rem }
+    .roster-section-title small { font-weight:700; opacity:.8 }
+    .roster-group { margin:0 0 18px }
+    .roster-group:last-child { margin-bottom:0 }
+    .roster-group-title { margin:0 0 8px; font-size:.85rem; letter-spacing:.02em; color:var(--muted); text-transform:uppercase; font-weight:900 }
+    .roster-group-title small { text-transform:none; font-weight:700 }
+    .roster-table th, .roster-table td { text-align:left }
+    .roster-table th:first-child, .roster-table td:first-child { text-align:right; width:34px }
+    .il-table .lineup-player { min-width:180px }
+    @media (max-width: 700px) {
+        .roster-table { min-width:520px }
+        .il-table { min-width:640px }
+    }
     .standings-dashboard { display:grid; gap:20px }
     .standings-section { display:grid; gap:14px }
     .standings-section-title { margin:0; padding:12px 14px; border-radius:12px; background:var(--navy); color:#fff; font-size:1.05rem }
@@ -2284,6 +2302,7 @@
             <button class="tab-btn" type="button" data-tab="standingsTab">📊 Standings</button>
             <button class="tab-btn" type="button" data-tab="leadersTab">🏆 League Leaders</button>
             <button class="tab-btn" type="button" data-tab="teamStatsTab">🥇 Team Stats</button>
+            <button class="tab-btn" type="button" data-tab="rosterTab">🧢 Roster</button>
             <button class="tab-btn" type="button" data-tab="scoringTab">⚾ Scoring Plays</button>
             <button class="tab-btn" type="button" data-tab="transactionsTab">🔄 Transactions</button>
             <button class="tab-btn" type="button" data-tab="trendsTab">📈 Stats & Trends</button>
@@ -2341,6 +2360,26 @@
                     <button class="btn secondary team-stats-group-btn" data-group="fielding" type="button">Fielding</button>
                 </div>
                 <div id="teamStatsContent"><div class="empty">Team stats will load when this tab is opened.</div></div>
+            </section>
+        </section>
+
+        <section id="rosterTab" class="tab-panel">
+            <section class="panel pad">
+                <div class="section-head">
+                    <div>
+                        <h2>Team Roster</h2>
+                        <p class="subtitle" style="margin:4px 0 0">Current active roster and injured list for any MLB team.</p>
+                    </div>
+                    <button class="btn secondary" id="rosterRefreshBtn" type="button">Reload</button>
+                </div>
+                <div class="transactions-toolbar" style="margin:0 0 16px">
+                    <div class="transactions-control">
+                        <label for="rosterTeamSelect">Team</label>
+                        <select id="rosterTeamSelect"><option value="">Choose a team…</option></select>
+                    </div>
+                    <div class="transactions-status" id="rosterStatus" aria-live="polite"></div>
+                </div>
+                <div id="rosterContent"><div class="empty">Choose a team above to view its current roster.</div></div>
             </section>
         </section>
 
@@ -2463,6 +2502,10 @@
         },
         teamStatsLoadedAt: 0,
         teamStatsRequest: 0,
+        roster: { active: [], injured: [] },
+        rosterTeamId: '',
+        rosterLoadedForTeam: '',
+        rosterRequest: 0,
         transactions: [],
         transactionTeams: [],
         transactionsLoading: false,
@@ -2513,6 +2556,10 @@
         teamStatsRefresh: $('teamStatsRefreshBtn'),
         teamStatsSubnav: $('teamStatsSubnav'),
         teamStatsContent: $('teamStatsContent'),
+        rosterTeamSelect: $('rosterTeamSelect'),
+        rosterRefresh: $('rosterRefreshBtn'),
+        rosterStatus: $('rosterStatus'),
+        rosterContent: $('rosterContent'),
         transactionsList: $('transactionsList'),
         transactionsStatus: $('transactionsStatus'),
         transactionTeamFilter: $('transactionTeamFilter'),
@@ -3506,6 +3553,100 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         renderTeamStats()
     }
 
+    const ROSTER_POSITION_ORDER = ['Pitcher', 'Catcher', 'Infielder', 'Outfielder', 'Designated Hitter', 'Two-Way Player'];
+    const ROSTER_POSITION_LABELS = {
+        Pitcher: 'Pitchers', Catcher: 'Catchers', Infielder: 'Infielders', Outfielder: 'Outfielders',
+        'Designated Hitter': 'Designated Hitter', 'Two-Way Player': 'Two-Way Player'
+    };
+    const ROSTER_IL_ORDER = ['D7', 'D10', 'D15', 'D60'];
+    const ROSTER_IL_LABELS = { D7: '7-Day IL', D10: '10-Day IL', D15: '15-Day IL', D60: '60-Day IL' };
+
+    async function fetchTeamRoster(teamId) {
+        const data = await fetchJson(`${API_BASE}/teams/${teamId}/roster?rosterType=40Man`);
+        return (data.roster || []).filter(p => p.person && p.person.id)
+    }
+    function rosterJerseyRank(p) {
+        const n = parseInt(p.jerseyNumber, 10);
+        return Number.isFinite(n) ? n : 999
+    }
+    function rosterPositionRank(p) {
+        const idx = ROSTER_POSITION_ORDER.indexOf(p.position?.type);
+        return idx === -1 ? ROSTER_POSITION_ORDER.length : idx
+    }
+    function sortActiveRoster(entries) {
+        return entries.slice().sort((a, b) => rosterPositionRank(a) - rosterPositionRank(b) || rosterJerseyRank(a) - rosterJerseyRank(b) || (a.person.fullName || '').localeCompare(b.person.fullName || ''))
+    }
+    function sortInjuredRoster(entries) {
+        const rank = p => { const i = ROSTER_IL_ORDER.indexOf(p.status?.code); return i === -1 ? ROSTER_IL_ORDER.length : i };
+        return entries.slice().sort((a, b) => rank(a) - rank(b) || (a.person.fullName || '').localeCompare(b.person.fullName || ''))
+    }
+    function rosterPlayerCellHtml(p) {
+        return `<div class="lineup-player"><img src="${playerHeadshot(p.person.id)}" alt="" loading="lazy" onerror="this.style.display='none'"><span><strong>${esc(p.person.fullName)}</strong></span></div>`
+    }
+    function rosterGroupHtml(title, entries) {
+        if (!entries.length) return '';
+        const rows = entries.map(p => `<tr><td>${esc(p.jerseyNumber || '—')}</td><td>${rosterPlayerCellHtml(p)}</td><td>${esc(p.position?.abbreviation || '—')}</td></tr>`).join('');
+        return `<div class="roster-group"><h3 class="roster-group-title">${esc(title)} <small>(${entries.length})</small></h3><div class="lineup-scroll"><table class="lineup-table roster-table"><thead><tr><th>#</th><th>Player</th><th>Pos</th></tr></thead><tbody>${rows}</tbody></table></div></div>`
+    }
+    function injuredListHtml(entries) {
+        if (!entries.length) return '<div class="empty">No players are currently on the injured list.</div>';
+        const rows = entries.map(p => `<tr><td>${rosterPlayerCellHtml(p)}</td><td>${esc(p.position?.abbreviation || '—')}</td><td>${esc(ROSTER_IL_LABELS[p.status?.code] || p.status?.description || '—')}</td><td>${esc(p.note || '—')}</td></tr>`).join('');
+        return `<div class="lineup-scroll"><table class="lineup-table roster-table il-table"><thead><tr><th>Player</th><th>Pos</th><th>Status</th><th>Injury</th></tr></thead><tbody>${rows}</tbody></table></div>`
+    }
+    function renderRosterTeamOptions() {
+        if (!els.rosterTeamSelect) return;
+        const current = els.rosterTeamSelect.value;
+        els.rosterTeamSelect.innerHTML = '<option value="">Choose a team…</option>' + state.transactionTeams
+            .map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
+        if ([...els.rosterTeamSelect.options].some(o => o.value === current)) els.rosterTeamSelect.value = current
+    }
+    function renderRoster() {
+        if (!els.rosterContent) return;
+        if (!state.rosterTeamId) {
+            els.rosterContent.innerHTML = '<div class="empty">Choose a team above to view its current roster.</div>';
+            return
+        }
+        if (state.rosterLoadedForTeam !== state.rosterTeamId) {
+            els.rosterContent.innerHTML = '<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>';
+            return
+        }
+        const active = sortActiveRoster(state.roster.active);
+        const grouped = ROSTER_POSITION_ORDER.map(type => rosterGroupHtml(ROSTER_POSITION_LABELS[type], active.filter(p => (p.position?.type || '') === type))).join('');
+        const other = active.filter(p => !ROSTER_POSITION_ORDER.includes(p.position?.type));
+        const activeHtml = (grouped + rosterGroupHtml('Other', other)) || '<div class="empty">No active roster data is available.</div>';
+        const injuredHtml = injuredListHtml(sortInjuredRoster(state.roster.injured));
+        els.rosterContent.innerHTML = `<div class="roster-section"><h3 class="roster-section-title">Active Roster <small>(${active.length})</small></h3>${activeHtml}</div><div class="roster-section"><h3 class="roster-section-title">Injured List <small>(${state.roster.injured.length})</small></h3>${injuredHtml}</div>`
+    }
+    async function loadRoster(force = false) {
+        if (!els.rosterContent || !state.rosterTeamId) return;
+        if (!force && state.rosterLoadedForTeam === state.rosterTeamId) { renderRoster(); return }
+        const request = ++state.rosterRequest;
+        state.rosterLoadedForTeam = '';
+        if (els.rosterStatus) els.rosterStatus.textContent = 'Loading roster…';
+        renderRoster();
+        try {
+            const entries = await fetchTeamRoster(state.rosterTeamId);
+            if (request !== state.rosterRequest) return;
+            state.roster = {
+                active: entries.filter(p => p.status?.code === 'A'),
+                injured: entries.filter(p => /^D\d+$/.test(p.status?.code || ''))
+            };
+            state.rosterLoadedForTeam = state.rosterTeamId;
+            if (els.rosterStatus) els.rosterStatus.textContent = ''
+        } catch {
+            if (request !== state.rosterRequest) return;
+            state.roster = { active: [], injured: [] };
+            state.rosterLoadedForTeam = '';
+            if (els.rosterStatus) els.rosterStatus.textContent = 'Roster could not be loaded. Please try again.'
+        }
+        renderRoster()
+    }
+    async function activateRosterTab() {
+        await loadTransactionTeams();
+        renderRosterTeamOptions();
+        if (state.rosterTeamId) loadRoster()
+    }
+
     function toast(msg) {
         const n = document.createElement('div');
         n.className = 'toast-item';
@@ -3944,6 +4085,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         if (tabId === 'scoringTab') renderDaily();
         if (tabId === 'transactionsTab') loadTransactions();
         if (tabId === 'teamStatsTab') loadTeamStats();
+        if (tabId === 'rosterTab') activateRosterTab();
         requestAnimationFrame(() => window.scrollTo(0, window.scrollY));
     }
 
@@ -4083,6 +4225,12 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
     if (els.teamStatsSubnav) els.teamStatsSubnav.querySelectorAll('.team-stats-group-btn').forEach(btn => {
         btn.onclick = () => setTeamStatsGroup(btn.dataset.group)
     });
+    if (els.rosterTeamSelect) els.rosterTeamSelect.onchange = () => {
+        state.rosterTeamId = els.rosterTeamSelect.value;
+        state.rosterLoadedForTeam = '';
+        if (state.rosterTeamId) loadRoster(); else renderRoster()
+    };
+    if (els.rosterRefresh) els.rosterRefresh.onclick = () => loadRoster(true);
     $('trendsRefreshBtn').onclick = () => { renderStatsTrends(); loadTodayImpactStats(); loadDailyPlays(); };
     els.transactionsRefresh.onclick = () => loadTransactions(true);
     els.transactionTeamFilter.onchange = renderTransactions;
