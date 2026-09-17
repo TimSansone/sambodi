@@ -3964,9 +3964,18 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         return `${a.abbreviation || a.name} at ${h.abbreviation || h.name} · ${p.about?.isTopInning ? 'Top' : 'Bottom'} ${p.about?.inning || '—'}`;
     }
     function collectDaily(g, feed, rows, metrics) {
-        for (const p of feed.liveData?.plays?.allPlays || []) {
+        const plays = feed.liveData?.plays?.allPlays || [];
+        for (let i = 0; i < plays.length; i++) {
+            const p = plays[i];
             const context = dailyContext(g, p);
-            if (p.about?.isScoringPlay) {
+            const prev = plays[i - 1]?.result || {};
+            const result = p.result || {};
+            const awayChanged = result.awayScore !== undefined && prev.awayScore !== undefined && result.awayScore !== prev.awayScore;
+            const homeChanged = result.homeScore !== undefined && prev.homeScore !== undefined && result.homeScore !== prev.homeScore;
+            // Some run-scoring plays (e.g. balks, wild pitches, passed balls that plate a run mid at-bat)
+            // are not reliably flagged isScoringPlay by the API, so also treat a score change vs. the
+            // previous play — or a credited RBI — as a scoring play. Matches the per-game detail logic.
+            if (p.about?.isScoringPlay || Number(result.rbi || 0) > 0 || awayChanged || homeChanged) {
                 const rawTime = p.about.endTime || p.playEvents?.at(-1)?.endTime || p.about.startTime;
                 const scoringTeam = p.about?.isTopInning ? g.teams.away.team : g.teams.home.team;
                 rows.push({ gamePk: g.gamePk, index: p.about.atBatIndex, time: Date.parse(rawTime) || 0,
