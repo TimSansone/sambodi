@@ -1354,9 +1354,10 @@
     .roster-table th, .roster-table td { text-align:left }
     .roster-table th:first-child, .roster-table td:first-child { text-align:right; width:34px }
     .il-table .lineup-player { min-width:180px }
+    .roster-il-note { display:block; margin-top:8px; color:var(--muted) }
     @media (max-width: 700px) {
         .roster-table { min-width:520px }
-        .il-table { min-width:640px }
+        .il-table { min-width:920px }
     }
     .standings-dashboard { display:grid; gap:20px }
     .standings-section { display:grid; gap:14px }
@@ -3560,6 +3561,22 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
     };
     const ROSTER_IL_ORDER = ['D7', 'D10', 'D15', 'D60'];
     const ROSTER_IL_LABELS = { D7: '7-Day IL', D10: '10-Day IL', D15: '15-Day IL', D60: '60-Day IL' };
+    const ROSTER_IL_DURATION_DAYS = { D7: 7, D10: 10, D15: 15, D60: 60 };
+
+    async function fetchTeamIlTransactions(teamId) {
+        const end = todayIso();
+        const start = addDays(end, -220);
+        try {
+            const data = await fetchJson(`${API_BASE}/transactions?teamId=${teamId}&startDate=${start}&endDate=${end}`);
+            return (data.transactions || []).filter(t => t.typeCode === 'SC' && /\bplaced\b/i.test(t.description || '') && /injured list/i.test(t.description || ''))
+        } catch { return [] }
+    }
+    function findIlPlacementDate(ilTransactions, personId) {
+        const matches = ilTransactions.filter(t => t.person?.id === personId);
+        if (!matches.length) return null;
+        matches.sort((a, b) => (b.effectiveDate || b.date || '').localeCompare(a.effectiveDate || a.date || ''));
+        return matches[0].effectiveDate || matches[0].date || null
+    }
 
     async function fetchTeamRoster(teamId) {
         const data = await fetchJson(`${API_BASE}/teams/${teamId}/roster?rosterType=40Man`);
@@ -3590,8 +3607,8 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
     }
     function injuredListHtml(entries) {
         if (!entries.length) return '<div class="empty">No players are currently on the injured list.</div>';
-        const rows = entries.map(p => `<tr><td>${rosterPlayerCellHtml(p)}</td><td>${esc(p.position?.abbreviation || '—')}</td><td>${esc(ROSTER_IL_LABELS[p.status?.code] || p.status?.description || '—')}</td><td>${esc(p.note || '—')}</td></tr>`).join('');
-        return `<div class="lineup-scroll"><table class="lineup-table roster-table il-table"><thead><tr><th>Player</th><th>Pos</th><th>Status</th><th>Injury</th></tr></thead><tbody>${rows}</tbody></table></div>`
+        const rows = entries.map(p => `<tr><td>${rosterPlayerCellHtml(p)}</td><td>${esc(p.position?.abbreviation || '—')}</td><td>${esc(ROSTER_IL_LABELS[p.status?.code] || p.status?.description || '—')}</td><td>${esc(p.note || '—')}</td><td>${p.ilDate ? esc(formatTransactionDate(p.ilDate)) : '—'}</td><td>${p.ilEligibleDate ? esc(formatTransactionDate(p.ilEligibleDate)) : '—'}</td></tr>`).join('');
+        return `<div class="lineup-scroll"><table class="lineup-table roster-table il-table"><thead><tr><th>Player</th><th>Pos</th><th>Status</th><th>Injury</th><th>On IL Since</th><th>Eligible to Return</th></tr></thead><tbody>${rows}</tbody></table></div><small class="roster-il-note">"Eligible to Return" is the earliest date allowed under MLB's minimum injured-list rules — teams often keep a player out longer. Dates are based on official transaction records and may be unavailable for older placements.</small>`
     }
     function renderRosterTeamOptions() {
         if (!els.rosterTeamSelect) return;
@@ -3627,9 +3644,20 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
         try {
             const entries = await fetchTeamRoster(state.rosterTeamId);
             if (request !== state.rosterRequest) return;
+            const injured = entries.filter(p => /^D\d+$/.test(p.status?.code || ''));
+            if (injured.length) {
+                const ilTransactions = await fetchTeamIlTransactions(state.rosterTeamId);
+                if (request !== state.rosterRequest) return;
+                injured.forEach(p => {
+                    const placedDate = findIlPlacementDate(ilTransactions, p.person.id);
+                    const duration = ROSTER_IL_DURATION_DAYS[p.status?.code];
+                    p.ilDate = placedDate;
+                    p.ilEligibleDate = (placedDate && duration) ? addDays(placedDate, duration) : null
+                })
+            }
             state.roster = {
                 active: entries.filter(p => p.status?.code === 'A'),
-                injured: entries.filter(p => /^D\d+$/.test(p.status?.code || ''))
+                injured
             };
             state.rosterLoadedForTeam = state.rosterTeamId;
             if (els.rosterStatus) els.rosterStatus.textContent = ''
