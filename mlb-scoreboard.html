@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="en">
 <head>
@@ -745,6 +744,22 @@
     .live-player small {
         color: var(--muted);
         line-height:1.35
+    }
+
+    .live-player-photo {
+        display: flow-root;
+        min-width: 0;
+    }
+
+    .live-player-photo .live-headshot {
+        float: right;
+        width: 48px;
+        height: 48px;
+        max-width: 30%;
+        object-fit: contain;
+        margin: 0 0 6px 8px;
+        border-radius: 8px;
+        background: #eef3f8;
     }
 
     .pitch-results {
@@ -2553,8 +2568,9 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             strikes = stats.strikes,
             balls = stats.balls ?? (Number.isFinite(Number(pitches)) && Number.isFinite(Number(strikes)) ? Number(pitches) - Number(strikes) : undefined);
         return {
+            id: p?.id || p?.person?.id,
             name: p?.fullName || 'Pitcher unavailable',
-            detail: `Pitches: ${statValue(pitches)} · Balls: ${statValue(balls)} · Strikes: ${statValue(strikes)}`
+            detail: `Pitches: ${statValue(pitches)} · Balls: ${statValue(balls)} · Strikes: ${statValue(strikes)} · K: ${statValue(stats.strikeOuts)}`
         }
     }
     function batterLine(g) {
@@ -2566,6 +2582,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             gameStats = box?.stats?.batting || {},
             seasonStats = box?.seasonStats?.batting || player?.seasonStats?.batting || {};
         return {
+            id: b?.id || b?.person?.id,
             name: b?.fullName || 'Batter unavailable',
             detail: `${statValue(gameStats.hits, 0)}/${statValue(gameStats.atBats, 0)} · RBI: ${statValue(gameStats.rbi, 0)} · AVG: ${statValue(seasonStats.avg || gameStats.avg)}`
         }
@@ -2642,12 +2659,15 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             .map(([base, label]) => `${label}: ${livePlayerName(feed, offense[base], 'Runner')}`);
         return runners.length ? runners.join(' · ') : 'Bases empty'
     }
+    function liveHeadshot(player) {
+        return player.id ? `<img class="live-headshot" src="${playerHeadshot(player.id)}" alt="" loading="lazy" decoding="async" onerror="this.style.visibility='hidden'">` : ''
+    }
     function liveCardDetails(g) {
         if (gameState(g) !== 'live')
             return '';
         const pitcherInfo = pitcherLine(g),
             batterInfo = batterLine(g);
-        return `<div class="live-card-details"><div class="live-diamond-row">${baseGraphic(g)}<div class="live-count">${liveCountSummary(g)}</div></div><div class="live-matchup"><div class="live-player"><span>Pitcher</span><strong>${esc(pitcherInfo.name)}</strong><small>${esc(pitcherInfo.detail)}</small></div><div class="live-player"><span>Batter</span><strong>${esc(batterInfo.name)}</strong><small>${esc(batterInfo.detail)}</small></div></div>${pitchResultsHtml(g)}<div class="live-matchup"><div class="live-player"><span>On Deck</span><strong>${esc(onDeckName(g))}</strong></div><div class="live-player"><span>In the Hole</span><strong>${esc(inTheHoleName(g))}</strong></div></div>${latestPlayHtml(g)}</div>`
+        return `<div class="live-card-details"><div class="live-diamond-row">${baseGraphic(g)}<div class="live-count">${liveCountSummary(g)}</div></div><div class="live-matchup"><div class="live-player live-player-photo">${liveHeadshot(pitcherInfo)}<span>Pitcher</span><strong>${esc(pitcherInfo.name)}</strong><small>${esc(pitcherInfo.detail)}</small></div><div class="live-player live-player-photo">${liveHeadshot(batterInfo)}<span>Batter</span><strong>${esc(batterInfo.name)}</strong><small>${esc(batterInfo.detail)}</small></div></div>${pitchResultsHtml(g)}<div class="live-matchup"><div class="live-player"><span>On Deck</span><strong>${esc(onDeckName(g))}</strong></div><div class="live-player"><span>In the Hole</span><strong>${esc(inTheHoleName(g))}</strong></div></div>${latestPlayHtml(g)}</div>`
     }
     function visibleGames() {
         let games = [...state.games];
@@ -2934,7 +2954,7 @@ SP: ${pitcherRecord(g, s)}` : `Record: ${rec(g, s)}`
             pitcherInfo = pitcherLine(g),
             batterInfo = batterLine(g),
             lineups = lineupsHtml(g, feed);
-        return `<h2>Game Details</h2><div class="matchup"><div class="match-team"><img src="${logo(a.id)}" alt=""><strong>${esc(a.name)}</strong><span>${esc(rec(g, 'away'))}</span></div><div class="match-score">${score(g, 'away')} - ${score(g, 'home')}</div><div class="match-team"><img src="${logo(h.id)}" alt=""><strong>${esc(h.name)}</strong><span>${esc(rec(g, 'home'))}</span></div></div><div style="margin-top:14px">${lineScore(g)}</div><div class="mini-grid" style="margin-top:14px"><div class="mini"><span>Status</span><strong>${esc(statusLabel(g))}</strong></div><div class="mini"><span>Count</span><strong>${esc(countText(feed))}</strong></div><div class="mini"><span>Away Starter</span><strong>${esc(pitcherRecord(g, 'away'))}</strong></div><div class="mini"><span>Home Starter</span><strong>${esc(pitcherRecord(g, 'home'))}</strong></div><div class="mini"><span>Pitching Now</span><strong>${esc(pitcherInfo.name)}</strong><small>${esc(pitcherInfo.detail)}</small></div><div class="mini"><span>Batting Now</span><strong>${esc(batterInfo.name)}</strong><small>${esc(batterInfo.detail)}</small></div><div class="mini"><span>On Deck</span><strong>${esc(onDeckName(g))}</strong></div><div class="mini"><span>Runners on Base</span><strong>${esc(baseRunnerNames(g))}</strong></div></div>${lineups}<div style="margin-top:14px"><h2>Recent Plays</h2><div class="plays">${playsHtml(simplePlays(feed), 'Play-by-play will appear when available.', g)}</div></div><div style="margin-top:14px"><h2>Scoring Plays</h2><div class="plays">${playsHtml(scoringPlays(feed), 'No scoring plays yet.', g, true)}</div></div>`
+        return `<h2>Game Details</h2><div class="matchup"><div class="match-team"><img src="${logo(a.id)}" alt=""><strong>${esc(a.name)}</strong><span>${esc(rec(g, 'away'))}</span></div><div class="match-score">${score(g, 'away')} - ${score(g, 'home')}</div><div class="match-team"><img src="${logo(h.id)}" alt=""><strong>${esc(h.name)}</strong><span>${esc(rec(g, 'home'))}</span></div></div><div style="margin-top:14px">${lineScore(g)}</div><div class="mini-grid" style="margin-top:14px"><div class="mini"><span>Status</span><strong>${esc(statusLabel(g))}</strong></div><div class="mini"><span>Count</span><strong>${esc(countText(feed))}</strong></div><div class="mini"><span>Away Starter</span><strong>${esc(pitcherRecord(g, 'away'))}</strong></div><div class="mini"><span>Home Starter</span><strong>${esc(pitcherRecord(g, 'home'))}</strong></div><div class="mini live-player-photo">${liveHeadshot(pitcherInfo)}<span>Pitching Now</span><strong>${esc(pitcherInfo.name)}</strong><small>${esc(pitcherInfo.detail)}</small></div><div class="mini live-player-photo">${liveHeadshot(batterInfo)}<span>Batting Now</span><strong>${esc(batterInfo.name)}</strong><small>${esc(batterInfo.detail)}</small></div><div class="mini"><span>On Deck</span><strong>${esc(onDeckName(g))}</strong></div><div class="mini"><span>Runners on Base</span><strong>${esc(baseRunnerNames(g))}</strong></div></div>${lineups}<div style="margin-top:14px"><h2>Recent Plays</h2><div class="plays">${playsHtml(simplePlays(feed), 'Play-by-play will appear when available.', g)}</div></div><div style="margin-top:14px"><h2>Scoring Plays</h2><div class="plays">${playsHtml(scoringPlays(feed), 'No scoring plays yet.', g, true)}</div></div>`
     }
     function renderDetail() {
         const g = state.games.find(x => x.gamePk === state.selected);
